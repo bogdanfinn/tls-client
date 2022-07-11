@@ -88,7 +88,6 @@ func requestToppsAsChrome103Client() {
 			"accept-language",
 			"cache-control",
 			"if-none-match",
-			"referer",
 			"sec-ch-ua",
 			"sec-ch-ua-mobile",
 			"sec-ch-ua-platform",
