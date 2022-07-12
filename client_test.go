@@ -65,7 +65,6 @@ func TestClient_Chrome103(t *testing.T) {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"referer":                   {"https://www.asos.com/de/damen/ctas/styles-fur-besondere-anlasse/cat/?cid=13502&ctaref=hp%7Cww%7Cprime%7Cfeature%7C2%7Ccategory%7Csummerdresses&page=1&scrollTo=product-200985291"},
 		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
@@ -81,7 +80,6 @@ func TestClient_Chrome103(t *testing.T) {
 			"accept-language",
 			"cache-control",
 			"if-none-match",
-			"referer",
 			"sec-ch-ua",
 			"sec-ch-ua-mobile",
 			"sec-ch-ua-platform",
@@ -124,7 +122,6 @@ func TestClient_Safari_15_3(t *testing.T) {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"referer":                   {"https://www.asos.com/de/damen/ctas/styles-fur-besondere-anlasse/cat/?cid=13502&ctaref=hp%7Cww%7Cprime%7Cfeature%7C2%7Ccategory%7Csummerdresses&page=1&scrollTo=product-200985291"},
 		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
@@ -140,7 +137,6 @@ func TestClient_Safari_15_3(t *testing.T) {
 			"accept-language",
 			"cache-control",
 			"if-none-match",
-			"referer",
 			"sec-ch-ua",
 			"sec-ch-ua-mobile",
 			"sec-ch-ua-platform",
@@ -183,7 +179,6 @@ func TestClient_Safari_15_5(t *testing.T) {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"referer":                   {"https://www.asos.com/de/damen/ctas/styles-fur-besondere-anlasse/cat/?cid=13502&ctaref=hp%7Cww%7Cprime%7Cfeature%7C2%7Ccategory%7Csummerdresses&page=1&scrollTo=product-200985291"},
 		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
@@ -199,7 +194,6 @@ func TestClient_Safari_15_5(t *testing.T) {
 			"accept-language",
 			"cache-control",
 			"if-none-match",
-			"referer",
 			"sec-ch-ua",
 			"sec-ch-ua-mobile",
 			"sec-ch-ua-platform",
@@ -242,7 +236,6 @@ func TestClient_Safari_iOS_15_5(t *testing.T) {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"referer":                   {"https://www.asos.com/de/damen/ctas/styles-fur-besondere-anlasse/cat/?cid=13502&ctaref=hp%7Cww%7Cprime%7Cfeature%7C2%7Ccategory%7Csummerdresses&page=1&scrollTo=product-200985291"},
 		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
@@ -258,7 +251,6 @@ func TestClient_Safari_iOS_15_5(t *testing.T) {
 			"accept-language",
 			"cache-control",
 			"if-none-match",
-			"referer",
 			"sec-ch-ua",
 			"sec-ch-ua-mobile",
 			"sec-ch-ua-platform",
@@ -277,6 +269,120 @@ func TestClient_Safari_iOS_15_5(t *testing.T) {
 	}
 
 	compareResponse(t, tls_client.BrowserFingerprints[tls_client.SafariIOS][tls.HelloIOS_15_5], resp)
+}
+
+func TestClient_Firefox_102(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Firefox_102),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = http.Header{
+		"accept":                    {"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
+		"accept-encoding":           {"gzip"},
+		"Accept-Encoding":           {"gzip"},
+		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+		"cache-control":             {"max-age=0"},
+		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
+		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
+		"sec-ch-ua-mobile":          {"?0"},
+		"sec-ch-ua-platform":        {`"macOS"`},
+		"sec-fetch-dest":            {"document"},
+		"sec-fetch-mode":            {"navigate"},
+		"sec-fetch-site":            {"none"},
+		"sec-fetch-user":            {"?1"},
+		"upgrade-insecure-requests": {"1"},
+		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"accept-encoding",
+			"accept-language",
+			"cache-control",
+			"if-none-match",
+			"sec-ch-ua",
+			"sec-ch-ua-mobile",
+			"sec-ch-ua-platform",
+			"sec-fetch-dest",
+			"sec-fetch-mode",
+			"sec-fetch-site",
+			"sec-fetch-user",
+			"upgrade-insecure-requests",
+			"user-agent",
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, tls_client.BrowserFingerprints[tls_client.Firefox][tls.HelloFirefox_102], resp)
+}
+
+func TestClient_Opera_89(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Opera_89),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = http.Header{
+		"accept":                    {"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
+		"accept-encoding":           {"gzip"},
+		"Accept-Encoding":           {"gzip"},
+		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+		"cache-control":             {"max-age=0"},
+		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
+		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
+		"sec-ch-ua-mobile":          {"?0"},
+		"sec-ch-ua-platform":        {`"macOS"`},
+		"sec-fetch-dest":            {"document"},
+		"sec-fetch-mode":            {"navigate"},
+		"sec-fetch-site":            {"none"},
+		"sec-fetch-user":            {"?1"},
+		"upgrade-insecure-requests": {"1"},
+		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"accept-encoding",
+			"accept-language",
+			"cache-control",
+			"if-none-match",
+			"sec-ch-ua",
+			"sec-ch-ua-mobile",
+			"sec-ch-ua-platform",
+			"sec-fetch-dest",
+			"sec-fetch-mode",
+			"sec-fetch-site",
+			"sec-fetch-user",
+			"upgrade-insecure-requests",
+			"user-agent",
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, tls_client.BrowserFingerprints[tls_client.Opera][tls.HelloOpera_89], resp)
 }
 
 func compareResponse(t *testing.T, expectedValues map[string]string, resp *http.Response) {

@@ -30,6 +30,10 @@ This TLS Client allows you to specify the Client (Browser and Version) you want 
     - 15.5
 - iOS (Safari)
     - 15.5
+- Firefox
+    - 102
+- Opera
+    - 89
 
 #### Need other clients?
 

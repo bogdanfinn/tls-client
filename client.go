@@ -81,7 +81,7 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
 	return &http.Client{
 		Jar:           cJar,
 		Timeout:       config.timeout,
-		Transport:     newRoundTripper(config.clientProfile.clientHelloId, config.clientProfile.settings, config.clientProfile.settingsOrder, config.clientProfile.pseudoHeaderOrder, config.clientProfile.connectionFlow, config.insecureSkipVerify, dialer),
+		Transport:     newRoundTripper(config.clientProfile.clientHelloId, config.clientProfile.settings, config.clientProfile.settingsOrder, config.clientProfile.pseudoHeaderOrder, config.clientProfile.priorities, config.clientProfile.connectionFlow, config.insecureSkipVerify, dialer),
 		CheckRedirect: redirectFunc,
 	}, nil
 }

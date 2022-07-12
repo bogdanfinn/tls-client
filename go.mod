@@ -19,7 +19,7 @@ require (
 )
 
 //replace github.com/Carcraftz/utls => ../utls
-replace github.com/Carcraftz/utls => github.com/bogdanfinn/utls v0.0.1
+replace github.com/Carcraftz/utls => github.com/bogdanfinn/utls v0.0.2
 
 //replace github.com/Carcraftz/fhttp => ../fhttp
-replace github.com/Carcraftz/fhttp => github.com/bogdanfinn/fhttp v0.0.1
+replace github.com/Carcraftz/fhttp => github.com/bogdanfinn/fhttp v0.0.2

@@ -24,6 +24,7 @@ type roundTripper struct {
 	clientHelloId     utls.ClientHelloID
 	settings          map[http2.SettingID]uint32
 	settingsOrder     []http2.SettingID
+	priorities        []http2.Priority
 	pseudoHeaderOrder []string
 	connectionFlow    uint32
 
@@ -136,6 +137,8 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 			t2.SettingsOrder = rt.settingsOrder
 		}
 
+		t2.Priorities = rt.priorities
+
 		t2.PushHandler = &http2.DefaultPushHandler{}
 		rt.cachedTransports[addr] = &t2
 	default:
@@ -162,12 +165,13 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443") // we can assume port is 443 at this point
 }
 
-func newRoundTripper(clientHello utls.ClientHelloID, settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, pseudoHeaderOrder []string, connectionFlow uint32, insecureSkipVerify bool, dialer ...proxy.ContextDialer) http.RoundTripper {
+func newRoundTripper(clientHello utls.ClientHelloID, settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, pseudoHeaderOrder []string, priorities []http2.Priority, connectionFlow uint32, insecureSkipVerify bool, dialer ...proxy.ContextDialer) http.RoundTripper {
 	if len(dialer) > 0 {
 		return &roundTripper{
 			dialer:             dialer[0],
 			settings:           settings,
 			settingsOrder:      settingsOrder,
+			priorities:         priorities,
 			pseudoHeaderOrder:  pseudoHeaderOrder,
 			insecureSkipVerify: insecureSkipVerify,
 			connectionFlow:     connectionFlow,
@@ -180,6 +184,7 @@ func newRoundTripper(clientHello utls.ClientHelloID, settings map[http2.SettingI
 			dialer:             proxy.Direct,
 			settings:           settings,
 			settingsOrder:      settingsOrder,
+			priorities:         priorities,
 			pseudoHeaderOrder:  pseudoHeaderOrder,
 			insecureSkipVerify: insecureSkipVerify,
 			connectionFlow:     connectionFlow,
