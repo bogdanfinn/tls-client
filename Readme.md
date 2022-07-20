@@ -59,7 +59,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	http "github.com/Carcraftz/fhttp"
+	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
 )
 

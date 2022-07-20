@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"testing"
 
-	http "github.com/Carcraftz/fhttp"
-	tls "github.com/Carcraftz/utls"
+	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
+	tls "github.com/bogdanfinn/utls"
 )
 
 const apiEndpoint = "https://tls.peet.ws/api/all"

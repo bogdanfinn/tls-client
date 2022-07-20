@@ -5,7 +5,7 @@ import (
 	"log"
 	goHttp "net/http"
 
-	http "github.com/Carcraftz/fhttp"
+	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
 )
 

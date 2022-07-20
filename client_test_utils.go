@@ -1,6 +1,6 @@
 package tls_client
 
-import tls "github.com/Carcraftz/utls"
+import tls "github.com/bogdanfinn/utls"
 
 const (
 	Chrome    = "Chrome"

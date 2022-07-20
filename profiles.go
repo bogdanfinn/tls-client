@@ -1,8 +1,8 @@
 package tls_client
 
 import (
-	"github.com/Carcraftz/fhttp/http2"
-	tls "github.com/Carcraftz/utls"
+	"github.com/bogdanfinn/fhttp/http2"
+	tls "github.com/bogdanfinn/utls"
 )
 
 var DefaultClientProfile = Chrome_103

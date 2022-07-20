@@ -11,10 +11,10 @@ import (
 	"net/url"
 	"sync"
 
-	http "github.com/Carcraftz/fhttp"
+	http "github.com/bogdanfinn/fhttp"
 	"golang.org/x/net/proxy"
 
-	"github.com/Carcraftz/fhttp/http2"
+	"github.com/bogdanfinn/fhttp/http2"
 )
 
 // Copyright 2018 Google Inc.

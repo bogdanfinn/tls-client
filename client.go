@@ -4,8 +4,8 @@ import (
 	"io"
 	"time"
 
-	http "github.com/Carcraftz/fhttp"
-	"github.com/Carcraftz/fhttp/cookiejar"
+	http "github.com/bogdanfinn/fhttp"
+	"github.com/bogdanfinn/fhttp/cookiejar"
 	"golang.org/x/net/proxy"
 )
 
