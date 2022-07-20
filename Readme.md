@@ -43,6 +43,9 @@ Please open an issue on this github repository. In the best case you provide the
 
 ```go
 go get -u github.com/bogdanfinn/tls-client
+
+// or specific version:
+// go get -u github.com/bogdanfinn/tls-client@v0.0.3
 ```
 
 
