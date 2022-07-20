@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	goHttp "net/http"
+	"net/url"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
@@ -38,6 +39,7 @@ func requestToppsAsGoClient() {
 	}
 
 	re, err := c.Do(r)
+
 	if err != nil {
 		log.Println(err)
 		return
@@ -101,6 +103,7 @@ func requestToppsAsChrome103Client() {
 	}
 
 	resp, err := client.Do(req)
+
 	if err != nil {
 		log.Println(err)
 		return
@@ -109,4 +112,13 @@ func requestToppsAsChrome103Client() {
 	defer resp.Body.Close()
 
 	log.Println(fmt.Sprintf("requesting topps as chrome103 => status code: %d", resp.StatusCode))
+
+	u, err := url.Parse("https://www.topps.com/")
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(fmt.Sprintf("tls client cookies for url %s : %v", u.String(), client.GetCookies(u)))
 }
