@@ -39,6 +39,13 @@ This TLS Client allows you to specify the Client (Browser and Version) you want 
 
 Please open an issue on this github repository. In the best case you provide the response of https://tls.peet.ws/api/all requested by the client you want to be implemented.
 
+### Installation
+
+```go
+go get -u github.com/bogdanfinn/tls-client
+```
+
+
 ### Quick Usage Example
 
 ```go
@@ -50,7 +57,7 @@ import (
 	"log"
 
 	http "github.com/Carcraftz/fhttp"
-	tls_client "tls-client"
+	tls_client "github.com/bogdanfinn/tls-client"
 )
 
 func main() {

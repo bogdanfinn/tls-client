@@ -1,4 +1,4 @@
-module tls-client
+module github.com/bogdanfinn/tls-client
 
 go 1.18
 

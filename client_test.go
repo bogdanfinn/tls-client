@@ -7,7 +7,7 @@ import (
 
 	http "github.com/Carcraftz/fhttp"
 	tls "github.com/Carcraftz/utls"
-	tls_client "tls-client"
+	tls_client "github.com/bogdanfinn/tls-client"
 )
 
 const apiEndpoint = "https://tls.peet.ws/api/all"

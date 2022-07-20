@@ -6,7 +6,7 @@ import (
 	goHttp "net/http"
 
 	http "github.com/Carcraftz/fhttp"
-	tls_client "tls-client"
+	tls_client "github.com/bogdanfinn/tls-client"
 )
 
 func main() {
