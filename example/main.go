@@ -54,6 +54,9 @@ func requestToppsAsChrome103Client() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
 		tls_client.WithClientProfile(tls_client.Chrome_103),
+		//tls_client.WithProxyUrl("http://user:pass@host:ip"),
+		//tls_client.WithNotFollowRedirects(),
+		//tls_client.WithInsecureSkipVerify(),
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)

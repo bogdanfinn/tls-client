@@ -67,6 +67,9 @@ func main() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
 		tls_client.WithClientProfile(tls_client.Chrome_103),
+		//tls_client.WithProxyUrl("http://user:pass@host:ip"),
+		//tls_client.WithNotFollowRedirects(), 
+		//tls_client.WithInsecureSkipVerify(),
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
@@ -142,19 +145,29 @@ For more configured clients check `./profiles.go`
 The implemented default client is currently Chrome 103 with a configured request timeout of 30 seconds.
 
 ### Compile this client for use in Python
+Please take a look at the cross compile build script in `cffi/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
 
-TBD
+The build script is written to cross compile from OSX to all other platforms (osx, linux, windows). If your build os is not OSX you might need to adjust the build script.
+
+You can also use the prebuilt packages in `cffi/dist`
+
+A python example on how to load and call the functionality will follow asap.
 
 ### Compile this client for use in NodeJS
+Please take a look at the cross compile build script in `cffi/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
 
-TBD
+The build script is written to cross compile from OSX to all other platforms (osx, linux, windows). If your build os is not OSX you might need to adjust the build script.
+
+You can also use the prebuilt packages in `cffi/dist`
+
+A NodeJS example on how to load and call the functionality will follow asap.
 
 ### Further Information
 
 This library uses the following api: https://tls.peet.ws/api/all to verify the hashes and fingerprints for akamai and
 ja3.
 
-If you are not using go but want to use the functionality check out this repository https://github.com/bogdanfinn/tls-client-api
+If you are not using go and do not want to implement the shared library but want to use the functionality check out this repository https://github.com/bogdanfinn/tls-client-api
 
 ### Questions?
 

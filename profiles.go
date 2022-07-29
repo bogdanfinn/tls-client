@@ -7,6 +7,15 @@ import (
 
 var DefaultClientProfile = Chrome_103
 
+var MappedTLSClients = map[string]ClientProfile{
+	"chrome_103":      Chrome_103,
+	"safari_15_5":     Safari_15_5,
+	"safari_15_3":     Safari_15_3,
+	"safari_ios_15_5": Safari_IOS_15_5,
+	"firefox_102":     Firefox_102,
+	"opera_89":        Opera_89,
+}
+
 type ClientProfile struct {
 	clientHelloId     tls.ClientHelloID
 	settings          map[http2.SettingID]uint32
