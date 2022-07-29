@@ -154,6 +154,8 @@ TBD
 This library uses the following api: https://tls.peet.ws/api/all to verify the hashes and fingerprints for akamai and
 ja3.
 
+If you are not using go but want to use the functionality check out this repository https://github.com/bogdanfinn/tls-client-api
+
 ### Questions?
 
 Contact me on discord
