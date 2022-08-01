@@ -24,16 +24,16 @@ This TLS Client allows you to specify the Client (Browser and Version) you want 
 ### Supported and tested Clients
 
 - Chrome
-    - 103
+    - 103 (chrome_103)
 - Safari
-    - 15.3
-    - 15.5
+    - 15.3 (safari_15_3)
+    - 15.5 (safari_15_5)
 - iOS (Safari)
-    - 15.5
+    - 15.5 (safari_ios_15_5)
 - Firefox
-    - 102
+    - 102 (firefox_102)
 - Opera
-    - 89
+    - 89 (opera_89)
 
 #### Need other clients?
 
@@ -151,7 +151,9 @@ The build script is written to cross compile from OSX to all other platforms (os
 
 You can also use the prebuilt packages in `cffi/dist`
 
-A python example on how to load and call the functionality will follow asap.
+A python example on how to load and call the functionality can be found in `cffi/example_python/example.py`. Please be aware that i'm not a python expert.
+
+Build and tested with python 3.8 on MacOS.
 
 ### Compile this client for use in NodeJS
 Please take a look at the cross compile build script in `cffi/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
