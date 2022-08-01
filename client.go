@@ -13,6 +13,7 @@ import (
 type HttpClient interface {
 	GetCookies(u *url.URL) []*http.Cookie
 	SetCookies(u *url.URL, cookies []*http.Cookie)
+	RotateProxy(proxyUrl string) error
 	Do(req *http.Request) (*http.Response, error)
 	Get(url string) (resp *http.Response, err error)
 	Head(url string) (resp *http.Response, err error)
@@ -87,6 +88,19 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
 		Transport:     newRoundTripper(config.clientProfile.clientHelloId, config.clientProfile.settings, config.clientProfile.settingsOrder, config.clientProfile.pseudoHeaderOrder, config.clientProfile.priorities, config.clientProfile.connectionFlow, config.insecureSkipVerify, dialer),
 		CheckRedirect: redirectFunc,
 	}, nil
+}
+
+func (c *httpClient) RotateProxy(proxyUrl string) error {
+	c.config.proxyUrl = proxyUrl
+
+	client, err := buildFromConfig(c.config)
+
+	if err != nil {
+		return err
+	}
+
+	c.Client = *client
+	return nil
 }
 
 func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
