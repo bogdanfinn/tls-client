@@ -162,7 +162,9 @@ The build script is written to cross compile from OSX to all other platforms (os
 
 You can also use the prebuilt packages in `cffi/dist`
 
-A NodeJS example on how to load and call the functionality will follow asap.
+A NodeJS example on how to load and call the functionality can be found in `cffi/example_node/index.js`. Please be aware that you need to run `npm install` to install the node dependencies.
+
+Build and tested with nodejs v16.13.2 on MacOS.
 
 ### Further Information
 
