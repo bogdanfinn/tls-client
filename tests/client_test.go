@@ -1,13 +1,12 @@
-package tls_client_test
+package tests
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"testing"
-
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
 	tls "github.com/bogdanfinn/utls"
+	"io/ioutil"
+	"testing"
 )
 
 const apiEndpoint = "https://tls.peet.ws/api/all"
@@ -65,7 +64,7 @@ func TestClient_Chrome103(t *testing.T) {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
+		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
 		"sec-fetch-dest":            {"document"},
@@ -73,7 +72,7 @@ func TestClient_Chrome103(t *testing.T) {
 		"sec-fetch-site":            {"none"},
 		"sec-fetch-user":            {"?1"},
 		"upgrade-insecure-requests": {"1"},
-		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
+		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
 			"accept-encoding",
@@ -97,7 +96,7 @@ func TestClient_Chrome103(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, tls_client.BrowserFingerprints[tls_client.Chrome][tls.HelloChrome_103], resp)
+	compareResponse(t, browserFingerprints[chrome][tls.HelloChrome_103], resp)
 }
 
 func TestClient_Safari_15_3(t *testing.T) {
@@ -122,7 +121,7 @@ func TestClient_Safari_15_3(t *testing.T) {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
+		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
 		"sec-fetch-dest":            {"document"},
@@ -130,7 +129,7 @@ func TestClient_Safari_15_3(t *testing.T) {
 		"sec-fetch-site":            {"none"},
 		"sec-fetch-user":            {"?1"},
 		"upgrade-insecure-requests": {"1"},
-		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
+		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
 			"accept-encoding",
@@ -154,7 +153,7 @@ func TestClient_Safari_15_3(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, tls_client.BrowserFingerprints[tls_client.Safari][tls.HelloSafari_15_3], resp)
+	compareResponse(t, browserFingerprints[safari][tls.HelloSafari_15_3], resp)
 }
 
 func TestClient_Safari_15_5(t *testing.T) {
@@ -179,7 +178,7 @@ func TestClient_Safari_15_5(t *testing.T) {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
+		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
 		"sec-fetch-dest":            {"document"},
@@ -187,7 +186,7 @@ func TestClient_Safari_15_5(t *testing.T) {
 		"sec-fetch-site":            {"none"},
 		"sec-fetch-user":            {"?1"},
 		"upgrade-insecure-requests": {"1"},
-		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
+		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
 			"accept-encoding",
@@ -211,7 +210,7 @@ func TestClient_Safari_15_5(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, tls_client.BrowserFingerprints[tls_client.Safari][tls.HelloSafari_15_5], resp)
+	compareResponse(t, browserFingerprints[safari][tls.HelloSafari_15_5], resp)
 }
 
 func TestClient_Safari_iOS_15_5(t *testing.T) {
@@ -236,7 +235,7 @@ func TestClient_Safari_iOS_15_5(t *testing.T) {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
+		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
 		"sec-fetch-dest":            {"document"},
@@ -244,7 +243,7 @@ func TestClient_Safari_iOS_15_5(t *testing.T) {
 		"sec-fetch-site":            {"none"},
 		"sec-fetch-user":            {"?1"},
 		"upgrade-insecure-requests": {"1"},
-		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
+		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
 			"accept-encoding",
@@ -268,7 +267,7 @@ func TestClient_Safari_iOS_15_5(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, tls_client.BrowserFingerprints[tls_client.SafariIOS][tls.HelloIOS_15_5], resp)
+	compareResponse(t, browserFingerprints[safariIos][tls.HelloIOS_15_5], resp)
 }
 
 func TestClient_Firefox_102(t *testing.T) {
@@ -293,7 +292,7 @@ func TestClient_Firefox_102(t *testing.T) {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
+		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
 		"sec-fetch-dest":            {"document"},
@@ -301,7 +300,7 @@ func TestClient_Firefox_102(t *testing.T) {
 		"sec-fetch-site":            {"none"},
 		"sec-fetch-user":            {"?1"},
 		"upgrade-insecure-requests": {"1"},
-		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
+		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
 			"accept-encoding",
@@ -325,7 +324,7 @@ func TestClient_Firefox_102(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, tls_client.BrowserFingerprints[tls_client.Firefox][tls.HelloFirefox_102], resp)
+	compareResponse(t, browserFingerprints[firefox][tls.HelloFirefox_102], resp)
 }
 
 func TestClient_Opera_89(t *testing.T) {
@@ -350,7 +349,7 @@ func TestClient_Opera_89(t *testing.T) {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
+		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
 		"sec-fetch-dest":            {"document"},
@@ -358,7 +357,7 @@ func TestClient_Opera_89(t *testing.T) {
 		"sec-fetch-site":            {"none"},
 		"sec-fetch-user":            {"?1"},
 		"upgrade-insecure-requests": {"1"},
-		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
+		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
 			"accept-encoding",
@@ -382,7 +381,7 @@ func TestClient_Opera_89(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, tls_client.BrowserFingerprints[tls_client.Opera][tls.HelloOpera_89], resp)
+	compareResponse(t, browserFingerprints[opera][tls.HelloOpera_89], resp)
 }
 
 func compareResponse(t *testing.T, expectedValues map[string]string, resp *http.Response) {
@@ -400,19 +399,19 @@ func compareResponse(t *testing.T, expectedValues map[string]string, resp *http.
 
 	for key, expectedValue := range expectedValues {
 		switch key {
-		case tls_client.Ja3String:
+		case ja3String:
 			if tlsApiResponse.TLS.Ja3 != expectedValue {
 				t.Errorf("TLS Ja3 mismatch.\nexpected: %s\nactual  : %s", expectedValue, tlsApiResponse.TLS.Ja3)
 			}
-		case tls_client.Ja3Hash:
+		case ja3Hash:
 			if tlsApiResponse.TLS.Ja3Hash != expectedValue {
 				t.Errorf("TLS Ja3 hash mismatch.\nexpected: %s\nactual  : %s", expectedValue, tlsApiResponse.TLS.Ja3Hash)
 			}
-		case tls_client.AkamaiFingerprint:
+		case akamaiFingerprint:
 			if tlsApiResponse.HTTP2.AkamaiFingerprint != expectedValue {
 				t.Errorf("akamai fingerprint mismatch.\nexpected: %s\nactual  : %s", expectedValue, tlsApiResponse.HTTP2.AkamaiFingerprint)
 			}
-		case tls_client.AkamaiFingerprintHash:
+		case akamaiFingerprintHash:
 			if tlsApiResponse.HTTP2.AkamaiFingerprintHash != expectedValue {
 				t.Errorf("akamai fingerprint hash mismatch.\nexpected: %s\nactual  : %s", expectedValue, tlsApiResponse.HTTP2.AkamaiFingerprintHash)
 			}

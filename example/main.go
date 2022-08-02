@@ -27,7 +27,7 @@ func requestToppsAsGoClient() {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
+		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
 		"sec-fetch-dest":            {"document"},
@@ -35,7 +35,7 @@ func requestToppsAsGoClient() {
 		"sec-fetch-site":            {"none"},
 		"sec-fetch-user":            {"?1"},
 		"upgrade-insecure-requests": {"1"},
-		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
+		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
 	}
 
 	re, err := c.Do(r)
@@ -78,7 +78,7 @@ func requestToppsAsChrome103Client() {
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
+		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google chrome";v="101"`},
 		"sec-ch-ua-mobile":          {"?0"},
 		"sec-ch-ua-platform":        {`"macOS"`},
 		"sec-fetch-dest":            {"document"},
@@ -86,7 +86,7 @@ func requestToppsAsChrome103Client() {
 		"sec-fetch-site":            {"none"},
 		"sec-fetch-user":            {"?1"},
 		"upgrade-insecure-requests": {"1"},
-		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
+		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
 			"accept-encoding",
