@@ -6,7 +6,7 @@ GOOS=darwin CGO_ENABLED=1 GOARCH=amd64 go build -buildmode=c-shared -o ./dist/tl
 
 # CC is needed when you cross compile from OSX to Linux
 echo 'Build Linux'
-GOOS=linux CGO_ENABLED=1 GOARCH=amd64 CC="x86_64-linux-musl-gcc" go build -buildmode=c-shared -o ./dist/tls-client-linux.so
+GOOS=linux CGO_ENABLED=1 GOARCH=amd64 CC="x86_64-linux-musl-gcc" go build -ldflags '-extldflags "-static"' -buildmode=c-shared -o ./dist/tls-client-linux-amd64.so
 
 # CC is needed when you cross compile from OSX to Windows
 echo 'Build Windows 32 Bit'
