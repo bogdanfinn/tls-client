@@ -1,3 +1,4 @@
 .idea
 example/Example
 venv
+cffi/example_node/node_modules
