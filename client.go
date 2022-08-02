@@ -13,7 +13,7 @@ import (
 type HttpClient interface {
 	GetCookies(u *url.URL) []*http.Cookie
 	SetCookies(u *url.URL, cookies []*http.Cookie)
-	RotateProxy(proxyUrl string) error
+	SetProxy(proxyUrl string) error
 	Do(req *http.Request) (*http.Response, error)
 	Get(url string) (resp *http.Response, err error)
 	Head(url string) (resp *http.Response, err error)
@@ -90,7 +90,7 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
 	}, nil
 }
 
-func (c *httpClient) RotateProxy(proxyUrl string) error {
+func (c *httpClient) SetProxy(proxyUrl string) error {
 	c.config.proxyUrl = proxyUrl
 
 	client, err := buildFromConfig(c.config)
