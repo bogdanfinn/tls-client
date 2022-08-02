@@ -171,6 +171,14 @@ ja3.
 
 If you are not using go and do not want to implement the shared library but want to use the functionality check out this repository https://github.com/bogdanfinn/tls-client-api
 
+### Frequently Asked Questions / Errors
+* **I'm receiving `tls: error decoding message` when using this TLS Client.**
+
+Please make sure to add the `Accept-Encoding` header for the expected encoding. Then the response will be automatically decoded. For example when you expect `gzip` as response add the `Accept-Encoding: gzip` header. 
+
+* **The TLS-Client does not set the user-agent header correctly**
+
+Do not mix up TLS-Fingerprints with HTTP Request Headers. They have more or less nothing in common. AntiBots using for example header order in addition to TLS-Fingerprinting. This library does only handle the TLS- and Akamai Fingerprint. You are still responsible to define the to be used headers and the header order.
 ### Questions?
 
 Contact me on discord
