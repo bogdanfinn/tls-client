@@ -2,6 +2,8 @@ package tls_client
 
 import (
 	"time"
+
+	http "github.com/bogdanfinn/fhttp"
 )
 
 type HttpClientOption func(config *httpClientConfig)
@@ -11,6 +13,7 @@ type httpClientConfig struct {
 	followRedirects    bool
 	insecureSkipVerify bool
 	proxyUrl           string
+	cookieJar          http.CookieJar
 	clientProfile      ClientProfile
 	timeout            time.Duration
 }
@@ -18,6 +21,12 @@ type httpClientConfig struct {
 func WithProxyUrl(proxyUrl string) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.proxyUrl = proxyUrl
+	}
+}
+
+func WithCookieJar(jar http.CookieJar) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.cookieJar = jar
 	}
 }
 

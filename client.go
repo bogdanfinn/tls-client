@@ -11,6 +11,7 @@ import (
 )
 
 type HttpClient interface {
+	GetCookieJar() http.CookieJar
 	GetCookies(u *url.URL) []*http.Cookie
 	SetCookies(u *url.URL, cookies []*http.Cookie)
 	SetProxy(proxyUrl string) error
@@ -80,7 +81,13 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
 		redirectFunc = nil
 	}
 
-	cJar, _ := cookiejar.New(nil)
+	var cJar http.CookieJar
+
+	if config.cookieJar != nil {
+		cJar = config.cookieJar
+	} else {
+		cJar, _ = cookiejar.New(nil)
+	}
 
 	return &http.Client{
 		Jar:           cJar,
@@ -109,4 +116,8 @@ func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
 
 func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	c.Jar.SetCookies(u, cookies)
+}
+
+func (c *httpClient) GetCookieJar() http.CookieJar {
+	return c.Jar
 }

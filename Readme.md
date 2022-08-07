@@ -70,7 +70,8 @@ func main() {
 		tls_client.WithClientProfile(tls_client.Chrome_104),
 		//tls_client.WithProxyUrl("http://user:pass@host:ip"),
 		//tls_client.WithNotFollowRedirects(), 
-		//tls_client.WithInsecureSkipVerify(),
+		//tls_client.WithInsecureSkipVerify(), 
+		//tls_client.WithCookieJar(cJar), // create cookieJar instance and pass it as argument
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
