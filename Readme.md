@@ -25,6 +25,7 @@ This TLS Client allows you to specify the Client (Browser and Version) you want 
 
 - Chrome
     - 103 (chrome_103)
+    - 104 (chrome_104)
 - Safari
     - 15.3 (safari_15_3)
     - 15.5 (safari_15_5)
@@ -45,7 +46,7 @@ Please open an issue on this github repository. In the best case you provide the
 go get -u github.com/bogdanfinn/tls-client
 
 // or specific version:
-// go get -u github.com/bogdanfinn/tls-client@v0.1.1
+// go get -u github.com/bogdanfinn/tls-client@v0.2.0
 ```
 
 
@@ -66,7 +67,7 @@ import (
 func main() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tls_client.Chrome_103),
+		tls_client.WithClientProfile(tls_client.Chrome_104),
 		//tls_client.WithProxyUrl("http://user:pass@host:ip"),
 		//tls_client.WithNotFollowRedirects(), 
 		//tls_client.WithInsecureSkipVerify(),
@@ -142,7 +143,7 @@ func main() {
 For more configured clients check `./profiles.go`
 
 #### Default Client
-The implemented default client is currently Chrome 103 with a configured request timeout of 30 seconds.
+The implemented default client is currently Chrome 104 with a configured request timeout of 30 seconds.
 
 ### Compile this client for use in Python
 Please take a look at the cross compile build script in `cffi/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).

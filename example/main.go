@@ -12,7 +12,7 @@ import (
 
 func main() {
 	requestToppsAsGoClient()
-	requestToppsAsChrome103Client()
+	requestToppsAsChrome104Client()
 }
 
 func requestToppsAsGoClient() {
@@ -50,10 +50,10 @@ func requestToppsAsGoClient() {
 	log.Println(fmt.Sprintf("requesting topps as golang => status code: %d", re.StatusCode))
 }
 
-func requestToppsAsChrome103Client() {
+func requestToppsAsChrome104Client() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tls_client.Chrome_103),
+		tls_client.WithClientProfile(tls_client.Chrome_104),
 		//tls_client.WithProxyUrl("http://user:pass@host:ip"),
 		//tls_client.WithNotFollowRedirects(),
 		//tls_client.WithInsecureSkipVerify(),

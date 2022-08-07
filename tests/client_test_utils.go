@@ -17,6 +17,12 @@ const (
 
 var browserFingerprints = map[string]map[tls.ClientHelloID]map[string]string{
 	chrome: {
+		tls.HelloChrome_104: map[string]string{
+			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513,29-23-24,0",
+			ja3Hash:               "e1d8b04eeb8ef3954ec4f49267a783ef",
+			akamaiFingerprint:     "1:65536,3:1000,4:6291456,6:262144|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "7ad845f20fc17cc8088a0d9312b17da1",
+		},
 		tls.HelloChrome_103: map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513,29-23-24,0",
 			ja3Hash:               "e1d8b04eeb8ef3954ec4f49267a783ef",
