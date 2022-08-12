@@ -2,11 +2,12 @@ package tests
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"testing"
+
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
 	tls "github.com/bogdanfinn/utls"
-	"io/ioutil"
-	"testing"
 )
 
 const apiEndpoint = "https://tls.peet.ws/api/all"
@@ -40,6 +41,63 @@ type TlsApiResponse struct {
 			Headers   []string `json:"headers,omitempty"`
 		} `json:"sent_frames"`
 	} `json:"http2"`
+}
+
+func TestClient_Chrome104(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_104),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = http.Header{
+		"accept":                    {"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
+		"accept-encoding":           {"gzip"},
+		"Accept-Encoding":           {"gzip"},
+		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+		"cache-control":             {"max-age=0"},
+		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
+		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google chrome";v="101"`},
+		"sec-ch-ua-mobile":          {"?0"},
+		"sec-ch-ua-platform":        {`"macOS"`},
+		"sec-fetch-dest":            {"document"},
+		"sec-fetch-mode":            {"navigate"},
+		"sec-fetch-site":            {"none"},
+		"sec-fetch-user":            {"?1"},
+		"upgrade-insecure-requests": {"1"},
+		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"accept-encoding",
+			"accept-language",
+			"cache-control",
+			"if-none-match",
+			"sec-ch-ua",
+			"sec-ch-ua-mobile",
+			"sec-ch-ua-platform",
+			"sec-fetch-dest",
+			"sec-fetch-mode",
+			"sec-fetch-site",
+			"sec-fetch-user",
+			"upgrade-insecure-requests",
+			"user-agent",
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, browserFingerprints[chrome][tls.HelloChrome_104], resp)
 }
 
 func TestClient_Chrome103(t *testing.T) {
