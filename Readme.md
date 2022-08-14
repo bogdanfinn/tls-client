@@ -178,7 +178,7 @@ If you are not using go and do not want to implement the shared library but want
 ### Frequently Asked Questions / Errors
 * **I'm receiving `tls: error decoding message` when using this TLS Client.**
 
-Please make sure to add the `Accept-Encoding` header for the expected encoding. Then the response will be automatically decoded. For example when you expect `gzip` as response add the `Accept-Encoding: gzip` header. 
+This issue should be fixed in `v.0.3.0`. There was an issue with the CompressCertExtension in the utls package dependency.
 
 * **The TLS-Client does not set the user-agent header correctly**
 
