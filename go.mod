@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/bogdanfinn/fhttp v0.3.0
 	github.com/bogdanfinn/utls v0.3.0
+	github.com/google/uuid v1.3.0
 	golang.org/x/net v0.0.0-20220622184535-263ec571b305
 )
 

@@ -17,6 +17,7 @@ func (e *TLSClientError) Error() string {
 }
 
 type RequestParams struct {
+	SessionId           *string           `json:"sessionId"`
 	TLSClientIdentifier string            `json:"tlsClientIdentifier"`
 	ProxyUrl            *string           `json:"proxyUrl"`
 	Headers             map[string]string `json:"headers"`
@@ -36,6 +37,7 @@ type CookieInput struct {
 }
 
 type Response struct {
+	SessionId       string              `json:"sessionId"`
 	StatusCode      int                 `json:"statusCode"`
 	ResponseBody    string              `json:"responseBody"`
 	ResponseHeaders map[string][]string `json:"responseHeaders"`

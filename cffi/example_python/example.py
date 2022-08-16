@@ -12,6 +12,7 @@ request.restype = ctypes.c_char_p
 # build the payload which is needed for the shared package
 """ full payload example
 {
+  "sessionId": "reusableSessionId",
   "tlsClientIdentifier": "chrome_103",
   "proxyUrl": "",
   "headerOrder": [

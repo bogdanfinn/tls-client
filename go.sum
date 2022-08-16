@@ -4,6 +4,8 @@ github.com/bogdanfinn/fhttp v0.3.0 h1:YiCOH7MFAxOO4wV21c9KYBxZ769WZX+O49I24nkEx4
 github.com/bogdanfinn/fhttp v0.3.0/go.mod h1:498Vm75DUxqAgT0KLFDGBcFQTD5fvEP76CuJPa2XBjI=
 github.com/bogdanfinn/utls v0.3.0 h1:Tmhmghcwy7T/Rb/9YxkyoKVWhBNIdfVTg8ftu0Z1R5s=
 github.com/bogdanfinn/utls v0.3.0/go.mod h1:FPF9ygi+iA4S/apxLKSXOUx7uIy7spLzl3AEFSKOeiI=
+github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
+github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/klauspost/compress v1.15.9 h1:wKRjX6JRtDdrE9qwa4b/Cip7ACOshUI4smpCQanqjSY=
 github.com/klauspost/compress v1.15.9/go.mod h1:PhcZ0MbTNciWF3rruxRgKxI5NkcHHrHUDtV4Yw2GlzU=
 golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 h1:kUhD7nTDoI3fVd9G4ORWrbV5NY0liEs/Jg2pv5f+bBA=

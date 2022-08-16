@@ -6,10 +6,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"sync"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
+	"github.com/google/uuid"
 )
+
+var clientsLock = sync.Mutex{}
+var clients = make(map[string]tls_client.HttpClient)
 
 //export request
 func request(requestParams *C.char) *C.char {
@@ -23,20 +28,7 @@ func request(requestParams *C.char) *C.char {
 		return handleResponse(nil, clientErr)
 	}
 
-	tlsClientProfile := getTlsClientProfile(requestInput.TLSClientIdentifier)
-
-	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tlsClientProfile),
-	}
-
-	proxy := requestInput.ProxyUrl
-
-	if proxy != nil && *proxy != "" {
-		options = append(options, tls_client.WithProxyUrl(*proxy))
-	}
-
-	tlsClient, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	tlsClient, newSessionId, err := getTlsClient(requestInput.SessionId, requestInput.TLSClientIdentifier, requestInput.ProxyUrl)
 
 	if err != nil {
 		clientErr := NewTLSClientError(err)
@@ -79,6 +71,7 @@ func request(requestParams *C.char) *C.char {
 	}
 
 	response := Response{
+		SessionId:       newSessionId,
 		StatusCode:      resp.StatusCode,
 		ResponseBody:    string(respBodyBytes),
 		ResponseHeaders: resp.Header,
@@ -94,6 +87,41 @@ func request(requestParams *C.char) *C.char {
 	}
 
 	return C.CString(string(jsonResponse))
+}
+
+func getTlsClient(sessionId *string, tlsClientIdentifier string, proxyUrl *string) (tls_client.HttpClient, string, error) {
+	clientsLock.Lock()
+	defer clientsLock.Unlock()
+
+	newSessionId := uuid.New().String()
+	if sessionId != nil && *sessionId != "" {
+		newSessionId = *sessionId
+	}
+
+	client, ok := clients[newSessionId]
+
+	if ok {
+		return client, newSessionId, nil
+	}
+
+	tlsClientProfile := getTlsClientProfile(tlsClientIdentifier)
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeout(30),
+		tls_client.WithClientProfile(tlsClientProfile),
+	}
+
+	proxy := proxyUrl
+
+	if proxy != nil && *proxy != "" {
+		options = append(options, tls_client.WithProxyUrl(*proxy))
+	}
+
+	tlsClient, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+
+	clients[newSessionId] = client
+
+	return tlsClient, newSessionId, err
 }
 
 func getTlsClientProfile(tlsClientIdentifier string) tls_client.ClientProfile {

@@ -8,6 +8,7 @@ const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64.dylib', 
 // build the payload which is needed for the shared package
 /* full payload example
 {
+    "sessionId": "reusableSessionId",
     "tlsClientIdentifier": "chrome_103",
     "proxyUrl": "",
     "headerOrder": [
