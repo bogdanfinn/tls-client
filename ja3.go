@@ -105,8 +105,13 @@ func stringToSpec(ja3 string) (*tls.ClientHelloSpec, error) {
 		suites = append(suites, uint16(cid))
 	}
 
+	minVid := vid
+	if vid == tls.VersionTLS13 {
+		minVid = tls.VersionTLS12
+	}
+
 	return &tls.ClientHelloSpec{
-		TLSVersMin:         vid,
+		TLSVersMin:         minVid,
 		TLSVersMax:         vid,
 		CipherSuites:       suites,
 		CompressionMethods: []byte{0},
@@ -160,7 +165,7 @@ func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 			Modes: []uint8{
 				tls.PskModeDHE,
 			}},
-		tls.ExtensionKeyShare:     &tls.KeyShareExtension{KeyShares: []tls.KeyShare{}},
+		tls.ExtensionKeyShare:     &tls.KeyShareExtension{KeyShares: []tls.KeyShare{{Group: tls.X25519}}},
 		tls.ExtensionNextProtoNeg: &tls.NPNExtension{},
 		tls.ExtensionALPS:         &tls.ALPSExtension{},
 		tls.ExtensionRenegotiationInfo: &tls.RenegotiationInfoExtension{
