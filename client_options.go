@@ -14,7 +14,10 @@ type httpClientConfig struct {
 	insecureSkipVerify bool
 	proxyUrl           string
 	cookieJar          http.CookieJar
+	clientProfileSet   bool
 	clientProfile      ClientProfile
+	ja3StringSet       bool
+	ja3String          string
 	timeout            time.Duration
 }
 
@@ -56,6 +59,14 @@ func WithInsecureSkipVerify() HttpClientOption {
 
 func WithClientProfile(clientProfile ClientProfile) HttpClientOption {
 	return func(config *httpClientConfig) {
+		config.clientProfileSet = true
 		config.clientProfile = clientProfile
+	}
+}
+
+func WithJa3String(ja3String string) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.ja3StringSet = true
+		config.ja3String = ja3String
 	}
 }

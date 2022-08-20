@@ -28,7 +28,17 @@ func request(requestParams *C.char) *C.char {
 		return handleResponse("", clientErr)
 	}
 
-	tlsClient, newSessionId, err := getTlsClient(requestInput.SessionId, requestInput.TLSClientIdentifier, requestInput.ProxyUrl)
+	if requestInput.TLSClientIdentifier != "" && requestInput.Ja3String != "" {
+		clientErr := NewTLSClientError(fmt.Errorf("can not built client out of client identifier and ja3string. Please provide only one of them"))
+		return handleResponse("", clientErr)
+	}
+
+	if requestInput.TLSClientIdentifier == "" && requestInput.Ja3String == "" {
+		clientErr := NewTLSClientError(fmt.Errorf("can not built client out without client identifier and without ja3string. Please provide only one of them"))
+		return handleResponse("", clientErr)
+	}
+
+	tlsClient, newSessionId, err := getTlsClient(requestInput.SessionId, requestInput.TLSClientIdentifier, requestInput.Ja3String, requestInput.ProxyUrl)
 
 	if err != nil {
 		clientErr := NewTLSClientError(err)
@@ -88,7 +98,7 @@ func request(requestParams *C.char) *C.char {
 	return C.CString(string(jsonResponse))
 }
 
-func getTlsClient(sessionId *string, tlsClientIdentifier string, proxyUrl *string) (tls_client.HttpClient, string, error) {
+func getTlsClient(sessionId *string, tlsClientIdentifier string, ja3String string, proxyUrl *string) (tls_client.HttpClient, string, error) {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
 
@@ -103,11 +113,24 @@ func getTlsClient(sessionId *string, tlsClientIdentifier string, proxyUrl *strin
 		return client, newSessionId, nil
 	}
 
-	tlsClientProfile := getTlsClientProfile(tlsClientIdentifier)
+	var clientProfile tls_client.ClientProfile
+
+	if tlsClientIdentifier != "" {
+		clientProfile = getTlsClientProfile(tlsClientIdentifier)
+	}
+
+	if ja3String != "" {
+		var decodeErr error
+		clientProfile, decodeErr = tls_client.GetClientProfileFromJa3String(ja3String)
+
+		if decodeErr != nil {
+			return nil, newSessionId, fmt.Errorf("can not build http client out of ja3 string: %w", decodeErr)
+		}
+	}
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tlsClientProfile),
+		tls_client.WithClientProfile(clientProfile),
 	}
 
 	proxy := proxyUrl

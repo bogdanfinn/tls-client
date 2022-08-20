@@ -36,6 +36,8 @@ This TLS Client allows you to specify the Client (Browser and Version) you want 
 - Opera
     - 89 (opera_89)
 
+You can also provide your own client by passing a ja3 String. See the example how to do it.
+
 #### Need other clients?
 
 Please open an issue on this github repository. In the best case you provide the response of https://tls.peet.ws/api/all requested by the client you want to be implemented.
@@ -68,6 +70,7 @@ func main() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
 		tls_client.WithClientProfile(tls_client.Chrome_104),
+		//tls_client.WithJa3String("771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513,29-23-24,0"),
 		//tls_client.WithProxyUrl("http://user:pass@host:ip"),
 		//tls_client.WithNotFollowRedirects(), 
 		//tls_client.WithInsecureSkipVerify(), 
@@ -141,7 +144,7 @@ func main() {
 
 ```
 
-For more configured clients check `./profiles.go`
+For more configured clients check `./profiles.go` or use your own by providing the ja3 string.
 
 #### Default Client
 The implemented default client is currently Chrome 104 with a configured request timeout of 30 seconds.
@@ -178,7 +181,7 @@ If you are not using go and do not want to implement the shared library but want
 ### Frequently Asked Questions / Errors
 * **I'm receiving `tls: error decoding message` when using this TLS Client.**
 
-This issue should be fixed in `v.0.3.0`. There was an issue with the CompressCertExtension in the utls package dependency.
+This issue should be fixed since `v.0.3.0`. There was an issue with the CompressCertExtension in the utls package dependency.
 
 * **The TLS-Client does not set the user-agent header correctly**
 

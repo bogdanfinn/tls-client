@@ -15,6 +15,8 @@ var MappedTLSClients = map[string]ClientProfile{
 	"safari_ios_15_5": Safari_IOS_15_5,
 	"firefox_102":     Firefox_102,
 	"opera_89":        Opera_89,
+	"custom_1":        Custom_1,
+	"custom_2":        Custom_2,
 }
 
 type ClientProfile struct {
@@ -26,8 +28,142 @@ type ClientProfile struct {
 	priorities        []http2.Priority
 }
 
+func (c ClientProfile) GetClientHelloSpec() (tls.ClientHelloSpec, error) {
+	return c.clientHelloId.ToSpec()
+}
+
 var Chrome_104 = ClientProfile{
 	clientHelloId: tls.HelloChrome_104,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      65536,
+		http2.SettingMaxConcurrentStreams: 1000,
+		http2.SettingInitialWindowSize:    6291456,
+		http2.SettingMaxHeaderListSize:    262144,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	},
+	connectionFlow: 15663105,
+}
+
+func Instagram1ClientSpecFactory() (tls.ClientHelloSpec, error) {
+	return tls.ClientHelloSpec{
+		CipherSuites: []uint16{
+			tls.TLS_AES_128_GCM_SHA256,
+			tls.TLS_AES_256_GCM_SHA384,
+			tls.TLS_CHACHA20_POLY1305_SHA256,
+		},
+		CompressionMethods: []byte{
+			tls.CompressionNone,
+		},
+		Extensions: []tls.TLSExtension{
+			&tls.SupportedVersionsExtension{[]uint16{
+				tls.VersionTLS13,
+				tls.VersionTLS12,
+				tls.VersionTLS11,
+				tls.VersionTLS10,
+			}},
+			&tls.SupportedCurvesExtension{[]tls.CurveID{
+				tls.X25519,
+				tls.CurveP256,
+			}},
+			&tls.KeyShareExtension{[]tls.KeyShare{
+				{Group: tls.X25519},
+			}},
+			&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
+				tls.ECDSAWithP256AndSHA256,
+				tls.ECDSAWithP384AndSHA384,
+				tls.ECDSAWithP521AndSHA512,
+				tls.PSSWithSHA256,
+			}},
+			&tls.SNIExtension{},
+			&tls.ALPNExtension{AlpnProtocols: []string{"h2", "h2-fb", "http/1.1"}},
+			&tls.PSKKeyExchangeModesExtension{[]uint8{
+				tls.PskModeDHE,
+				tls.PskModePlain,
+			}},
+			&tls.GenericExtension{
+				Id: tls.ExtensionEarlyData,
+			},
+			&tls.PreSharedKeyExtension{},
+		},
+	}, nil
+}
+
+var Custom_1 = ClientProfile{
+	clientHelloId: tls.ClientHelloID{"Custom", "1", nil, Instagram1ClientSpecFactory},
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      65536,
+		http2.SettingMaxConcurrentStreams: 1000,
+		http2.SettingInitialWindowSize:    6291456,
+		http2.SettingMaxHeaderListSize:    262144,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	},
+	connectionFlow: 15663105,
+}
+
+func Instagram2ClientSpecFactory() (tls.ClientHelloSpec, error) {
+	return tls.ClientHelloSpec{
+		CipherSuites: []uint16{
+			tls.TLS_AES_128_GCM_SHA256,
+			tls.TLS_AES_256_GCM_SHA384,
+			tls.TLS_CHACHA20_POLY1305_SHA256,
+		},
+		CompressionMethods: []byte{
+			tls.CompressionNone,
+		},
+		Extensions: []tls.TLSExtension{
+			&tls.SupportedVersionsExtension{[]uint16{
+				tls.VersionTLS13,
+				tls.VersionTLS12,
+				tls.VersionTLS11,
+				tls.VersionTLS10,
+			}},
+			&tls.SupportedCurvesExtension{[]tls.CurveID{
+				tls.X25519,
+				tls.CurveP256,
+			}},
+			&tls.KeyShareExtension{[]tls.KeyShare{
+				{Group: tls.X25519},
+			}},
+			&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
+				tls.ECDSAWithP256AndSHA256,
+				tls.ECDSAWithP384AndSHA384,
+				tls.ECDSAWithP521AndSHA512,
+				tls.PSSWithSHA256,
+			}},
+			&tls.SNIExtension{},
+			&tls.ALPNExtension{AlpnProtocols: []string{"h2", "h2-fb", "http/1.1"}},
+			&tls.PSKKeyExchangeModesExtension{[]uint8{
+				tls.PskModeDHE,
+				tls.PskModePlain,
+			}},
+		},
+	}, nil
+}
+
+var Custom_2 = ClientProfile{
+	clientHelloId: tls.ClientHelloID{"Custom", "1", nil, Instagram2ClientSpecFactory},
 	settings: map[http2.SettingID]uint32{
 		http2.SettingHeaderTableSize:      65536,
 		http2.SettingMaxConcurrentStreams: 1000,

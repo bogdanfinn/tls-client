@@ -1,6 +1,7 @@
 package tls_client
 
 import (
+	"fmt"
 	"io"
 	"net/url"
 	"time"
@@ -60,6 +61,14 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 }
 
 func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
+	if config.clientProfileSet && config.ja3StringSet {
+		return nil, fmt.Errorf("you can not create http client out of clientProfile option and ja3string option. decide for one of them")
+	}
+
+	if !config.clientProfileSet && !config.ja3StringSet {
+		return nil, fmt.Errorf("you can not create http client without clientProfile option and without ja3string option. decide for one of them")
+	}
+
 	var dialer proxy.ContextDialer
 	dialer = proxy.Direct
 
@@ -89,10 +98,25 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
 		cJar, _ = cookiejar.New(nil)
 	}
 
+	var clientProfile ClientProfile
+
+	if config.clientProfileSet {
+		clientProfile = config.clientProfile
+	}
+
+	if config.ja3StringSet {
+		var decodeErr error
+		clientProfile, decodeErr = GetClientProfileFromJa3String(config.ja3String)
+
+		if decodeErr != nil {
+			return nil, fmt.Errorf("can not build http client out of ja3 string: %w", decodeErr)
+		}
+	}
+
 	return &http.Client{
 		Jar:           cJar,
 		Timeout:       config.timeout,
-		Transport:     newRoundTripper(config.clientProfile.clientHelloId, config.clientProfile.settings, config.clientProfile.settingsOrder, config.clientProfile.pseudoHeaderOrder, config.clientProfile.priorities, config.clientProfile.connectionFlow, config.insecureSkipVerify, dialer),
+		Transport:     newRoundTripper(clientProfile, config.insecureSkipVerify, dialer),
 		CheckRedirect: redirectFunc,
 	}, nil
 }

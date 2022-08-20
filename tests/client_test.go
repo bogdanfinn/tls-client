@@ -97,7 +97,7 @@ func TestClient_Chrome104(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, browserFingerprints[chrome][tls.HelloChrome_104], resp)
+	compareResponse(t, browserFingerprints[chrome][tls.HelloChrome_104.Str()], resp)
 }
 
 func TestClient_Chrome103(t *testing.T) {
@@ -154,7 +154,7 @@ func TestClient_Chrome103(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, browserFingerprints[chrome][tls.HelloChrome_103], resp)
+	compareResponse(t, browserFingerprints[chrome][tls.HelloChrome_103.Str()], resp)
 }
 
 func TestClient_Safari_15_3(t *testing.T) {
@@ -211,7 +211,7 @@ func TestClient_Safari_15_3(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, browserFingerprints[safari][tls.HelloSafari_15_3], resp)
+	compareResponse(t, browserFingerprints[safari][tls.HelloSafari_15_3.Str()], resp)
 }
 
 func TestClient_Safari_15_5(t *testing.T) {
@@ -268,7 +268,7 @@ func TestClient_Safari_15_5(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, browserFingerprints[safari][tls.HelloSafari_15_5], resp)
+	compareResponse(t, browserFingerprints[safari][tls.HelloSafari_15_5.Str()], resp)
 }
 
 func TestClient_Safari_iOS_15_5(t *testing.T) {
@@ -325,7 +325,7 @@ func TestClient_Safari_iOS_15_5(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, browserFingerprints[safariIos][tls.HelloIOS_15_5], resp)
+	compareResponse(t, browserFingerprints[safariIos][tls.HelloIOS_15_5.Str()], resp)
 }
 
 func TestClient_Firefox_102(t *testing.T) {
@@ -382,7 +382,7 @@ func TestClient_Firefox_102(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, browserFingerprints[firefox][tls.HelloFirefox_102], resp)
+	compareResponse(t, browserFingerprints[firefox][tls.HelloFirefox_102.Str()], resp)
 }
 
 func TestClient_Opera_89(t *testing.T) {
@@ -439,7 +439,7 @@ func TestClient_Opera_89(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, browserFingerprints[opera][tls.HelloOpera_89], resp)
+	compareResponse(t, browserFingerprints[opera][tls.HelloOpera_89.Str()], resp)
 }
 
 func compareResponse(t *testing.T, expectedValues map[string]string, resp *http.Response) {
