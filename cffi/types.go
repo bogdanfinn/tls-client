@@ -37,10 +37,9 @@ type CookieInput struct {
 }
 
 type Response struct {
-	SessionId       string              `json:"sessionId"`
-	StatusCode      int                 `json:"statusCode"`
-	ResponseBody    string              `json:"responseBody"`
-	ResponseHeaders map[string][]string `json:"responseHeaders"`
-	ResponseCookies map[string]string   `json:"responseCookies"`
-	SessionCookies  map[string]string   `json:"sessionCookies"`
+	SessionId string              `json:"sessionId"`
+	Status    int                 `json:"status"`
+	Body      string              `json:"body"`
+	Headers   map[string][]string `json:"headers"`
+	Cookies   map[string]string   `json:"cookies"`
 }

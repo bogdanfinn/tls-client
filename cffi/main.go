@@ -25,21 +25,21 @@ func request(requestParams *C.char) *C.char {
 
 	if err != nil {
 		clientErr := NewTLSClientError(err)
-		return handleResponse(nil, clientErr)
+		return handleResponse("", clientErr)
 	}
 
 	tlsClient, newSessionId, err := getTlsClient(requestInput.SessionId, requestInput.TLSClientIdentifier, requestInput.ProxyUrl)
 
 	if err != nil {
 		clientErr := NewTLSClientError(err)
-		return handleResponse(nil, clientErr)
+		return handleResponse(newSessionId, clientErr)
 	}
 
 	req, err := buildRequest(requestInput)
 
 	if err != nil {
 		clientErr := NewTLSClientError(err)
-		return handleResponse(nil, clientErr)
+		return handleResponse(newSessionId, clientErr)
 	}
 
 	cookies := buildCookies(requestInput.RequestCookies)
@@ -52,14 +52,14 @@ func request(requestParams *C.char) *C.char {
 
 	if err != nil {
 		clientErr := NewTLSClientError(err)
-		return handleResponse(nil, clientErr)
+		return handleResponse(newSessionId, clientErr)
 	}
 
 	sessionCookies := tlsClient.GetCookies(req.URL)
 
 	if err != nil {
 		clientErr := NewTLSClientError(err)
-		return handleResponse(nil, clientErr)
+		return handleResponse(newSessionId, clientErr)
 	}
 
 	defer resp.Body.Close()
@@ -67,23 +67,22 @@ func request(requestParams *C.char) *C.char {
 	respBodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		clientErr := NewTLSClientError(err)
-		return handleResponse(nil, clientErr)
+		return handleResponse(newSessionId, clientErr)
 	}
 
 	response := Response{
-		SessionId:       newSessionId,
-		StatusCode:      resp.StatusCode,
-		ResponseBody:    string(respBodyBytes),
-		ResponseHeaders: resp.Header,
-		ResponseCookies: cookiesToMap(resp.Cookies()),
-		SessionCookies:  cookiesToMap(sessionCookies),
+		SessionId: newSessionId,
+		Status:    resp.StatusCode,
+		Body:      string(respBodyBytes),
+		Headers:   resp.Header,
+		Cookies:   cookiesToMap(sessionCookies),
 	}
 
 	jsonResponse, err := json.Marshal(response)
 
 	if err != nil {
 		clientErr := NewTLSClientError(err)
-		return handleResponse(nil, clientErr)
+		return handleResponse(newSessionId, clientErr)
 	}
 
 	return C.CString(string(jsonResponse))
@@ -119,7 +118,7 @@ func getTlsClient(sessionId *string, tlsClientIdentifier string, proxyUrl *strin
 
 	tlsClient, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
 
-	clients[newSessionId] = client
+	clients[newSessionId] = tlsClient
 
 	return tlsClient, newSessionId, err
 }
@@ -166,18 +165,22 @@ func buildRequest(input RequestParams) (*http.Request, error) {
 	return tlsReq, nil
 }
 
-func handleResponse(response interface{}, err error) *C.char {
+func handleResponse(sessionId string, err error) *C.char {
+	response := Response{
+		SessionId: sessionId,
+		Status:    0,
+		Body:      err.Error(),
+		Headers:   nil,
+		Cookies:   nil,
+	}
+
+	jsonResponse, err := json.Marshal(response)
+
 	if err != nil {
 		return C.CString(err.Error())
 	}
 
-	out, jsonErr := json.Marshal(response)
-
-	if jsonErr != nil {
-		return C.CString(jsonErr.Error())
-	}
-
-	return C.CString(string(out))
+	return C.CString(string(jsonResponse))
 }
 
 func cookiesToMap(cookies []*http.Cookie) map[string]string {

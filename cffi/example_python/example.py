@@ -33,8 +33,17 @@ request.restype = ctypes.c_char_p
     }
   ],
   "requestUrl": "https://tls.peet.ws/api/all",
-  "requestBody": "",
+  "requestBody": "", // needs to be a string! so json.dumps(yourActualyRequestBody) here
   "requestMethod": "GET"
+}
+
+The Response from the library looks like that:
+{
+  "sessionId": "some reusable sessionId",
+  "status": 200, //In case of an error the status code will be 0
+  "body": "The Response as string here or the error message",
+  "headers": {},
+  "cookies": {}
 }
 """
 requestPayload = {
