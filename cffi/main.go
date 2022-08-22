@@ -38,7 +38,7 @@ func request(requestParams *C.char) *C.char {
 		return handleResponse("", clientErr)
 	}
 
-	tlsClient, newSessionId, err := getTlsClient(requestInput.SessionId, requestInput.TLSClientIdentifier, requestInput.Ja3String, requestInput.ProxyUrl)
+	tlsClient, newSessionId, err := getTlsClient(requestInput)
 
 	if err != nil {
 		clientErr := NewTLSClientError(err)
@@ -98,9 +98,14 @@ func request(requestParams *C.char) *C.char {
 	return C.CString(string(jsonResponse))
 }
 
-func getTlsClient(sessionId *string, tlsClientIdentifier string, ja3String string, proxyUrl *string) (tls_client.HttpClient, string, error) {
+func getTlsClient(requestInput RequestParams) (tls_client.HttpClient, string, error) {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
+
+	sessionId := requestInput.SessionId
+	tlsClientIdentifier := requestInput.TLSClientIdentifier
+	ja3String := requestInput.Ja3String
+	proxyUrl := requestInput.ProxyUrl
 
 	newSessionId := uuid.New().String()
 	if sessionId != nil && *sessionId != "" {
@@ -128,9 +133,19 @@ func getTlsClient(sessionId *string, tlsClientIdentifier string, ja3String strin
 		}
 	}
 
+	timeoutSeconds := 30
+
+	if requestInput.TimeoutSeconds != 0 {
+		timeoutSeconds = requestInput.TimeoutSeconds
+	}
+
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
+		tls_client.WithTimeout(timeoutSeconds),
 		tls_client.WithClientProfile(clientProfile),
+	}
+
+	if !requestInput.FollowRedirects {
+		options = append(options, tls_client.WithNotFollowRedirects())
 	}
 
 	proxy := proxyUrl

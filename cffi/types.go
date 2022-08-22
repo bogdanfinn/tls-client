@@ -19,6 +19,8 @@ func (e *TLSClientError) Error() string {
 type RequestParams struct {
 	SessionId           *string           `json:"sessionId"`
 	TLSClientIdentifier string            `json:"tlsClientIdentifier"`
+	FollowRedirects     bool              `json:"followRedirects"`
+	TimeoutSeconds      int               `json:"timeoutSeconds"`
 	Ja3String           string            `json:"ja3String"`
 	ProxyUrl            *string           `json:"proxyUrl"`
 	Headers             map[string]string `json:"headers"`
