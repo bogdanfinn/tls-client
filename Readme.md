@@ -31,10 +31,13 @@ This TLS Client allows you to specify the Client (Browser and Version) you want 
     - 15.5 (safari_15_5)
 - iOS (Safari)
     - 15.5 (safari_ios_15_5)
+    - 15.6 (safari_ios_15_6)
 - Firefox
     - 102 (firefox_102)
+    - 104 (firefox_104)
 - Opera
     - 89 (opera_89)
+    - 90 (opera_90)
 
 You can also provide your own client by passing a ja3 String. See the example how to do it.
 
