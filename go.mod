@@ -3,7 +3,7 @@ module github.com/bogdanfinn/tls-client
 go 1.18
 
 require (
-	github.com/bogdanfinn/fhttp v0.4.1
+	github.com/bogdanfinn/fhttp v0.4.2
 	github.com/bogdanfinn/utls v0.4.1
 	github.com/google/uuid v1.3.0
 	github.com/stretchr/testify v1.8.0
@@ -23,4 +23,4 @@ require (
 
 // replace github.com/bogdanfinn/utls => ../utls
 
-// replace github.com/bogdanfinn/fhttp => ../fhttp
+replace github.com/bogdanfinn/fhttp => ../fhttp
