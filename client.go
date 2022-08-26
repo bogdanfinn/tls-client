@@ -11,11 +11,16 @@ import (
 	"golang.org/x/net/proxy"
 )
 
+var defaultRedirectFunc = func(req *http.Request, via []*http.Request) error {
+	return http.ErrUseLastResponse
+}
+
 type HttpClient interface {
 	GetCookieJar() http.CookieJar
 	GetCookies(u *url.URL) []*http.Cookie
 	SetCookies(u *url.URL, cookies []*http.Cookie)
 	SetProxy(proxyUrl string) error
+	ToggleFollowRedirect()
 	Do(req *http.Request) (*http.Response, error)
 	Get(url string) (resp *http.Response, err error)
 	Head(url string) (resp *http.Response, err error)
@@ -83,9 +88,7 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
 
 	var redirectFunc func(req *http.Request, via []*http.Request) error
 	if !config.followRedirects {
-		redirectFunc = func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		}
+		redirectFunc = defaultRedirectFunc
 	} else {
 		redirectFunc = nil
 	}
@@ -119,6 +122,16 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
 		Transport:     newRoundTripper(clientProfile, config.insecureSkipVerify, dialer),
 		CheckRedirect: redirectFunc,
 	}, nil
+}
+
+func (c *httpClient) ToggleFollowRedirect() {
+	c.config.followRedirects = !c.config.followRedirects
+
+	if c.config.followRedirects {
+		c.CheckRedirect = nil
+	} else {
+		c.CheckRedirect = defaultRedirectFunc
+	}
 }
 
 func (c *httpClient) SetProxy(proxyUrl string) error {

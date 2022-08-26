@@ -21,6 +21,23 @@ With this library you are able to create a http client implementing an interface
 client interface.
 This TLS Client allows you to specify the Client (Browser and Version) you want to use, when requesting a server.
 
+The Interface of the HTTP Client looks like the following and extends the base net/http Client Interface by some useful functions.
+Most likely you will use the `Do()` function like you did before with net/http Client.
+```go
+type HttpClient interface {
+	GetCookieJar() http.CookieJar
+	GetCookies(u *url.URL) []*http.Cookie
+	SetCookies(u *url.URL, cookies []*http.Cookie)
+	SetProxy(proxyUrl string) error
+	ToggleFollowRedirect()
+	Do(req *http.Request) (*http.Response, error)
+	Get(url string) (resp *http.Response, err error)
+	Head(url string) (resp *http.Response, err error)
+	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
+}
+```
+
+
 ### Supported and tested Clients
 
 - Chrome
@@ -51,7 +68,7 @@ Please open an issue on this github repository. In the best case you provide the
 go get -u github.com/bogdanfinn/tls-client
 
 // or specific version:
-// go get -u github.com/bogdanfinn/tls-client@v0.2.0
+// go get -u github.com/bogdanfinn/tls-client@v0.4.0
 ```
 
 
