@@ -78,7 +78,7 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
 	dialer = proxy.Direct
 
 	if config.proxyUrl != "" {
-		proxyDialer, err := newConnectDialer(config.proxyUrl)
+		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout)
 		if err != nil {
 			return nil, err
 		}

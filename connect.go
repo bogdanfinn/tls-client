@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/url"
 	"sync"
+	"time"
 
 	http "github.com/bogdanfinn/fhttp"
 	"golang.org/x/net/proxy"
@@ -42,8 +43,8 @@ type connectDialer struct {
 
 	// overridden DialTLS allows user to control establishment of TLS connection
 	// MUST return connection with completed Handshake, and NegotiatedProtocol
-	DialTLS func(network string, address string) (net.Conn, string, error)
-
+	DialTLS            func(network string, address string) (net.Conn, string, error)
+	Timeout            time.Duration
 	EnableH2ConnReuse  bool
 	cacheH2Mu          sync.Mutex
 	cachedH2ClientConn *http2.ClientConn
@@ -53,7 +54,7 @@ type connectDialer struct {
 // newConnectDialer creates a dialer to issue CONNECT requests and tunnel traffic via HTTP/S proxy.
 // proxyUrlStr must provide Scheme and Host, may provide credentials and port.
 // Example: https://username:password@golang.org:443
-func newConnectDialer(proxyUrlStr string) (proxy.ContextDialer, error) {
+func newConnectDialer(proxyUrlStr string, timeout time.Duration) (proxy.ContextDialer, error) {
 	proxyUrl, err := url.Parse(proxyUrlStr)
 	if err != nil {
 		return nil, err
@@ -79,8 +80,12 @@ func newConnectDialer(proxyUrlStr string) (proxy.ContextDialer, error) {
 		return nil, errors.New("scheme " + proxyUrl.Scheme + " is not supported")
 	}
 
-	client := &connectDialer{
-		ProxyUrl:          *proxyUrl,
+	dialer := &connectDialer{
+		ProxyUrl: *proxyUrl,
+		Dialer: net.Dialer{
+			Timeout: timeout,
+		},
+		Timeout:           timeout,
 		DefaultHeader:     make(http.Header),
 		EnableH2ConnReuse: true,
 	}
@@ -88,11 +93,11 @@ func newConnectDialer(proxyUrlStr string) (proxy.ContextDialer, error) {
 	if proxyUrl.User != nil {
 		if proxyUrl.User.Username() != "" {
 			password, _ := proxyUrl.User.Password()
-			client.DefaultHeader.Set("Proxy-Authorization", "Basic "+
+			dialer.DefaultHeader.Set("Proxy-Authorization", "Basic "+
 				base64.StdEncoding.EncodeToString([]byte(proxyUrl.User.Username()+":"+password)))
 		}
 	}
-	return client, nil
+	return dialer, nil
 }
 
 func (c *connectDialer) Dial(network, address string) (net.Conn, error) {
@@ -150,6 +155,11 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 			_ = rawConn.Close()
 			return nil, err
 		}
+
+		deadline := time.Now().Add(c.Timeout)
+
+		rawConn.SetReadDeadline(deadline)
+		rawConn.SetWriteDeadline(deadline)
 
 		resp, err := http.ReadResponse(bufio.NewReader(rawConn), req)
 		if err != nil {

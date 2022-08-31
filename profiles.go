@@ -29,6 +29,17 @@ type ClientProfile struct {
 	priorities        []http2.Priority
 }
 
+func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, pseudoHeaderOrder []string, connectionFlow uint32, priorities []http2.Priority) ClientProfile {
+	return ClientProfile{
+		clientHelloId:     clientHelloId,
+		settings:          settings,
+		settingsOrder:     settingsOrder,
+		pseudoHeaderOrder: pseudoHeaderOrder,
+		connectionFlow:    connectionFlow,
+		priorities:        priorities,
+	}
+}
+
 func (c ClientProfile) GetClientHelloSpec() (tls.ClientHelloSpec, error) {
 	return c.clientHelloId.ToSpec()
 }
