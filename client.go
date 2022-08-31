@@ -128,14 +128,17 @@ func (c *httpClient) ToggleFollowRedirect() {
 	c.config.followRedirects = !c.config.followRedirects
 
 	if c.config.followRedirects {
+		c.logger.Info("automatic redirect following is now disabled")
 		c.CheckRedirect = nil
 	} else {
+		c.logger.Info("automatic redirect following is now enabled")
 		c.CheckRedirect = defaultRedirectFunc
 	}
 }
 
 func (c *httpClient) SetProxy(proxyUrl string) error {
 	c.config.proxyUrl = proxyUrl
+	c.logger.Info(fmt.Sprintf("changed proxy to: %s", proxyUrl))
 
 	client, err := buildFromConfig(c.config)
 
@@ -148,10 +151,12 @@ func (c *httpClient) SetProxy(proxyUrl string) error {
 }
 
 func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
+	c.logger.Info(fmt.Sprintf("get cookies for url: %s", u.String()))
 	return c.Jar.Cookies(u)
 }
 
 func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
+	c.logger.Info(fmt.Sprintf("set cookies for url: %s", u.String()))
 	c.Jar.SetCookies(u, cookies)
 }
 
