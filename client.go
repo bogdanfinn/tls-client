@@ -20,7 +20,9 @@ type HttpClient interface {
 	GetCookies(u *url.URL) []*http.Cookie
 	SetCookies(u *url.URL, cookies []*http.Cookie)
 	SetProxy(proxyUrl string) error
-	ToggleFollowRedirect()
+	GetProxy() string
+	SetFollowRedirect(followRedirect bool)
+	GetFollowRedirect() bool
 	Do(req *http.Request) (*http.Response, error)
 	Get(url string) (resp *http.Response, err error)
 	Head(url string) (resp *http.Response, err error)
@@ -52,11 +54,13 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		opt(config)
 	}
 
-	client, err := buildFromConfig(config)
+	client, clientProfile, err := buildFromConfig(config)
 
 	if err != nil {
 		return nil, err
 	}
+
+	config.clientProfile = clientProfile
 
 	return &httpClient{
 		Client: *client,
@@ -65,13 +69,13 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 	}, nil
 }
 
-func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
-	if config.clientProfileSet && config.ja3StringSet {
-		return nil, fmt.Errorf("you can not create http client out of clientProfile option and ja3string option. decide for one of them")
+func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, error) {
+	if config.IsClientProfileSet() && config.IsJa3StringSet() {
+		return nil, ClientProfile{}, fmt.Errorf("you can not create http client out of clientProfile option and ja3string option. decide for one of them")
 	}
 
-	if !config.clientProfileSet && !config.ja3StringSet {
-		return nil, fmt.Errorf("you can not create http client without clientProfile option and without ja3string option. decide for one of them")
+	if !config.IsClientProfileSet() && !config.IsJa3StringSet() {
+		return nil, ClientProfile{}, fmt.Errorf("you can not create http client without clientProfile option and without ja3string option. decide for one of them")
 	}
 
 	var dialer proxy.ContextDialer
@@ -80,7 +84,7 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
 	if config.proxyUrl != "" {
 		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout)
 		if err != nil {
-			return nil, err
+			return nil, ClientProfile{}, err
 		}
 
 		dialer = proxyDialer
@@ -103,16 +107,16 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
 
 	var clientProfile ClientProfile
 
-	if config.clientProfileSet {
+	if config.IsClientProfileSet() {
 		clientProfile = config.clientProfile
 	}
 
-	if config.ja3StringSet {
+	if config.IsJa3StringSet() {
 		var decodeErr error
 		clientProfile, decodeErr = GetClientProfileFromJa3String(config.ja3String)
 
 		if decodeErr != nil {
-			return nil, fmt.Errorf("can not build http client out of ja3 string: %w", decodeErr)
+			return nil, ClientProfile{}, fmt.Errorf("can not build http client out of ja3 string: %w", decodeErr)
 		}
 	}
 
@@ -121,32 +125,54 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, error) {
 		Timeout:       config.timeout,
 		Transport:     newRoundTripper(clientProfile, config.insecureSkipVerify, dialer),
 		CheckRedirect: redirectFunc,
-	}, nil
+	}, clientProfile, nil
 }
 
-func (c *httpClient) ToggleFollowRedirect() {
-	c.config.followRedirects = !c.config.followRedirects
+func (c *httpClient) SetFollowRedirect(followRedirect bool) {
+	c.config.followRedirects = followRedirect
+	c.applyFollowRedirect()
+}
 
+func (c *httpClient) GetFollowRedirect() bool {
+	return c.config.followRedirects
+}
+
+func (c *httpClient) applyFollowRedirect() {
 	if c.config.followRedirects {
-		c.logger.Info("automatic redirect following is now disabled")
+		c.logger.Info("automatic redirect following is disabled")
 		c.CheckRedirect = nil
 	} else {
-		c.logger.Info("automatic redirect following is now enabled")
+		c.logger.Info("automatic redirect following is enabled")
 		c.CheckRedirect = defaultRedirectFunc
 	}
 }
 
 func (c *httpClient) SetProxy(proxyUrl string) error {
 	c.config.proxyUrl = proxyUrl
-	c.logger.Info(fmt.Sprintf("changed proxy to: %s", proxyUrl))
+	c.logger.Info(fmt.Sprintf("set proxy to: %s", proxyUrl))
 
-	client, err := buildFromConfig(c.config)
+	return c.applyProxy()
+}
 
-	if err != nil {
-		return err
+func (c *httpClient) GetProxy() string {
+	return c.config.proxyUrl
+}
+
+func (c *httpClient) applyProxy() error {
+	var dialer proxy.ContextDialer
+	dialer = proxy.Direct
+
+	if c.config.proxyUrl != "" {
+		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout)
+		if err != nil {
+			return err
+		}
+
+		dialer = proxyDialer
 	}
 
-	c.Client = *client
+	c.Transport = newRoundTripper(c.config.clientProfile, c.config.insecureSkipVerify, dialer)
+
 	return nil
 }
 

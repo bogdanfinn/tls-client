@@ -25,18 +25,19 @@ The Interface of the HTTP Client looks like the following and extends the base n
 Most likely you will use the `Do()` function like you did before with net/http Client.
 ```go
 type HttpClient interface {
-	GetCookieJar() http.CookieJar
-	GetCookies(u *url.URL) []*http.Cookie
-	SetCookies(u *url.URL, cookies []*http.Cookie)
-	SetProxy(proxyUrl string) error
-	ToggleFollowRedirect()
-	Do(req *http.Request) (*http.Response, error)
-	Get(url string) (resp *http.Response, err error)
-	Head(url string) (resp *http.Response, err error)
-	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
+    GetCookieJar() http.CookieJar
+    GetCookies(u *url.URL) []*http.Cookie
+    SetCookies(u *url.URL, cookies []*http.Cookie)
+    SetProxy(proxyUrl string) error
+    GetProxy() string
+    SetFollowRedirect(followRedirect bool)
+    GetFollowRedirect() bool
+    Do(req *http.Request) (*http.Response, error)
+    Get(url string) (resp *http.Response, err error)
+    Head(url string) (resp *http.Response, err error)
+    Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
 }
 ```
-
 
 ### Supported and tested Clients
 
@@ -165,7 +166,7 @@ func main() {
 
 ```
 
-For more configured clients check `./profiles.go` or use your own by providing the ja3 string.
+For more configured clients check `./profiles.go` or use your own by providing a custom ja3 string.
 
 #### Default Client
 The implemented default client is currently Chrome 105 with a configured request timeout of 30 seconds.

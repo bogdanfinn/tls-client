@@ -115,7 +115,16 @@ func getTlsClient(requestInput RequestParams) (tls_client.HttpClient, string, er
 	client, ok := clients[newSessionId]
 
 	if ok {
-		return client, newSessionId, nil
+		modifiedClient, changed, err := handleModification(client, proxyUrl, requestInput.FollowRedirects)
+		if err != nil {
+			return nil, newSessionId, fmt.Errorf("failed to modify existing client: %w", err)
+		}
+
+		if changed {
+			clients[newSessionId] = modifiedClient
+		}
+
+		return modifiedClient, newSessionId, nil
 	}
 
 	var clientProfile tls_client.ClientProfile
@@ -169,6 +178,26 @@ func getTlsClientProfile(tlsClientIdentifier string) tls_client.ClientProfile {
 	}
 
 	return tlsClientProfile
+}
+
+func handleModification(client tls_client.HttpClient, proxyUrl *string, followRedirects bool) (tls_client.HttpClient, bool, error) {
+	changed := false
+
+	if proxyUrl != nil && client.GetProxy() != *proxyUrl {
+		err := client.SetProxy(*proxyUrl)
+		if err != nil {
+			return nil, false, fmt.Errorf("failed to change proxy url of client: %w", err)
+		}
+
+		changed = true
+	}
+
+	if client.GetFollowRedirect() != followRedirects {
+		client.SetFollowRedirect(followRedirects)
+		changed = true
+	}
+
+	return client, changed, nil
 }
 
 func buildRequest(input RequestParams) (*http.Request, error) {
