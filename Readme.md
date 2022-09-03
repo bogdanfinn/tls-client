@@ -209,4 +209,4 @@ This issue should be fixed since `v.0.3.0`. There was an issue with the Compress
 Do not mix up TLS-Fingerprints with HTTP Request Headers. They have more or less nothing in common. AntiBots using for example header order in addition to TLS-Fingerprinting. This library does only handle the TLS- and Akamai Fingerprint. You are still responsible to define the to be used headers and the header order.
 ### Questions?
 
-Contact me on discord or join my discord support server: https: // discord.gg / 7Ej9eJvHqk 
+Join my discord support server: https: // discord.gg / 7Ej9eJvHqk 

@@ -1,6 +1,10 @@
 package main
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+)
 
 type TLSClientError struct {
 	err error
@@ -36,7 +40,23 @@ type CookieInput struct {
 	Value   string    `json:"value"`
 	Path    string    `json:"path"`
 	Domain  string    `json:"domain"`
-	Expires time.Time `json:"expires"`
+	Expires Timestamp `json:"expires"`
+}
+
+type Timestamp struct {
+	time.Time
+}
+
+func (p *Timestamp) UnmarshalJSON(bytes []byte) error {
+	var raw int64
+	err := json.Unmarshal(bytes, &raw)
+
+	if err != nil {
+		return fmt.Errorf("error decoding timestamp: %w", err)
+	}
+
+	*&p.Time = time.Unix(raw, 0)
+	return nil
 }
 
 type Response struct {
