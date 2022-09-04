@@ -61,7 +61,6 @@ func requestToppsAsChrome105Client() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
 		tls_client.WithClientProfile(tls_client.Chrome_105),
-		//tls_client.WithJa3String("771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513,29-23-24,0"),
 		//tls_client.WithProxyUrl("http://user:pass@host:ip"),
 		//tls_client.WithNotFollowRedirects(),
 		//tls_client.WithInsecureSkipVerify(),

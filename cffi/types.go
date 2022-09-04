@@ -23,9 +23,9 @@ func (e *TLSClientError) Error() string {
 type RequestParams struct {
 	SessionId           *string           `json:"sessionId"`
 	TLSClientIdentifier string            `json:"tlsClientIdentifier"`
+	CustomTlsClient     *CustomTlsClient  `json:"customTlsClient"`
 	FollowRedirects     bool              `json:"followRedirects"`
 	TimeoutSeconds      int               `json:"timeoutSeconds"`
-	Ja3String           string            `json:"ja3String"`
 	ProxyUrl            *string           `json:"proxyUrl"`
 	Headers             map[string]string `json:"headers"`
 	HeaderOrder         []string          `json:"headerOrder"`
@@ -33,6 +33,24 @@ type RequestParams struct {
 	RequestMethod       string            `json:"requestMethod"`
 	RequestBody         *string           `json:"requestBody"`
 	RequestCookies      []CookieInput     `json:"requestCookies"`
+}
+
+type CustomTlsClient struct {
+	Ja3String         string            `json:"ja3String"`
+	H2Settings        map[uint16]uint32 `json:"h2Settings"`
+	H2SettingsOrder   []uint16          `json:"h2SettingsOrder"`
+	PseudoHeaderOrder []string          `json:"pseudoHeaderOrder"`
+	ConnectionFlow    uint32            `json:"connectionFlow"`
+	PriorityFrames    []PriorityFrames  `json:"priorityFrames"`
+}
+
+type PriorityFrames struct {
+	StreamID      uint32 `json:"streamID"`
+	PriorityParam struct {
+		StreamDep uint32 `json:"streamDep"`
+		Exclusive bool   `json:"exclusive"`
+		Weight    uint8  `json:"weight"`
+	} `json:"priorityParam"`
 }
 
 type CookieInput struct {

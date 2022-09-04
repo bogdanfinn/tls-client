@@ -9,7 +9,9 @@ import (
 	"sync"
 
 	http "github.com/bogdanfinn/fhttp"
+	"github.com/bogdanfinn/fhttp/http2"
 	tls_client "github.com/bogdanfinn/tls-client"
+	tls "github.com/bogdanfinn/utls"
 	"github.com/google/uuid"
 )
 
@@ -28,13 +30,13 @@ func request(requestParams *C.char) *C.char {
 		return handleResponse("", clientErr)
 	}
 
-	if requestInput.TLSClientIdentifier != "" && requestInput.Ja3String != "" {
-		clientErr := NewTLSClientError(fmt.Errorf("can not built client out of client identifier and ja3string. Please provide only one of them"))
+	if requestInput.TLSClientIdentifier != "" && requestInput.CustomTlsClient != nil {
+		clientErr := NewTLSClientError(fmt.Errorf("can not built client out of client identifier and custom tls client information. Please provide only one of them"))
 		return handleResponse("", clientErr)
 	}
 
-	if requestInput.TLSClientIdentifier == "" && requestInput.Ja3String == "" {
-		clientErr := NewTLSClientError(fmt.Errorf("can not built client out without client identifier and without ja3string. Please provide only one of them"))
+	if requestInput.TLSClientIdentifier == "" && requestInput.CustomTlsClient == nil {
+		clientErr := NewTLSClientError(fmt.Errorf("can not built client without client identifier and without custom tls client information. Please provide at least one of them"))
 		return handleResponse("", clientErr)
 	}
 
@@ -104,7 +106,6 @@ func getTlsClient(requestInput RequestParams) (tls_client.HttpClient, string, er
 
 	sessionId := requestInput.SessionId
 	tlsClientIdentifier := requestInput.TLSClientIdentifier
-	ja3String := requestInput.Ja3String
 	proxyUrl := requestInput.ProxyUrl
 
 	newSessionId := uuid.New().String()
@@ -133,13 +134,14 @@ func getTlsClient(requestInput RequestParams) (tls_client.HttpClient, string, er
 		clientProfile = getTlsClientProfile(tlsClientIdentifier)
 	}
 
-	if ja3String != "" {
-		var decodeErr error
-		clientProfile, decodeErr = tls_client.GetClientProfileFromJa3String(ja3String)
+	if requestInput.CustomTlsClient != nil {
+		clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, err := getCustomTlsClientProfile(requestInput.CustomTlsClient)
 
-		if decodeErr != nil {
-			return nil, newSessionId, fmt.Errorf("can not build http client out of ja3 string: %w", decodeErr)
+		if err != nil {
+			return nil, newSessionId, fmt.Errorf("can not build http client out of custom tls client information: %w", err)
 		}
+
+		clientProfile = tls_client.NewClientProfile(clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames)
 	}
 
 	timeoutSeconds := 30
@@ -168,6 +170,48 @@ func getTlsClient(requestInput RequestParams) (tls_client.HttpClient, string, er
 	clients[newSessionId] = tlsClient
 
 	return tlsClient, newSessionId, err
+}
+
+func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.ClientHelloID, map[http2.SettingID]uint32, []http2.SettingID, []string, uint32, []http2.Priority, error) {
+	specFactory, err := tls_client.GetSpecFactorFromJa3String(customClientDefinition.Ja3String)
+
+	if err != nil {
+		return tls.ClientHelloID{}, nil, nil, nil, 0, nil, err
+	}
+
+	h2Settings := make(map[http2.SettingID]uint32)
+	for key, value := range customClientDefinition.H2Settings {
+		h2Settings[http2.SettingID(key)] = value
+	}
+
+	var h2SettingsOrder []http2.SettingID
+	for _, order := range customClientDefinition.H2SettingsOrder {
+		h2SettingsOrder = append(h2SettingsOrder, http2.SettingID(order))
+	}
+
+	pseudoHeaderOrder := customClientDefinition.PseudoHeaderOrder
+	connectionFlow := customClientDefinition.ConnectionFlow
+
+	var priorityFrames []http2.Priority
+	for _, priority := range customClientDefinition.PriorityFrames {
+		priorityFrames = append(priorityFrames, http2.Priority{
+			StreamID: priority.StreamID,
+			PriorityParam: http2.PriorityParam{
+				StreamDep: priority.PriorityParam.StreamDep,
+				Exclusive: priority.PriorityParam.Exclusive,
+				Weight:    priority.PriorityParam.Weight,
+			},
+		})
+	}
+
+	clientHelloId := tls.ClientHelloID{
+		Client:      "Custom",
+		Version:     "1",
+		Seed:        nil,
+		SpecFactory: specFactory,
+	}
+
+	return clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, nil
 }
 
 func getTlsClientProfile(tlsClientIdentifier string) tls_client.ClientProfile {

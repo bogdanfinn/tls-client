@@ -70,14 +70,6 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 }
 
 func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, error) {
-	if config.IsClientProfileSet() && config.IsJa3StringSet() {
-		return nil, ClientProfile{}, fmt.Errorf("you can not create http client out of clientProfile option and ja3string option. decide for one of them")
-	}
-
-	if !config.IsClientProfileSet() && !config.IsJa3StringSet() {
-		return nil, ClientProfile{}, fmt.Errorf("you can not create http client without clientProfile option and without ja3string option. decide for one of them")
-	}
-
 	var dialer proxy.ContextDialer
 	dialer = proxy.Direct
 
@@ -105,20 +97,7 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 		cJar, _ = cookiejar.New(nil)
 	}
 
-	var clientProfile ClientProfile
-
-	if config.IsClientProfileSet() {
-		clientProfile = config.clientProfile
-	}
-
-	if config.IsJa3StringSet() {
-		var decodeErr error
-		clientProfile, decodeErr = GetClientProfileFromJa3String(config.ja3String)
-
-		if decodeErr != nil {
-			return nil, ClientProfile{}, fmt.Errorf("can not build http client out of ja3 string: %w", decodeErr)
-		}
-	}
+	clientProfile := config.clientProfile
 
 	return &http.Client{
 		Jar:           cJar,
