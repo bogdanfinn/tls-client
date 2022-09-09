@@ -54,6 +54,12 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		opt(config)
 	}
 
+	err := validateConfig(config)
+
+	if err != nil {
+		return nil, err
+	}
+
 	client, clientProfile, err := buildFromConfig(config)
 
 	if err != nil {
@@ -62,11 +68,19 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 
 	config.clientProfile = clientProfile
 
+	if logger == nil {
+		logger = NewNoopLogger()
+	}
+
 	return &httpClient{
 		Client: *client,
 		logger: logger,
 		config: config,
 	}, nil
+}
+
+func validateConfig(config *httpClientConfig) error {
+	return nil
 }
 
 func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, error) {
@@ -118,10 +132,10 @@ func (c *httpClient) GetFollowRedirect() bool {
 
 func (c *httpClient) applyFollowRedirect() {
 	if c.config.followRedirects {
-		c.logger.Info("automatic redirect following is disabled")
+		c.logger.Info("automatic redirect following is enabled")
 		c.CheckRedirect = nil
 	} else {
-		c.logger.Info("automatic redirect following is enabled")
+		c.logger.Info("automatic redirect following is disabled")
 		c.CheckRedirect = defaultRedirectFunc
 	}
 }
@@ -162,7 +176,30 @@ func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
 
 func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	c.logger.Info(fmt.Sprintf("set cookies for url: %s", u.String()))
-	c.Jar.SetCookies(u, cookies)
+
+	var filteredCookies []*http.Cookie
+
+	existingCookies := c.Jar.Cookies(u)
+
+	for _, cookie := range cookies {
+		alreadyInJar := false
+
+		for _, existingCookie := range existingCookies {
+			alreadyInJar = cookie.Name == existingCookie.Name
+
+			if alreadyInJar {
+				break
+			}
+		}
+
+		if alreadyInJar {
+			continue
+		}
+
+		filteredCookies = append(filteredCookies, cookie)
+	}
+
+	c.Jar.SetCookies(u, filteredCookies)
 }
 
 func (c *httpClient) GetCookieJar() http.CookieJar {
