@@ -25,18 +25,19 @@ The Interface of the HTTP Client looks like the following and extends the base n
 Most likely you will use the `Do()` function like you did before with net/http Client.
 ```go
 type HttpClient interface {
-	GetCookieJar() http.CookieJar
-	GetCookies(u *url.URL) []*http.Cookie
-	SetCookies(u *url.URL, cookies []*http.Cookie)
-	SetProxy(proxyUrl string) error
-	ToggleFollowRedirect()
-	Do(req *http.Request) (*http.Response, error)
-	Get(url string) (resp *http.Response, err error)
-	Head(url string) (resp *http.Response, err error)
-	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
+    GetCookieJar() http.CookieJar
+    GetCookies(u *url.URL) []*http.Cookie
+    SetCookies(u *url.URL, cookies []*http.Cookie)
+    SetProxy(proxyUrl string) error
+    GetProxy() string
+    SetFollowRedirect(followRedirect bool)
+    GetFollowRedirect() bool
+    Do(req *http.Request) (*http.Response, error)
+    Get(url string) (resp *http.Response, err error)
+    Head(url string) (resp *http.Response, err error)
+    Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
 }
 ```
-
 
 ### Supported and tested Clients
 
@@ -57,7 +58,7 @@ type HttpClient interface {
     - 89 (opera_89)
     - 90 (opera_90)
 
-You can also provide your own client by passing a ja3 String. See the example how to do it.
+You can also provide your own client. See the example how to do it.
 
 #### Need other clients?
 
@@ -91,9 +92,8 @@ func main() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
 		tls_client.WithClientProfile(tls_client.Chrome_105),
-		//tls_client.WithJa3String("771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513,29-23-24,0"),
+		tls_client.WithNotFollowRedirects(), 
 		//tls_client.WithProxyUrl("http://user:pass@host:ip"),
-		//tls_client.WithNotFollowRedirects(), 
 		//tls_client.WithInsecureSkipVerify(), 
 		//tls_client.WithCookieJar(cJar), // create cookieJar instance and pass it as argument
 	}
@@ -113,7 +113,6 @@ func main() {
 	req.Header = http.Header{
 		"accept":                    {"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
 		"accept-encoding":           {"gzip"},
-		"Accept-Encoding":           {"gzip"},
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"cache-control":             {"max-age=0"},
 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
@@ -165,30 +164,32 @@ func main() {
 
 ```
 
-For more configured clients check `./profiles.go` or use your own by providing the ja3 string.
+For more configured clients check `./profiles.go` or use your own custom client. See examples.
 
 #### Default Client
-The implemented default client is currently Chrome 105 with a configured request timeout of 30 seconds.
+The implemented default client is currently Chrome 105 with a configured request timeout of 30 seconds and no automatic redirect following.
 
-### Compile this client for use in Python
-Please take a look at the cross compile build script in `cffi/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
+### Compile this client for use in Python as a shared library
+Please take a look at the cross compile build script in `cffi_dist/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
 
 The build script is written to cross compile from OSX to all other platforms (osx, linux, windows). If your build os is not OSX you might need to adjust the build script.
 
-You can also use the prebuilt packages in `cffi/dist`
+You can also use the prebuilt packages in `cffi_dist/dist`
 
-A python example on how to load and call the functionality can be found in `cffi/example_python/example.py`. Please be aware that i'm not a python expert.
+A python example on how to load and call the functionality can be found in `cffi_dist/example_python/example.py`. Please be aware that i'm not a python expert.
+For more documentation please take a look at: https://github.com/bogdanfinn/tls-client-api
 
 Build and tested with python 3.8 on MacOS.
 
-### Compile this client for use in NodeJS
-Please take a look at the cross compile build script in `cffi/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
+### Compile this client for use in NodeJS as a shared library
+Please take a look at the cross compile build script in `cffi_dist/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
 
 The build script is written to cross compile from OSX to all other platforms (osx, linux, windows). If your build os is not OSX you might need to adjust the build script.
 
-You can also use the prebuilt packages in `cffi/dist`
+You can also use the prebuilt packages in `cffi_dist/dist`
 
-A NodeJS example on how to load and call the functionality can be found in `cffi/example_node/index.js`. Please be aware that you need to run `npm install` to install the node dependencies.
+A NodeJS example on how to load and call the functionality can be found in `cffi_dist/example_node/index.js`. Please be aware that you need to run `npm install` to install the node dependencies.
+For more documentation please take a look at: https://github.com/bogdanfinn/tls-client-api
 
 Build and tested with nodejs v16.13.2 on MacOS.
 
@@ -207,6 +208,19 @@ This issue should be fixed since `v.0.3.0`. There was an issue with the Compress
 * **The TLS-Client does not set the user-agent header correctly**
 
 Do not mix up TLS-Fingerprints with HTTP Request Headers. They have more or less nothing in common. AntiBots using for example header order in addition to TLS-Fingerprinting. This library does only handle the TLS- and Akamai Fingerprint. You are still responsible to define the to be used headers and the header order.
+If you do not provide any headers the http client will use by default these two headers (nothing more):
+```
+accept-encoding: gzip, deflate, br
+user-agent: Go-http-client/2.0
+```
+
+* **If I use the shared library in electron my application freezes?**
+Please only load the dll once in your application and call every function `async` to not block the main thread.
+
+* **My Post Request is not working correctly?**
+Please make sure that you set the correct `Content-Type` Header for your Post Body Payload.
+
 ### Questions?
 
 Join my discord support server: https: // discord.gg / 7Ej9eJvHqk 
+No Support in DMs!

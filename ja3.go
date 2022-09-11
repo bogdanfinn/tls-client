@@ -9,27 +9,15 @@ import (
 	tls "github.com/bogdanfinn/utls"
 )
 
-func GetClientProfileFromJa3String(ja3String string) (ClientProfile, error) {
+func GetSpecFactorFromJa3String(ja3String string) (func() (tls.ClientHelloSpec, error), error) {
 	spec, err := stringToSpec(ja3String)
 
 	if err != nil {
-		return ClientProfile{}, err
+		return nil, err
 	}
 
-	return ClientProfile{
-		clientHelloId: tls.ClientHelloID{
-			Client:  "Custom",
-			Version: "1",
-			Seed:    nil,
-			SpecFactory: func() (tls.ClientHelloSpec, error) {
-				return *spec, nil
-			},
-		},
-		settings:          DefaultClientProfile.settings,
-		settingsOrder:     DefaultClientProfile.settingsOrder,
-		pseudoHeaderOrder: DefaultClientProfile.pseudoHeaderOrder,
-		connectionFlow:    DefaultClientProfile.connectionFlow,
-		priorities:        DefaultClientProfile.priorities,
+	return func() (tls.ClientHelloSpec, error) {
+		return *spec, nil
 	}, nil
 }
 
@@ -37,7 +25,6 @@ func stringToSpec(ja3 string) (*tls.ClientHelloSpec, error) {
 	extMap := getExtensionBaseMap()
 	ja3StringParts := strings.Split(ja3, ",")
 
-	version := ja3StringParts[0]
 	ciphers := strings.Split(ja3StringParts[1], "-")
 	extensions := strings.Split(ja3StringParts[2], "-")
 	curves := strings.Split(ja3StringParts[3], "-")
@@ -89,13 +76,6 @@ func stringToSpec(ja3 string) (*tls.ClientHelloSpec, error) {
 		exts = append(exts, te)
 	}
 
-	vid64, err := strconv.ParseUint(version, 10, 16)
-	if err != nil {
-		return nil, err
-	}
-
-	vid := uint16(vid64)
-
 	var suites []uint16
 	for _, c := range ciphers {
 		cid, err := strconv.ParseUint(c, 10, 16)
@@ -105,14 +85,7 @@ func stringToSpec(ja3 string) (*tls.ClientHelloSpec, error) {
 		suites = append(suites, uint16(cid))
 	}
 
-	minVid := vid
-	if vid == tls.VersionTLS13 {
-		minVid = tls.VersionTLS12
-	}
-
 	return &tls.ClientHelloSpec{
-		TLSVersMin:         minVid,
-		TLSVersMax:         vid,
 		CipherSuites:       suites,
 		CompressionMethods: []byte{0},
 		Extensions:         exts,

@@ -10,39 +10,6 @@ import (
 	tls "github.com/bogdanfinn/utls"
 )
 
-const apiEndpoint = "https://tls.peet.ws/api/all"
-
-type TlsApiResponse struct {
-	Donate      string `json:"donate"`
-	IP          string `json:"ip"`
-	HTTPVersion string `json:"http_version"`
-	Path        string `json:"path"`
-	Method      string `json:"method"`
-	TLS         struct {
-		Ciphers    []string `json:"ciphers"`
-		Curves     []string `json:"curves"`
-		Extensions []string `json:"extensions"`
-		Points     []string `json:"points"`
-		Version    string   `json:"version"`
-		Protocols  []string `json:"protocols"`
-		Versions   []string `json:"versions"`
-		Ja3        string   `json:"ja3"`
-		Ja3Hash    string   `json:"ja3_hash"`
-	} `json:"tls"`
-	HTTP2 struct {
-		AkamaiFingerprint     string `json:"akamai_fingerprint"`
-		AkamaiFingerprintHash string `json:"akamai_fingerprint_hash"`
-		SentFrames            []struct {
-			FrameType string   `json:"frame_type"`
-			Length    int      `json:"length"`
-			Settings  []string `json:"settings,omitempty"`
-			Increment int      `json:"increment,omitempty"`
-			StreamID  int      `json:"stream_id,omitempty"`
-			Headers   []string `json:"headers,omitempty"`
-		} `json:"sent_frames"`
-	} `json:"http2"`
-}
-
 func TestClient_Chrome105(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(tls_client.Chrome_105),
@@ -53,7 +20,7 @@ func TestClient_Chrome105(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +77,7 @@ func TestClient_Chrome104(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +134,7 @@ func TestClient_Chrome103(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -224,7 +191,7 @@ func TestClient_Safari_15_3(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -281,7 +248,7 @@ func TestClient_Safari_15_5(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -338,7 +305,7 @@ func TestClient_Safari_iOS_15_5(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -395,7 +362,7 @@ func TestClient_Firefox_102(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -452,7 +419,7 @@ func TestClient_Opera_89(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
