@@ -35,8 +35,10 @@ type httpClient struct {
 	config *httpClientConfig
 }
 
+var DefaultTimeoutSeconds = 30
+
 var DefaultOptions = []HttpClientOption{
-	WithTimeout(30),
+	WithTimeout(DefaultTimeoutSeconds),
 	WithClientProfile(DefaultClientProfile),
 }
 
@@ -47,7 +49,7 @@ func ProvideDefaultClient(logger Logger) (HttpClient, error) {
 func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, error) {
 	config := &httpClientConfig{
 		followRedirects: true,
-		timeout:         30 * time.Second,
+		timeout:         time.Duration(DefaultTimeoutSeconds) * time.Second,
 	}
 
 	for _, opt := range options {
