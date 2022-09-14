@@ -1,22 +1,19 @@
-import ctypes
-import json
+const ffi = require('ffi-napi');
+const fs = require("fs")
 
-# load the tls-client shared package for your OS you are currently running your python script (i'm running on mac)
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-0.5.2..dylib')
+// load the tls-client shared package for your OS you are currently running your nodejs script (i'm running on mac)
+const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-0.5.2.dylib', {
+    'request': ['string', ['string']]
+});
 
-# extract the exposed request function from the shared package
-request = library.request
-request.argtypes = [ctypes.c_char_p]
-request.restype = ctypes.c_char_p
-
-# build the payload which is needed for the shared package
-""" full payload example
+// build the payload which is needed for the shared package
+/* full payload example
 {
   "sessionId": "reusableSessionId",
-  "tlsClientIdentifier": "chrome_105",
+  "tlsClientIdentifier": "chrome_103",
   "followRedirects": False,
   "insecureSkipVerify": False,
-  "isByteResponse": False,
+  "isByteResponse": true,
   "timeoutSeconds": 30,
   "customTlsClient": {
     "ja3String": "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513,29-23-24,0",
@@ -40,7 +37,7 @@ request.restype = ctypes.c_char_p
     ],
     "connectionFlow": 15663105,
     "priorityFrames": [
-      
+
     ]
   },
   "proxyUrl": "",
@@ -65,37 +62,23 @@ request.restype = ctypes.c_char_p
   "requestBody": "", // needs to be a string! so json.dumps(yourActualyRequestBody) here
   "requestMethod": "GET"
 }
-"""
-requestPayload = {
-    "customTlsClient": {
-        "ja3String": "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513,29-23-24,0",
-        "h2Settings": {
-            1: 65536,
-            3: 1000,
-            4: 6291456,
-            6: 262144
-        },
-        "h2SettingsOrder": [
-            1,
-            3,
-            4,
-            6
-        ],
-        "pseudoHeaderOrder": [
-            ":method",
-            ":authority",
-            ":scheme",
-            ":path"
-        ],
-        "connectionFlow": 15663105,
-        "priorityFrames": [
 
-        ]
-    },
-    "proxyUrl": "",
-    "followRedirects": False,
-    "insecureSkipVerify": False,
+The Response from the library looks like that:
+{
+  "sessionId": "some reusable sessionId",
+  "status": 200, //In case of an error the status code will be 0
+  "body": "The Response as string here or the error message",
+  "headers": {},
+  "cookies": {}
+}
+*/
+const requestPayload = {
+    "tlsClientIdentifier": "chrome_103",
+    "followRedirects": false,
+    "insecureSkipVerify": false,
+    "isByteResponse": true,
     "timeoutSeconds": 30,
+    "proxyUrl": "",
     "headers": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
@@ -108,23 +91,20 @@ requestPayload = {
         "accept-encoding",
         "accept-language"
     ],
-    "requestUrl": "https://tls.peet.ws/api/all",
+    "requestUrl": "https://avatars.githubusercontent.com/u/17678241?v=4",
     "requestMethod": "GET",
     "requestBody": "",
     "requestCookies": []
 }
 
-# this is a pointer to the response
-response = request(json.dumps(requestPayload).encode('utf-8'))
+// call the library with the requestPayload as string
+const response = tlsClientLibrary.request(JSON.stringify(requestPayload));
 
-# we dereference the pointer to a byte array
-response_bytes = ctypes.string_at(response)
+// convert response string to json
+const responseObject = JSON.parse(response)
 
-# convert our byte array to a string (tls client returns json)
-response_string = response_bytes.decode('utf-8')
+const base64Data = responseObject.body.replace(/^data:image\/png;base64,/, "");
 
-# convert response string to json
-response_object = json.loads(response_string)
+const done = fs.writeFile("./example.png", base64Data, 'base64', () => {
 
-# print out output
-print(response_object)
+})

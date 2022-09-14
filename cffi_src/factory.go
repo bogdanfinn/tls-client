@@ -2,6 +2,7 @@ package tls_client_cffi_src
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"sync"
@@ -83,7 +84,7 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	return tlsReq, nil
 }
 
-func BuildResponse(sessionId string, resp *http.Response, cookies []*http.Cookie) (Response, *TLSClientError) {
+func BuildResponse(sessionId string, resp *http.Response, cookies []*http.Cookie, isByteResponse bool) (Response, *TLSClientError) {
 	defer resp.Body.Close()
 
 	respBodyBytes, err := ioutil.ReadAll(resp.Body)
@@ -92,10 +93,20 @@ func BuildResponse(sessionId string, resp *http.Response, cookies []*http.Cookie
 		return Response{}, clientErr
 	}
 
+	finalResponse := string(respBodyBytes)
+
+	if isByteResponse {
+		mimeType := http.DetectContentType(respBodyBytes)
+		base64Encoding := fmt.Sprintf("data:%s;base64,", mimeType)
+		base64Encoding += base64.StdEncoding.EncodeToString(respBodyBytes)
+
+		finalResponse = base64Encoding
+	}
+
 	response := Response{
 		SessionId: sessionId,
 		Status:    resp.StatusCode,
-		Body:      string(respBodyBytes),
+		Body:      finalResponse,
 		Headers:   resp.Header,
 		Cookies:   cookiesToMap(cookies),
 	}

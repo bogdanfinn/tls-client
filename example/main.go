@@ -3,10 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	goHttp "net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/cookiejar"
@@ -15,12 +18,52 @@ import (
 	tls "github.com/bogdanfinn/utls"
 )
 
+type TlsApiResponse struct {
+	Donate      string `json:"donate"`
+	IP          string `json:"ip"`
+	HTTPVersion string `json:"http_version"`
+	Path        string `json:"path"`
+	Method      string `json:"method"`
+	TLS         struct {
+		Ciphers        []string `json:"ciphers"`
+		Curves         []string `json:"curves"`
+		Extensions     []string `json:"extensions"`
+		Points         []string `json:"points"`
+		Version        string   `json:"version"`
+		Protocols      []string `json:"protocols"`
+		Versions       []string `json:"versions"`
+		Ja3            string   `json:"ja3"`
+		Ja3Hash        string   `json:"ja3_hash"`
+		Ja3Padding     string   `json:"ja3_padding"`
+		Ja3HashPadding string   `json:"ja3_hash_padding"`
+	} `json:"tls"`
+	HTTP2 struct {
+		AkamaiFingerprint     string `json:"akamai_fingerprint"`
+		AkamaiFingerprintHash string `json:"akamai_fingerprint_hash"`
+		SentFrames            []struct {
+			FrameType string   `json:"frame_type"`
+			Length    int      `json:"length"`
+			Settings  []string `json:"settings,omitempty"`
+			Increment int      `json:"increment,omitempty"`
+			StreamID  int      `json:"stream_id,omitempty"`
+			Headers   []string `json:"headers,omitempty"`
+			Flags     []string `json:"flags,omitempty"`
+			Priority  struct {
+				Weight    int `json:"weight"`
+				DependsOn int `json:"depends_on"`
+				Exclusive int `json:"exclusive"`
+			} `json:"priority,omitempty"`
+		} `json:"sent_frames"`
+	} `json:"http2"`
+}
+
 func main() {
 	requestToppsAsGoClient()
 	requestToppsAsChrome105Client()
 	requestWithFollowRedirectSwitch()
 	requestWithCustomClient()
 	rotateProxiesOnClient()
+	downloadImageWithTlsClient()
 }
 
 func requestToppsAsGoClient() {
@@ -211,6 +254,63 @@ func requestWithFollowRedirectSwitch() {
 	defer resp.Body.Close()
 
 	log.Println(fmt.Sprintf("requesting currys.co.uk with automatic redirect follow => status code: %d (Redirect Followed)", resp.StatusCode))
+}
+
+func downloadImageWithTlsClient() {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeout(30),
+		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithNotFollowRedirects(),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://avatars.githubusercontent.com/u/17678241?v=4", nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	log.Println(fmt.Sprintf("requesting image => status code: %d", resp.StatusCode))
+
+	ex, err := os.Executable()
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	exPath := filepath.Dir(ex)
+
+	fileName := fmt.Sprintf("%s/%s", exPath, "example-test.jpg")
+
+	file, err := os.Create(fileName)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(fmt.Sprintf("wrote file to: %s", fileName))
 }
 
 func rotateProxiesOnClient() {

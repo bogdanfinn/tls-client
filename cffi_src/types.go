@@ -25,6 +25,7 @@ type RequestInput struct {
 	TLSClientIdentifier string            `json:"tlsClientIdentifier"`
 	CustomTlsClient     *CustomTlsClient  `json:"customTlsClient"`
 	FollowRedirects     bool              `json:"followRedirects"`
+	IsByteResponse      bool              `json:"isByteResponse"`
 	InsecureSkipVerify  bool              `json:"insecureSkipVerify"`
 	TimeoutSeconds      int               `json:"timeoutSeconds"`
 	ProxyUrl            *string           `json:"proxyUrl"`

@@ -1,7 +1,7 @@
 const ffi = require('ffi-napi');
 
 // load the tls-client shared package for your OS you are currently running your nodejs script (i'm running on mac)
-const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64.dylib', {
+const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-0.5.2.dylib', {
     'request': ['string', ['string']]
 });
 
@@ -12,6 +12,7 @@ const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64.dylib', 
   "tlsClientIdentifier": "chrome_103",
   "followRedirects": False,
   "insecureSkipVerify": False,
+  "isByteResponse": false,
   "timeoutSeconds": 30,
   "customTlsClient": {
     "ja3String": "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513,29-23-24,0",

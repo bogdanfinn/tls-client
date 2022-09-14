@@ -49,7 +49,7 @@ func request(requestParams *C.char) *C.char {
 
 	sessionCookies := tlsClient.GetCookies(req.URL)
 
-	response, err := tls_client_cffi_src.BuildResponse(sessionId, resp, sessionCookies)
+	response, err := tls_client_cffi_src.BuildResponse(sessionId, resp, sessionCookies, requestInput.IsByteResponse)
 	if err != nil {
 		return handleErrorResponse(sessionId, err)
 	}
@@ -75,7 +75,7 @@ func handleErrorResponse(sessionId string, err *tls_client_cffi_src.TLSClientErr
 
 	jsonResponse, marshallError := json.Marshal(response)
 
-	if err != nil {
+	if marshallError != nil {
 		return C.CString(marshallError.Error())
 	}
 
