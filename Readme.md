@@ -76,7 +76,7 @@ Please open an issue on this github repository. In the best case you provide the
 go get -u github.com/bogdanfinn/tls-client
 
 // or specific version:
-// go get -u github.com/bogdanfinn/tls-client@v0.4.0
+// go get github.com/bogdanfinn/tls-client@v0.5.2
 ```
 
 
