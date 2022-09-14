@@ -47,9 +47,13 @@ type HttpClient interface {
     - 105 (chrome_105)
 - Safari
     - 15.3 (safari_15_3)
-    - 15.5 (safari_15_5)
+    - 15.6.1 (safari_15_6_1)
+    - 16.0 (safari_16_0)
 - iOS (Safari)
     - 15.5 (safari_ios_15_5)
+    - 15.6 (safari_ios_15_6)
+    - 16.0 (safari_ios_16_0)
+- iPadOS (Safari)
     - 15.6 (safari_ios_15_6)
 - Firefox
     - 102 (firefox_102)
@@ -57,6 +61,8 @@ type HttpClient interface {
 - Opera
     - 89 (opera_89)
     - 90 (opera_90)
+- Custom Clients
+    - Zalando Android Mobile 
 
 You can also provide your own client. See the example how to do it.
 

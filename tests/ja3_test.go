@@ -99,8 +99,8 @@ func TestJA3_Opera_89(t *testing.T) {
 	assert.Equal(t, len(spec.Extensions), 15, "Client should have 14 extensions")
 }
 
-func TestJA3_Safari_15_5(t *testing.T) {
-	input := browserFingerprints[safari][utls.HelloSafari_15_5.Str()][ja3String]
+func TestJA3_Ipad_15_6(t *testing.T) {
+	input := browserFingerprints[safariIpadOs][utls.HelloIPad_15_6.Str()][ja3String]
 
 	specFunc, err := tls_client.GetSpecFactorFromJa3String(input)
 

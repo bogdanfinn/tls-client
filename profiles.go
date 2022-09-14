@@ -8,17 +8,21 @@ import (
 var DefaultClientProfile = Chrome_105
 
 var MappedTLSClients = map[string]ClientProfile{
-	"chrome_103":      Chrome_103,
-	"chrome_104":      Chrome_104,
-	"chrome_105":      Chrome_105,
-	"safari_15_5":     Safari_15_5,
-	"safari_15_3":     Safari_15_3,
-	"safari_ios_15_5": Safari_IOS_15_5,
-	"safari_ios_15_6": Safari_IOS_15_6,
-	"firefox_102":     Firefox_102,
-	"firefox_104":     Firefox_104,
-	"opera_89":        Opera_89,
-	"opera_90":        Opera_90,
+	"chrome_103":             Chrome_103,
+	"chrome_104":             Chrome_104,
+	"chrome_105":             Chrome_105,
+	"safari_15_3":            Safari_15_3,
+	"safari_15_6_1":          Safari_15_6_1,
+	"safari_16_0":            Safari_16_0,
+	"safari_ipad_15_6":       Safari_Ipad_15_6,
+	"safari_ios_15_5":        Safari_IOS_15_5,
+	"safari_ios_15_6":        Safari_IOS_15_6,
+	"safari_ios_16_0":        Safari_IOS_16_0,
+	"firefox_102":            Firefox_102,
+	"firefox_104":            Firefox_104,
+	"opera_89":               Opera_89,
+	"opera_90":               Opera_90,
+	"zalando_android_mobile": ZalandoAndroidMobile,
 }
 
 type ClientProfile struct {
@@ -133,10 +137,67 @@ var Safari_15_3 = ClientProfile{
 	connectionFlow: 10485760,
 }
 
-var Safari_15_5 = ClientProfile{
-	clientHelloId: tls.HelloSafari_15_5,
+var Safari_15_6_1 = ClientProfile{
+	clientHelloId: tls.HelloSafari_15_6_1,
 	settings: map[http2.SettingID]uint32{
 		http2.SettingInitialWindowSize:    4194304,
+		http2.SettingMaxConcurrentStreams: 100,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxConcurrentStreams,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":scheme",
+		":path",
+		":authority",
+	},
+	connectionFlow: 10485760,
+}
+
+var Safari_16_0 = ClientProfile{
+	clientHelloId: tls.HelloSafari_16_0,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingInitialWindowSize:    4194304,
+		http2.SettingMaxConcurrentStreams: 100,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxConcurrentStreams,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":scheme",
+		":path",
+		":authority",
+	},
+	connectionFlow: 10485760,
+}
+
+var Safari_Ipad_15_6 = ClientProfile{
+	clientHelloId: tls.HelloIPad_15_6,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingInitialWindowSize:    2097152,
+		http2.SettingMaxConcurrentStreams: 100,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxConcurrentStreams,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":scheme",
+		":path",
+		":authority",
+	},
+	connectionFlow: 10485760,
+}
+
+var Safari_IOS_16_0 = ClientProfile{
+	clientHelloId: tls.HelloIOS_16_0,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingInitialWindowSize:    2097152,
 		http2.SettingMaxConcurrentStreams: 100,
 	},
 	settingsOrder: []http2.SettingID{
