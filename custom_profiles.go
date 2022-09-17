@@ -78,7 +78,6 @@ var ZalandoAndroidMobile = ClientProfile{
 	},
 	settings: map[http2.SettingID]uint32{
 		http2.SettingHeaderTableSize:      4096,
-		http2.SettingEnablePush:           1,
 		http2.SettingMaxConcurrentStreams: math.MaxUint32,
 		http2.SettingInitialWindowSize:    16777216,
 		http2.SettingMaxFrameSize:         16384,
@@ -86,7 +85,6 @@ var ZalandoAndroidMobile = ClientProfile{
 	},
 	settingsOrder: []http2.SettingID{
 		http2.SettingHeaderTableSize,
-		http2.SettingEnablePush,
 		http2.SettingMaxConcurrentStreams,
 		http2.SettingInitialWindowSize,
 		http2.SettingMaxFrameSize,
@@ -94,9 +92,9 @@ var ZalandoAndroidMobile = ClientProfile{
 	},
 	pseudoHeaderOrder: []string{
 		":method",
+		":path",
 		":authority",
 		":scheme",
-		":path",
 	},
 	connectionFlow: 15663105,
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,12 +11,14 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/cookiejar"
 	"github.com/bogdanfinn/fhttp/http2"
 	tls_client "github.com/bogdanfinn/tls-client"
 	tls "github.com/bogdanfinn/utls"
+	"github.com/google/uuid"
 )
 
 type TlsApiResponse struct {
@@ -64,6 +67,7 @@ func main() {
 	requestWithCustomClient()
 	rotateProxiesOnClient()
 	downloadImageWithTlsClient()
+	loginZalando()
 }
 
 func requestToppsAsGoClient() {
@@ -579,4 +583,131 @@ func requestWithCustomClient() {
 	defer resp.Body.Close()
 
 	log.Println(fmt.Sprintf("requesting topps as customClient1 => status code: %d", resp.StatusCode))
+}
+
+type ZalandoLoginPayload struct {
+	Email          string `json:"email"`
+	Password       string `json:"password"`
+	AppVersion     string `json:"appVersion"`
+	AppdomainId    string `json:"appdomainId"`
+	DeviceLanguage string `json:"deviceLanguage"`
+	DevicePlatform string `json:"devicePlatform"`
+	Sig            string `json:"sig"`
+	Ts             int    `json:"ts"`
+	Uuid           string `json:"uuid"`
+}
+
+func loginZalando() {
+	// next to the uuid you need ts and sig and of course akamai sensor data
+	id := uuid.New()
+	akamaiBmpSensor := ""
+	ts := 1661985341830
+	sig := "f01ae091f136195da14333dc7485e0099dd8fb3a"
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeout(60),
+		tls_client.WithClientProfile(tls_client.ZalandoAndroidMobile),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// ts and sig has to match with ts and sig from headers
+	loginPayload := ZalandoLoginPayload{
+		Email:          "random@gmail.com",
+		Password:       "randompassword",
+		AppVersion:     "22.10.3",
+		AppdomainId:    "1",
+		DeviceLanguage: "en",
+		DevicePlatform: "android",
+		Sig:            sig,
+		Ts:             ts,
+		Uuid:           id.String(),
+	}
+
+	jsonLoginPayload, err := json.Marshal(loginPayload)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	bodyBuffer := bytes.NewBuffer(jsonLoginPayload)
+	req, err := http.NewRequest(http.MethodPost, "https://en.zalando.de/api/mobile/v3/user/login.json", bodyBuffer)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req.Header = http.Header{
+		"cache-control":        {"private, no-cache, no-store"},
+		"x-app-domain":         {"1"},
+		"user-agent":           {`Zalando/22.11.0 (Linux; Android 8.0.0; Samsung SM-A520F/R16NW.A520FXXUGCTKA)`},
+		"x-uuid":               {id.String()},
+		"x-ts":                 {strconv.Itoa(ts)},
+		"x-device-language":    {"en"},
+		"x-sig":                {sig},
+		"x-os-version":         {"9"},
+		"accept-language":      {"en-GB"},
+		"accept":               {"application/json"},
+		"x-app-version":        {"22.10.3"},
+		"x-device-platform":    {"android"},
+		"x-device-os":          {"android"},
+		"x-zalando-mobile-app": {"1166c0792788b3f3a"},
+		"x-logged-in":          {"false"},
+		"x-advertising-id":     {"6fdbd95c-ccf1-40cf-9910-88f26deaa61f"},
+		"content-type":         {"application/json"},
+		"content-length":       {strconv.Itoa(bodyBuffer.Len())},
+		"accept-encoding":      {"gzip"},
+		"ot-tracer-traceid":    {"c71c9283de42cad1"},
+		"ot-tracer-spanid":     {"b603dda8154a3f50"},
+		"ot-tracer-sampled":    {"true"},
+		"x-acf-sensor-data":    {akamaiBmpSensor},
+		http.HeaderOrderKey: {
+			"cache-control",
+			"x-app-domain",
+			"user-agent",
+			"x-uuid",
+			"x-ts",
+			"x-device-language",
+			"x-sig",
+			"x-os-version",
+			"accept-language",
+			"accept",
+			"x-app-version",
+			"x-device-platform",
+			"x-device-os",
+			"x-zalando-mobile-app",
+			"x-logged-in",
+			"x-advertising-id",
+			"content-type",
+			"content-length",
+			"accept-encoding",
+			"ot-tracer-traceid",
+			"ot-tracer-spanid",
+			"ot-tracer-sampled",
+			"x-acf-sensor-data",
+		},
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	log.Println(fmt.Sprintf("requesting zalando login as zalando android client => status code: %d", resp.StatusCode))
+
+	readBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(string(readBytes))
 }
