@@ -85,7 +85,7 @@ func (p *Timestamp) UnmarshalJSON(bytes []byte) error {
 }
 
 type Response struct {
-	SessionId string              `json:"sessionId"`
+	SessionId string              `json:"sessionId,omitempty"`
 	Status    int                 `json:"status"`
 	Body      string              `json:"body"`
 	Headers   map[string][]string `json:"headers"`

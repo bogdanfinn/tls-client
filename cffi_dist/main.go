@@ -19,20 +19,20 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
-		return handleErrorResponse("", clientErr)
+		return handleErrorResponse("", false, clientErr)
 	}
 
 	tlsClient, err := tls_client_cffi_src.GetTlsClientFromSession(cookiesInput.SessionId)
 
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
-		return handleErrorResponse(cookiesInput.SessionId, clientErr)
+		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
 	}
 
 	u, parsErr := url.Parse(cookiesInput.Url)
 	if parsErr != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(parsErr)
-		return handleErrorResponse(cookiesInput.SessionId, clientErr)
+		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
 	}
 
 	cookies := tlsClient.GetCookies(u)
@@ -41,7 +41,7 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
-		return handleErrorResponse(cookiesInput.SessionId, clientErr)
+		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
 	}
 
 	return C.CString(string(jsonResponse))
@@ -56,20 +56,20 @@ func request(requestParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
-		return handleErrorResponse("", clientErr)
+		return handleErrorResponse("", false, clientErr)
 	}
 
-	tlsClient, sessionId, err := tls_client_cffi_src.GetTlsClientFromInput(requestInput)
+	tlsClient, sessionId, withSession, err := tls_client_cffi_src.GetTlsClientFromInput(requestInput)
 
 	if err != nil {
-		return handleErrorResponse(sessionId, err)
+		return handleErrorResponse(sessionId, withSession, err)
 	}
 
 	req, err := tls_client_cffi_src.BuildRequest(requestInput)
 
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
-		return handleErrorResponse(sessionId, clientErr)
+		return handleErrorResponse(sessionId, withSession, clientErr)
 	}
 
 	cookies := buildCookies(requestInput.RequestCookies)
@@ -82,33 +82,36 @@ func request(requestParams *C.char) *C.char {
 
 	if reqErr != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(fmt.Errorf("failed to do request: %w", reqErr))
-		return handleErrorResponse(sessionId, clientErr)
+		return handleErrorResponse(sessionId, withSession, clientErr)
 	}
 
 	sessionCookies := tlsClient.GetCookies(req.URL)
 
-	response, err := tls_client_cffi_src.BuildResponse(sessionId, resp, sessionCookies, requestInput.IsByteResponse)
+	response, err := tls_client_cffi_src.BuildResponse(sessionId, withSession, resp, sessionCookies, requestInput.IsByteResponse)
 	if err != nil {
-		return handleErrorResponse(sessionId, err)
+		return handleErrorResponse(sessionId, withSession, err)
 	}
 
 	jsonResponse, marshallError := json.Marshal(response)
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
-		return handleErrorResponse(sessionId, clientErr)
+		return handleErrorResponse(sessionId, withSession, clientErr)
 	}
 
 	return C.CString(string(jsonResponse))
 }
 
-func handleErrorResponse(sessionId string, err *tls_client_cffi_src.TLSClientError) *C.char {
+func handleErrorResponse(sessionId string, withSession bool, err *tls_client_cffi_src.TLSClientError) *C.char {
 	response := tls_client_cffi_src.Response{
-		SessionId: sessionId,
-		Status:    0,
-		Body:      err.Error(),
-		Headers:   nil,
-		Cookies:   nil,
+		Status:  0,
+		Body:    err.Error(),
+		Headers: nil,
+		Cookies: nil,
+	}
+
+	if withSession {
+		response.SessionId = sessionId
 	}
 
 	jsonResponse, marshallError := json.Marshal(response)
