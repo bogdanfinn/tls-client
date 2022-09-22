@@ -8,6 +8,7 @@ import (
 var DefaultClientProfile = Chrome_105
 
 var MappedTLSClients = map[string]ClientProfile{
+	"chrome_102":             Chrome_102,
 	"chrome_103":             Chrome_103,
 	"chrome_104":             Chrome_104,
 	"chrome_105":             Chrome_105,
@@ -23,6 +24,7 @@ var MappedTLSClients = map[string]ClientProfile{
 	"opera_89":               Opera_89,
 	"opera_90":               Opera_90,
 	"zalando_android_mobile": ZalandoAndroidMobile,
+	"nike_ios_mobile":        NikeIosMobile,
 }
 
 type ClientProfile struct {
@@ -74,6 +76,29 @@ var Chrome_105 = ClientProfile{
 
 var Chrome_104 = ClientProfile{
 	clientHelloId: tls.HelloChrome_104,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      65536,
+		http2.SettingMaxConcurrentStreams: 1000,
+		http2.SettingInitialWindowSize:    6291456,
+		http2.SettingMaxHeaderListSize:    262144,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	},
+	connectionFlow: 15663105,
+}
+
+var Chrome_102 = ClientProfile{
+	clientHelloId: tls.HelloChrome_102,
 	settings: map[http2.SettingID]uint32{
 		http2.SettingHeaderTableSize:      65536,
 		http2.SettingMaxConcurrentStreams: 1000,
