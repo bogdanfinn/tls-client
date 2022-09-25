@@ -239,13 +239,19 @@ func getTlsClientProfile(tlsClientIdentifier string) tls_client.ClientProfile {
 func handleModification(client tls_client.HttpClient, proxyUrl *string, followRedirects bool) (tls_client.HttpClient, bool, error) {
 	changed := false
 
-	if proxyUrl != nil && client.GetProxy() != *proxyUrl {
-		err := client.SetProxy(*proxyUrl)
-		if err != nil {
-			return nil, false, fmt.Errorf("failed to change proxy url of client: %w", err)
-		}
+	if client == nil {
+		return client, false, fmt.Errorf("no tls client for modification check")
+	}
 
-		changed = true
+	if proxyUrl != nil {
+		if client.GetProxy() != *proxyUrl {
+			err := client.SetProxy(*proxyUrl)
+			if err != nil {
+				return nil, false, fmt.Errorf("failed to change proxy url of client: %w", err)
+			}
+
+			changed = true
+		}
 	}
 
 	if client.GetFollowRedirect() != followRedirects {
