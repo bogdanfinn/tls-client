@@ -28,17 +28,36 @@ type TlsApiResponse struct {
 	Path        string `json:"path"`
 	Method      string `json:"method"`
 	TLS         struct {
-		Ciphers        []string `json:"ciphers"`
-		Curves         []string `json:"curves"`
-		Extensions     []string `json:"extensions"`
-		Points         []string `json:"points"`
-		Version        string   `json:"version"`
-		Protocols      []string `json:"protocols"`
-		Versions       []string `json:"versions"`
-		Ja3            string   `json:"ja3"`
-		Ja3Hash        string   `json:"ja3_hash"`
-		Ja3Padding     string   `json:"ja3_padding"`
-		Ja3HashPadding string   `json:"ja3_hash_padding"`
+		Ciphers    []string `json:"ciphers"`
+		Extensions []struct {
+			Name                       string      `json:"name"`
+			ServerName                 string      `json:"server_name,omitempty"`
+			Data                       string      `json:"data,omitempty"`
+			SupportedGroups            []string    `json:"supported_groups,omitempty"`
+			EllipticCurvesPointFormats interface{} `json:"elliptic_curves_point_formats,omitempty"`
+			Protocols                  []string    `json:"protocols,omitempty"`
+			StatusRequest              struct {
+				CertificateStatusType   string `json:"certificate_status_type"`
+				ResponderIDListLength   int    `json:"responder_id_list_length"`
+				RequestExtensionsLength int    `json:"request_extensions_length"`
+			} `json:"status_request,omitempty"`
+			SignatureAlgorithms []string `json:"signature_algorithms,omitempty"`
+			SharedKeys          []struct {
+				TLSGrease0Xfafa string `json:"TLS_GREASE (0xfafa),omitempty"`
+				X2551929        string `json:"X25519 (29),omitempty"`
+			} `json:"shared_keys,omitempty"`
+			PskKeyExchangeMode string   `json:"PSK_Key_Exchange_Mode,omitempty"`
+			Versions           []string `json:"versions,omitempty"`
+			Algorithms         []string `json:"algorithms,omitempty"`
+		} `json:"extensions"`
+		Version          string `json:"version"`
+		Ja3NoPadding     string `json:"ja3_no_padding"`
+		Ja3NoPaddingHash string `json:"ja3_no_padding_hash"`
+		Ja3              string `json:"ja3"`
+		Ja3Hash          string `json:"ja3_hash"`
+		ClientRandom     string `json:"client_random"`
+		SessionID        string `json:"session_id"`
+		UsedTLSVersion   string `json:"used_tls_version"`
 	} `json:"tls"`
 	HTTP2 struct {
 		AkamaiFingerprint     string `json:"akamai_fingerprint"`

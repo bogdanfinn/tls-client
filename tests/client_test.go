@@ -714,19 +714,19 @@ func compareResponse(t *testing.T, expectedValues map[string]string, resp *http.
 	for key, expectedValue := range expectedValues {
 		switch key {
 		case ja3String:
-			if tlsApiResponse.TLS.Ja3 != expectedValue {
+			if tlsApiResponse.TLS.Ja3NoPadding != expectedValue {
 				t.Errorf("TLS Ja3 mismatch.\nexpected: %s\nactual  : %s", expectedValue, tlsApiResponse.TLS.Ja3)
 			}
 		case ja3Hash:
-			if tlsApiResponse.TLS.Ja3Hash != expectedValue {
+			if tlsApiResponse.TLS.Ja3NoPaddingHash != expectedValue {
 				t.Errorf("TLS Ja3 hash mismatch.\nexpected: %s\nactual  : %s", expectedValue, tlsApiResponse.TLS.Ja3Hash)
 			}
 		case ja3StringWithPadding:
-			if tlsApiResponse.TLS.Ja3Padding != expectedValue {
+			if tlsApiResponse.TLS.Ja3 != expectedValue {
 				t.Errorf("TLS Ja3 (wtith Padding) mismatch.\nexpected: %s\nactual  : %s", expectedValue, tlsApiResponse.TLS.Ja3)
 			}
 		case ja3HashWithPadding:
-			if tlsApiResponse.TLS.Ja3HashPadding != expectedValue {
+			if tlsApiResponse.TLS.Ja3Hash != expectedValue {
 				t.Errorf("TLS Ja3 hash (wtith Padding) mismatch.\nexpected: %s\nactual  : %s", expectedValue, tlsApiResponse.TLS.Ja3Hash)
 			}
 		case akamaiFingerprint:
