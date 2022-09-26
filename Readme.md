@@ -42,6 +42,7 @@ type HttpClient interface {
 ### Supported and tested Clients
 
 - Chrome
+    - 102 (chrome_102)
     - 103 (chrome_103)
     - 104 (chrome_104)
     - 105 (chrome_105)
@@ -62,7 +63,8 @@ type HttpClient interface {
     - 89 (opera_89)
     - 90 (opera_90)
 - Custom Clients
-    - Zalando Android Mobile 
+    - Zalando Android Mobile (zalando_android_mobile) 
+    - Zalando Android Mobile (nike_ios_mobile)
 
 You can also provide your own client. See the example how to do it.
 
@@ -186,6 +188,8 @@ A python example on how to load and call the functionality can be found in `cffi
 For more documentation please take a look at: https://github.com/bogdanfinn/tls-client-api
 
 Build and tested with python 3.8 on MacOS.
+
+I highly recommend to take a look at this repository, when you want to use this tls-client in python: https://github.com/FlorianREGAZ/Python-Tls-Client
 
 ### Compile this client for use in NodeJS as a shared library
 Please take a look at the cross compile build script in `cffi_dist/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
