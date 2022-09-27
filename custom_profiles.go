@@ -9,7 +9,7 @@ import (
 
 var ZalandoAndroidMobile = ClientProfile{
 	clientHelloId: tls.ClientHelloID{
-		Client:  "ZalandoCustom",
+		Client:  "ZalandoAndroidCustom",
 		Version: "1",
 		Seed:    nil,
 		SpecFactory: func() (tls.ClientHelloSpec, error) {
@@ -101,7 +101,7 @@ var ZalandoAndroidMobile = ClientProfile{
 
 var NikeIosMobile = ClientProfile{
 	clientHelloId: tls.ClientHelloID{
-		Client:  "NikeCustom",
+		Client:  "NikeIosCustom",
 		Version: "1",
 		Seed:    nil,
 		SpecFactory: func() (tls.ClientHelloSpec, error) {

@@ -40,6 +40,7 @@ var DefaultTimeoutSeconds = 30
 var DefaultOptions = []HttpClientOption{
 	WithTimeout(DefaultTimeoutSeconds),
 	WithClientProfile(DefaultClientProfile),
+	WithNotFollowRedirects(),
 }
 
 func ProvideDefaultClient(logger Logger) (HttpClient, error) {

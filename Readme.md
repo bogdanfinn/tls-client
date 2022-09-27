@@ -42,12 +42,10 @@ type HttpClient interface {
 ### Supported and tested Clients
 
 - Chrome
-    - 102 (chrome_102)
     - 103 (chrome_103)
     - 104 (chrome_104)
     - 105 (chrome_105)
 - Safari
-    - 15.3 (safari_15_3)
     - 15.6.1 (safari_15_6_1)
     - 16.0 (safari_16_0)
 - iOS (Safari)
@@ -59,12 +57,14 @@ type HttpClient interface {
 - Firefox
     - 102 (firefox_102)
     - 104 (firefox_104)
+    - 105 (firefox_105)
 - Opera
     - 89 (opera_89)
     - 90 (opera_90)
+    - 91 (opera_91)
 - Custom Clients
     - Zalando Android Mobile (zalando_android_mobile) 
-    - Zalando Android Mobile (nike_ios_mobile)
+    - Nike IOS Mobile (nike_ios_mobile)
 
 You can also provide your own client. See the example how to do it.
 
@@ -81,6 +81,7 @@ go get -u github.com/bogdanfinn/tls-client
 // go get github.com/bogdanfinn/tls-client@v0.5.2
 ```
 
+I would recommend to check the github tags for the latest version and install that one explicit.
 
 ### Quick Usage Example
 
@@ -172,7 +173,7 @@ func main() {
 
 ```
 
-For more configured clients check `./profiles.go` or use your own custom client. See examples.
+For more configured clients check `./profiles.go`, `./custom_profiles.go` or use your own custom client. See examples folder.
 
 #### Default Client
 The implemented default client is currently Chrome 105 with a configured request timeout of 30 seconds and no automatic redirect following.

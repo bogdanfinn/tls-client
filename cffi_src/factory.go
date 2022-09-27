@@ -17,6 +17,19 @@ import (
 var clientsLock = sync.Mutex{}
 var clients = make(map[string]tls_client.HttpClient)
 
+func GetTlsClientFromSession(sessionId string) (tls_client.HttpClient, error) {
+	clientsLock.Lock()
+	defer clientsLock.Unlock()
+
+	client, ok := clients[sessionId]
+
+	if !ok {
+		return nil, fmt.Errorf("no client found for sessionId: %s", sessionId)
+	}
+
+	return client, nil
+}
+
 func GetTlsClientFromInput(requestInput RequestInput) (tls_client.HttpClient, string, *TLSClientError) {
 	sessionId := requestInput.SessionId
 

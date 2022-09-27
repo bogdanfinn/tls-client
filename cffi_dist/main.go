@@ -4,10 +4,48 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client_cffi_src "github.com/bogdanfinn/tls-client/cffi_src"
 )
+
+//export getCookiesFromSession
+func getCookiesFromSession(getCookiesParams *C.char) *C.char {
+	getCookiesParamsJson := C.GoString(getCookiesParams)
+
+	cookiesInput := tls_client_cffi_src.GetCookiesFromSessionInput{}
+	marshallError := json.Unmarshal([]byte(getCookiesParamsJson), &cookiesInput)
+
+	if marshallError != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+		return handleErrorResponse("", clientErr)
+	}
+
+	tlsClient, err := tls_client_cffi_src.GetTlsClientFromSession(cookiesInput.SessionId)
+
+	if err != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(err)
+		return handleErrorResponse(cookiesInput.SessionId, clientErr)
+	}
+
+	u, parsErr := url.Parse(cookiesInput.Url)
+	if parsErr != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(parsErr)
+		return handleErrorResponse(cookiesInput.SessionId, clientErr)
+	}
+
+	cookies := tlsClient.GetCookies(u)
+
+	jsonResponse, marshallError := json.Marshal(cookies)
+
+	if marshallError != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+		return handleErrorResponse(cookiesInput.SessionId, clientErr)
+	}
+
+	return C.CString(string(jsonResponse))
+}
 
 //export request
 func request(requestParams *C.char) *C.char {

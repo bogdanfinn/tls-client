@@ -17,67 +17,10 @@ import (
 	"github.com/bogdanfinn/fhttp/cookiejar"
 	"github.com/bogdanfinn/fhttp/http2"
 	tls_client "github.com/bogdanfinn/tls-client"
+	"github.com/bogdanfinn/tls-client/shared"
 	tls "github.com/bogdanfinn/utls"
 	"github.com/google/uuid"
 )
-
-type TlsApiResponse struct {
-	Donate      string `json:"donate"`
-	IP          string `json:"ip"`
-	HTTPVersion string `json:"http_version"`
-	Path        string `json:"path"`
-	Method      string `json:"method"`
-	TLS         struct {
-		Ciphers    []string `json:"ciphers"`
-		Extensions []struct {
-			Name                       string      `json:"name"`
-			ServerName                 string      `json:"server_name,omitempty"`
-			Data                       string      `json:"data,omitempty"`
-			SupportedGroups            []string    `json:"supported_groups,omitempty"`
-			EllipticCurvesPointFormats interface{} `json:"elliptic_curves_point_formats,omitempty"`
-			Protocols                  []string    `json:"protocols,omitempty"`
-			StatusRequest              struct {
-				CertificateStatusType   string `json:"certificate_status_type"`
-				ResponderIDListLength   int    `json:"responder_id_list_length"`
-				RequestExtensionsLength int    `json:"request_extensions_length"`
-			} `json:"status_request,omitempty"`
-			SignatureAlgorithms []string `json:"signature_algorithms,omitempty"`
-			SharedKeys          []struct {
-				TLSGrease0Xfafa string `json:"TLS_GREASE (0xfafa),omitempty"`
-				X2551929        string `json:"X25519 (29),omitempty"`
-			} `json:"shared_keys,omitempty"`
-			PskKeyExchangeMode string   `json:"PSK_Key_Exchange_Mode,omitempty"`
-			Versions           []string `json:"versions,omitempty"`
-			Algorithms         []string `json:"algorithms,omitempty"`
-		} `json:"extensions"`
-		Version          string `json:"version"`
-		Ja3NoPadding     string `json:"ja3_no_padding"`
-		Ja3NoPaddingHash string `json:"ja3_no_padding_hash"`
-		Ja3              string `json:"ja3"`
-		Ja3Hash          string `json:"ja3_hash"`
-		ClientRandom     string `json:"client_random"`
-		SessionID        string `json:"session_id"`
-		UsedTLSVersion   string `json:"used_tls_version"`
-	} `json:"tls"`
-	HTTP2 struct {
-		AkamaiFingerprint     string `json:"akamai_fingerprint"`
-		AkamaiFingerprintHash string `json:"akamai_fingerprint_hash"`
-		SentFrames            []struct {
-			FrameType string   `json:"frame_type"`
-			Length    int      `json:"length"`
-			Settings  []string `json:"settings,omitempty"`
-			Increment int      `json:"increment,omitempty"`
-			StreamID  int      `json:"stream_id,omitempty"`
-			Headers   []string `json:"headers,omitempty"`
-			Flags     []string `json:"flags,omitempty"`
-			Priority  struct {
-				Weight    int `json:"weight"`
-				DependsOn int `json:"depends_on"`
-				Exclusive int `json:"exclusive"`
-			} `json:"priority,omitempty"`
-		} `json:"sent_frames"`
-	} `json:"http2"`
-}
 
 func main() {
 	requestToppsAsGoClient()
@@ -404,7 +347,7 @@ func rotateProxiesOnClient() {
 		return
 	}
 
-	tlsApiResponse := TlsApiResponse{}
+	tlsApiResponse := shared.TlsApiResponse{}
 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
 		log.Println(err)
 		return
@@ -433,7 +376,7 @@ func rotateProxiesOnClient() {
 		return
 	}
 
-	tlsApiResponse = TlsApiResponse{}
+	tlsApiResponse = shared.TlsApiResponse{}
 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
 		log.Println(err)
 		return

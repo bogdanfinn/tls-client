@@ -20,6 +20,11 @@ func (e *TLSClientError) Error() string {
 	return e.err.Error()
 }
 
+type GetCookiesFromSessionInput struct {
+	SessionId string `json:"sessionId"`
+	Url       string `json:"url"`
+}
+
 type RequestInput struct {
 	SessionId           *string           `json:"sessionId"`
 	TLSClientIdentifier string            `json:"tlsClientIdentifier"`

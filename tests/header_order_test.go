@@ -7,6 +7,7 @@ import (
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
+	"github.com/bogdanfinn/tls-client/shared"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,7 +51,7 @@ func TestClient_HeaderOrder(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tlsApiResponse := TlsApiResponse{}
+	tlsApiResponse := shared.TlsApiResponse{}
 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +86,7 @@ func TestClient_HeaderOrder(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tlsApiResponse = TlsApiResponse{}
+	tlsApiResponse = shared.TlsApiResponse{}
 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
 		t.Fatal(err)
 	}
