@@ -21,7 +21,11 @@ func TestJA3(t *testing.T) {
 func ja3_chrome_105(t *testing.T) {
 	input := browserFingerprints[chrome][utls.HelloChrome_105.Str()][ja3String]
 
-	specFunc, err := tls_client.GetSpecFactorFromJa3String(input)
+	ssa := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
+	sv := []string{"1.3", "1.2"}
+	sc := []string{"GREASE", "X25519"}
+
+	specFunc, err := tls_client.GetSpecFactoryFromJa3String(input, ssa, sv, sc, "zlib")
 
 	if err != nil {
 		t.Fatal(err)
@@ -39,7 +43,11 @@ func ja3_chrome_105(t *testing.T) {
 func ja3_firefox_105(t *testing.T) {
 	input := browserFingerprints[firefox][utls.HelloFirefox_105.Str()][ja3String]
 
-	specFunc, err := tls_client.GetSpecFactorFromJa3String(input)
+	ssa := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
+	sv := []string{"1.3", "1.2"}
+	sc := []string{"GREASE", "X25519"}
+
+	specFunc, err := tls_client.GetSpecFactoryFromJa3String(input, ssa, sv, sc, "zlib")
 
 	if err != nil {
 		t.Fatal(err)
@@ -56,8 +64,12 @@ func ja3_firefox_105(t *testing.T) {
 
 func ja3_opera_91(t *testing.T) {
 	input := browserFingerprints[opera][utls.HelloOpera_91.Str()][ja3String]
+	
+	ssa := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
+	sv := []string{"1.3", "1.2"}
+	sc := []string{"GREASE", "X25519"}
 
-	specFunc, err := tls_client.GetSpecFactorFromJa3String(input)
+	specFunc, err := tls_client.GetSpecFactoryFromJa3String(input, ssa, sv, sc, "zlib")
 
 	if err != nil {
 		t.Fatal(err)

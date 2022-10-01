@@ -206,20 +206,30 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 }
 
 func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.ClientHelloID, map[http2.SettingID]uint32, []http2.SettingID, []string, uint32, []http2.Priority, error) {
-	specFactory, err := tls_client.GetSpecFactorFromJa3String(customClientDefinition.Ja3String)
+	specFactory, err := tls_client.GetSpecFactoryFromJa3String(customClientDefinition.Ja3String, customClientDefinition.SupportedSignatureAlgorithms, customClientDefinition.SupportedVersions, customClientDefinition.KeyShareCurves, customClientDefinition.CertCompressionAlgo)
 
 	if err != nil {
 		return tls.ClientHelloID{}, nil, nil, nil, 0, nil, err
 	}
 
-	h2Settings := make(map[http2.SettingID]uint32)
+	resolvedH2Settings := make(map[http2.SettingID]uint32)
 	for key, value := range customClientDefinition.H2Settings {
-		h2Settings[http2.SettingID(key)] = value
+		resolvedKey, ok := tls_client.H2SettingsMap[key]
+		if !ok {
+			continue
+		}
+
+		resolvedH2Settings[resolvedKey] = value
 	}
 
-	var h2SettingsOrder []http2.SettingID
+	var resolvedH2SettingsOrder []http2.SettingID
 	for _, order := range customClientDefinition.H2SettingsOrder {
-		h2SettingsOrder = append(h2SettingsOrder, http2.SettingID(order))
+		resolvedKey, ok := tls_client.H2SettingsMap[order]
+		if !ok {
+			continue
+		}
+
+		resolvedH2SettingsOrder = append(resolvedH2SettingsOrder, resolvedKey)
 	}
 
 	pseudoHeaderOrder := customClientDefinition.PseudoHeaderOrder
@@ -244,7 +254,7 @@ func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.Cli
 		SpecFactory: specFactory,
 	}
 
-	return clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, nil
+	return clientHelloId, resolvedH2Settings, resolvedH2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, nil
 }
 
 func getTlsClientProfile(tlsClientIdentifier string) tls_client.ClientProfile {

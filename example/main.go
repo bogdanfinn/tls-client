@@ -26,13 +26,13 @@ import (
 
 func main() {
 	shareHttpClientInGoRoutines()
-	//requestToppsAsGoClient()
-	//requestToppsAsChrome105Client()
-	//requestWithFollowRedirectSwitch()
-	//requestWithCustomClient()
-	//rotateProxiesOnClient()
-	//downloadImageWithTlsClient()
-	//loginZalandoMobile()
+	requestToppsAsGoClient()
+	requestToppsAsChrome105Client()
+	requestWithFollowRedirectSwitch()
+	requestWithCustomClient()
+	rotateProxiesOnClient()
+	downloadImageWithTlsClient()
+	loginZalandoMobile()
 }
 
 func requestToppsAsGoClient() {

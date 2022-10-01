@@ -43,12 +43,16 @@ type RequestInput struct {
 }
 
 type CustomTlsClient struct {
-	Ja3String         string            `json:"ja3String"`
-	H2Settings        map[uint16]uint32 `json:"h2Settings"`
-	H2SettingsOrder   []uint16          `json:"h2SettingsOrder"`
-	PseudoHeaderOrder []string          `json:"pseudoHeaderOrder"`
-	ConnectionFlow    uint32            `json:"connectionFlow"`
-	PriorityFrames    []PriorityFrames  `json:"priorityFrames"`
+	Ja3String                    string            `json:"ja3String"`
+	SupportedSignatureAlgorithms []string          `json:"supportedSignatureAlgorithms"`
+	SupportedVersions            []string          `json:"supportedVersions"`
+	KeyShareCurves               []string          `json:"keyShareCurves"`
+	CertCompressionAlgo          string            `json:"certCompressionAlgo"`
+	H2Settings                   map[string]uint32 `json:"h2Settings"`
+	H2SettingsOrder              []string          `json:"h2SettingsOrder"`
+	PseudoHeaderOrder            []string          `json:"pseudoHeaderOrder"`
+	ConnectionFlow               uint32            `json:"connectionFlow"`
+	PriorityFrames               []PriorityFrames  `json:"priorityFrames"`
 }
 
 type PriorityFrames struct {

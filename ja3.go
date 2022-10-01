@@ -9,15 +9,55 @@ import (
 	tls "github.com/bogdanfinn/utls"
 )
 
-func GetSpecFactorFromJa3String(ja3String string) (func() (tls.ClientHelloSpec, error), error) {
+func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms, supportedVersions, keyShareCurves []string, certCompressionAlgo string) (func() (tls.ClientHelloSpec, error), error) {
 	return func() (tls.ClientHelloSpec, error) {
-		spec, err := stringToSpec(ja3String)
+		var mappedSignatureAlgorithms []tls.SignatureScheme
 
-		return spec, err
+		for _, supportedSignatureAlgorithm := range supportedSignatureAlgorithms {
+			signatureAlgorithm, ok := signatureAlgorithms[supportedSignatureAlgorithm]
+			if ok {
+				mappedSignatureAlgorithms = append(mappedSignatureAlgorithms, signatureAlgorithm)
+			}
+		}
+
+		var mappedTlsVersions []uint16
+
+		for _, version := range supportedVersions {
+			mappedVersion, ok := tlsVersions[version]
+			if ok {
+				mappedTlsVersions = append(mappedTlsVersions, mappedVersion)
+			}
+		}
+
+		var mappedKeyShares []tls.KeyShare
+
+		for _, keyShareCurve := range keyShareCurves {
+			resolvedKeyShare, ok := curves[keyShareCurve]
+
+			if !ok {
+				continue
+			}
+
+			mappedKeyShare := tls.KeyShare{Group: resolvedKeyShare}
+
+			if keyShareCurve == "GREASE" {
+				mappedKeyShare.Data = []byte{0}
+			}
+
+			mappedKeyShares = append(mappedKeyShares, mappedKeyShare)
+		}
+
+		compressionAlgo, ok := certCompression[certCompressionAlgo]
+
+		if !ok {
+			return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedTlsVersions, mappedKeyShares, nil)
+		}
+
+		return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedTlsVersions, mappedKeyShares, &compressionAlgo)
 	}, nil
 }
 
-func stringToSpec(ja3 string) (tls.ClientHelloSpec, error) {
+func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, tlsVersions []uint16, keyShares []tls.KeyShare, certCompression *tls.CertCompressionAlgo) (tls.ClientHelloSpec, error) {
 	extMap := getExtensionBaseMap()
 	ja3StringParts := strings.Split(ja3, ",")
 
@@ -55,7 +95,20 @@ func stringToSpec(ja3 string) (tls.ClientHelloSpec, error) {
 		targetPointFormats = append(targetPointFormats, byte(pid))
 	}
 
+	if certCompression == nil && strings.Contains(ja3StringParts[2], fmt.Sprintf("%d", tls.ExtensionCompressCertificate)) {
+		fmt.Println("attention our ja3 defines ExtensionCompressCertificate but you did not specify certCompression")
+	}
+
+	if certCompression != nil {
+		extMap[tls.ExtensionCompressCertificate] = &tls.UtlsCompressCertExtension{Algorithms: []tls.CertCompressionAlgo{*certCompression}}
+	}
+
+	extMap[tls.ExtensionKeyShare] = &tls.KeyShareExtension{KeyShares: keyShares}
 	extMap[tls.ExtensionSupportedPoints] = &tls.SupportedPointsExtension{SupportedPoints: targetPointFormats}
+	extMap[tls.ExtensionSupportedVersions] = &tls.SupportedVersionsExtension{Versions: tlsVersions}
+	extMap[tls.ExtensionSignatureAlgorithms] = &tls.SignatureAlgorithmsExtension{
+		SupportedSignatureAlgorithms: signatureAlgorithms,
+	}
 
 	var exts []tls.TLSExtension
 	for _, e := range extensions {
@@ -91,50 +144,34 @@ func stringToSpec(ja3 string) (tls.ClientHelloSpec, error) {
 
 func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 	return map[uint16]tls.TLSExtension{
+		tls.GREASE_PLACEHOLDER:     &tls.UtlsGREASEExtension{},
 		tls.ExtensionServerName:    &tls.SNIExtension{},
 		tls.ExtensionStatusRequest: &tls.StatusRequestExtension{},
 
 		// These are applied later
 		// tls.ExtensionSupportedCurves: &tls.SupportedCurvesExtension{...}
 		// tls.ExtensionSupportedPoints: &tls.SupportedPointsExtension{...}
+		// tls.ExtensionSignatureAlgorithms: &tls.SignatureAlgorithmsExtension{...}
+		// tls.ExtensionCompressCertificate:  &tls.UtlsCompressCertExtension{...},
+		// tls.ExtensionSupportedVersions: &tls.SupportedVersionsExtension{...}
+		// tls.ExtensionKeyShare:     &tls.KeyShareExtension{...},
 
-		tls.ExtensionSignatureAlgorithms: &tls.SignatureAlgorithmsExtension{
-			SupportedSignatureAlgorithms: []tls.SignatureScheme{
-				tls.ECDSAWithP256AndSHA256,
-				tls.PSSWithSHA256,
-				tls.PKCS1WithSHA256,
-				tls.ECDSAWithP384AndSHA384,
-				tls.PSSWithSHA384,
-				tls.PKCS1WithSHA384,
-				tls.PSSWithSHA512,
-				tls.PKCS1WithSHA512,
-				// tls.PKCS1WithSHA1,
-			},
-		},
 		tls.ExtensionALPN: &tls.ALPNExtension{
 			AlpnProtocols: []string{"h2", "http/1.1"},
 		},
 		tls.ExtensionSCT:                  &tls.SCTExtension{},
 		tls.ExtensionPadding:              &tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
 		tls.ExtensionExtendedMasterSecret: &tls.UtlsExtendedMasterSecretExtension{},
-		tls.ExtensionCompressCertificate:  &tls.UtlsCompressCertExtension{},
 		tls.ExtensionRecordSizeLimit:      &tls.FakeRecordSizeLimitExtension{},
 		tls.ExtensionDelegatedCredentials: &tls.DelegatedCredentialsExtension{},
 		tls.ExtensionSessionTicket:        &tls.SessionTicketExtension{},
 		tls.ExtensionPreSharedKey:         &tls.PreSharedKeyExtension{},
 		tls.ExtensionEarlyData:            &tls.GenericExtension{Id: tls.ExtensionEarlyData},
-		tls.ExtensionSupportedVersions: &tls.SupportedVersionsExtension{Versions: []uint16{
-			// tls.GREASE_PLACEHOLDER,
-			tls.VersionTLS13,
-			tls.VersionTLS12,
-			tls.VersionTLS11,
-			tls.VersionTLS10}},
-		tls.ExtensionCookie: &tls.CookieExtension{},
+		tls.ExtensionCookie:               &tls.CookieExtension{},
 		tls.ExtensionPSKModes: &tls.PSKKeyExchangeModesExtension{
 			Modes: []uint8{
 				tls.PskModeDHE,
 			}},
-		tls.ExtensionKeyShare:     &tls.KeyShareExtension{KeyShares: []tls.KeyShare{{Group: tls.X25519}}},
 		tls.ExtensionNextProtoNeg: &tls.NPNExtension{},
 		tls.ExtensionALPS:         &tls.ALPSExtension{},
 		tls.ExtensionRenegotiationInfo: &tls.RenegotiationInfoExtension{
