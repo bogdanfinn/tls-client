@@ -25,6 +25,7 @@ var MappedTLSClients = map[string]ClientProfile{
 	"opera_91":               Opera_91,
 	"zalando_android_mobile": ZalandoAndroidMobile,
 	"nike_ios_mobile":        NikeIosMobile,
+	"nike_android_mobile":    NikeAndroidMobile,
 }
 
 type ClientProfile struct {
