@@ -10,18 +10,14 @@ import (
 )
 
 func GetSpecFactorFromJa3String(ja3String string) (func() (tls.ClientHelloSpec, error), error) {
-	spec, err := stringToSpec(ja3String)
-
-	if err != nil {
-		return nil, err
-	}
-
 	return func() (tls.ClientHelloSpec, error) {
-		return *spec, nil
+		spec, err := stringToSpec(ja3String)
+
+		return spec, err
 	}, nil
 }
 
-func stringToSpec(ja3 string) (*tls.ClientHelloSpec, error) {
+func stringToSpec(ja3 string) (tls.ClientHelloSpec, error) {
 	extMap := getExtensionBaseMap()
 	ja3StringParts := strings.Split(ja3, ",")
 
@@ -42,7 +38,7 @@ func stringToSpec(ja3 string) (*tls.ClientHelloSpec, error) {
 	for _, c := range curves {
 		cid, err := strconv.ParseUint(c, 10, 16)
 		if err != nil {
-			return nil, err
+			return tls.ClientHelloSpec{}, err
 		}
 		targetCurves = append(targetCurves, tls.CurveID(cid))
 	}
@@ -54,7 +50,7 @@ func stringToSpec(ja3 string) (*tls.ClientHelloSpec, error) {
 	for _, p := range pointFormats {
 		pid, err := strconv.ParseUint(p, 10, 8)
 		if err != nil {
-			return nil, err
+			return tls.ClientHelloSpec{}, err
 		}
 		targetPointFormats = append(targetPointFormats, byte(pid))
 	}
@@ -66,12 +62,12 @@ func stringToSpec(ja3 string) (*tls.ClientHelloSpec, error) {
 		eId, err := strconv.ParseUint(e, 10, 16)
 
 		if err != nil {
-			return nil, err
+			return tls.ClientHelloSpec{}, err
 		}
 
 		te, ok := extMap[uint16(eId)]
 		if !ok {
-			return nil, fmt.Errorf("unknown extension with id %s provided", e)
+			return tls.ClientHelloSpec{}, fmt.Errorf("unknown extension with id %s provided", e)
 		}
 		exts = append(exts, te)
 	}
@@ -80,12 +76,12 @@ func stringToSpec(ja3 string) (*tls.ClientHelloSpec, error) {
 	for _, c := range ciphers {
 		cid, err := strconv.ParseUint(c, 10, 16)
 		if err != nil {
-			return nil, err
+			return tls.ClientHelloSpec{}, err
 		}
 		suites = append(suites, uint16(cid))
 	}
 
-	return &tls.ClientHelloSpec{
+	return tls.ClientHelloSpec{
 		CipherSuites:       suites,
 		CompressionMethods: []byte{0},
 		Extensions:         exts,
