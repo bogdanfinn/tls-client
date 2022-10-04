@@ -81,6 +81,7 @@ go get -u github.com/bogdanfinn/tls-client
 // or specific version:
 // go get github.com/bogdanfinn/tls-client@v0.5.2
 ```
+Some users have trouble when using `go get -u`. If this is the case for you please cleanup your go.mod file and do a `go get` with a specific version.
 
 I would recommend to check the github tags for the latest version and install that one explicit.
 
@@ -121,34 +122,12 @@ func main() {
 	}
 
 	req.Header = http.Header{
-		"accept":                    {"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
-		"accept-encoding":           {"gzip"},
+		"accept":                    {"*/*"},
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
-		"cache-control":             {"max-age=0"},
-		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"sec-ch-ua":                 {`" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"`},
-		"sec-ch-ua-mobile":          {"?0"},
-		"sec-ch-ua-platform":        {`"macOS"`},
-		"sec-fetch-dest":            {"document"},
-		"sec-fetch-mode":            {"navigate"},
-		"sec-fetch-site":            {"none"},
-		"sec-fetch-user":            {"?1"},
-		"upgrade-insecure-requests": {"1"},
 		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
-			"accept-encoding",
 			"accept-language",
-			"cache-control",
-			"if-none-match",
-			"sec-ch-ua",
-			"sec-ch-ua-mobile",
-			"sec-ch-ua-platform",
-			"sec-fetch-dest",
-			"sec-fetch-mode",
-			"sec-fetch-site",
-			"sec-fetch-user",
-			"upgrade-insecure-requests",
 			"user-agent",
 		},
 	}
@@ -171,48 +150,50 @@ func main() {
 
 	log.Println(string(readBytes))
 }
-
 ```
+For more configured clients check `./profiles.go`, `./custom_profiles.go` or use your own custom client. See `examples` folder how to use a complete custom tls client.
 
-For more configured clients check `./profiles.go`, `./custom_profiles.go` or use your own custom client. See examples folder.
+#### Client Options
+List of current available client options
+```go
+WithTimeout
+WithProxyUrl
+WithCookieJar
+WithNotFollowRedirects
+WithInsecureSkipVerify
+WithClientProfile
+```
 
 #### Default Client
 The implemented default client is currently Chrome 105 with a configured request timeout of 30 seconds and no automatic redirect following.
 
-### Compile this client for use in Python as a shared library
+### Compile this client as a shared library for use in other languages like Python or NodeJS
 Please take a look at the cross compile build script in `cffi_dist/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
 
 The build script is written to cross compile from OSX to all other platforms (osx, linux, windows). If your build os is not OSX you might need to adjust the build script.
 
 You can also use the prebuilt packages in `cffi_dist/dist`
 
-A python example on how to load and call the functionality can be found in `cffi_dist/example_python/example.py`. Please be aware that i'm not a python expert.
-For more documentation please take a look at: https://github.com/bogdanfinn/tls-client-api
-
-Build and tested with python 3.8 on MacOS.
-
+A python example on how to load and call the functionality can be found in `cffi_dist/example_python`. Please be aware that i'm not a python expert.
 I highly recommend to take a look at this repository, when you want to use this tls-client in python: https://github.com/FlorianREGAZ/Python-Tls-Client
 
-### Compile this client for use in NodeJS as a shared library
-Please take a look at the cross compile build script in `cffi_dist/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
+A NodeJS example on how to load and call the functionality can be found in `cffi_dist/example_node`. Please be aware that you need to run `npm install` to install the node dependencies.
 
-The build script is written to cross compile from OSX to all other platforms (osx, linux, windows). If your build os is not OSX you might need to adjust the build script.
-
-You can also use the prebuilt packages in `cffi_dist/dist`
-
-A NodeJS example on how to load and call the functionality can be found in `cffi_dist/example_node/index.js`. Please be aware that you need to run `npm install` to install the node dependencies.
-For more documentation please take a look at: https://github.com/bogdanfinn/tls-client-api
-
-Build and tested with nodejs v16.13.2 on MacOS.
+The basic logic behind the shared library is, that you pass all required information in a JSON string to the shared lib function which then creates the client, the request and the request data out of it and forwards the request.
+For more documentation on this JSON string please take a look at: https://github.com/bogdanfinn/tls-client-api
 
 ### Further Information
 
 This library uses the following api: https://tls.peet.ws/api/all to verify the hashes and fingerprints for akamai and
-ja3.
+ja3. Be aware that also peets api does not show every extension/cipher a tls client is using. Do not rely just on ja3 strings.
 
 If you are not using go and do not want to implement the shared library but want to use the functionality check out this repository https://github.com/bogdanfinn/tls-client-api
 
 ### Frequently Asked Questions / Errors
+* **This client fails when I test on www.google.com**
+
+Please check this issue for explanation: https://github.com/bogdanfinn/tls-client/issues/6
+ 
 * **I'm receiving `tls: error decoding message` when using this TLS Client.**
 
 This issue should be fixed since `v.0.3.0`. There was an issue with the CompressCertExtension in the utls package dependency.
@@ -227,7 +208,7 @@ user-agent: Go-http-client/2.0
 ```
 
 * **If I use the shared library in electron my application freezes?**
-Please only load the dll once in your application and call every function `async` to not block the main thread.
+Please only load the dll once in your application and call every function `async` to not block the main thread. An example is added in the nodejs examples.
 
 * **My Post Request is not working correctly?**
 Please make sure that you set the correct `Content-Type` Header for your Post Body Payload.
