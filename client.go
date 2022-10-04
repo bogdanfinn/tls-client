@@ -71,6 +71,14 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 
 	config.clientProfile = clientProfile
 
+	if config.debug {
+		if logger == nil {
+			logger = NewLogger()
+		}
+
+		logger = NewDebugLogger(logger)
+	}
+
 	if logger == nil {
 		logger = NewNoopLogger()
 	}
@@ -125,6 +133,8 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 }
 
 func (c *httpClient) SetFollowRedirect(followRedirect bool) {
+	c.logger.Debug("set follow redirect from %v to %v", c.config.followRedirects, followRedirect)
+
 	c.config.followRedirects = followRedirect
 	c.applyFollowRedirect()
 }
@@ -144,6 +154,7 @@ func (c *httpClient) applyFollowRedirect() {
 }
 
 func (c *httpClient) SetProxy(proxyUrl string) error {
+	c.logger.Debug("set proxy from %s to %s", c.config.proxyUrl, proxyUrl)
 	c.config.proxyUrl = proxyUrl
 	c.logger.Info(fmt.Sprintf("set proxy to: %s", proxyUrl))
 
@@ -159,8 +170,10 @@ func (c *httpClient) applyProxy() error {
 	dialer = proxy.Direct
 
 	if c.config.proxyUrl != "" {
+		c.logger.Debug("proxy url %s supplied - using proxy connect dialer", c.config.proxyUrl)
 		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout)
 		if err != nil {
+			c.logger.Error("failed to create proxy connect dialer: %s", err.Error())
 			return err
 		}
 

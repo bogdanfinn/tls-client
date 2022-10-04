@@ -159,6 +159,7 @@ List of current available client options
 WithTimeout
 WithProxyUrl
 WithCookieJar
+WithDebug
 WithNotFollowRedirects
 WithInsecureSkipVerify
 WithClientProfile
