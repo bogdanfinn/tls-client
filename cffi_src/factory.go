@@ -123,7 +123,12 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 		Status:  resp.StatusCode,
 		Body:    finalResponse,
 		Headers: resp.Header,
+		Target:  "",
 		Cookies: cookiesToMap(cookies),
+	}
+
+	if resp.Request != nil && resp.Request.URL != nil {
+		response.Target = resp.Request.URL.String()
 	}
 
 	if withSession {
