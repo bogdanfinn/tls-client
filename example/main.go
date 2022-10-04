@@ -12,6 +12,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
+	"time"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/cookiejar"
@@ -23,13 +25,14 @@ import (
 )
 
 func main() {
-	requestToppsAsGoClient()
-	requestToppsAsChrome105Client()
-	requestWithFollowRedirectSwitch()
-	requestWithCustomClient()
-	rotateProxiesOnClient()
-	downloadImageWithTlsClient()
-	loginZalando()
+	shareHttpClientInGoRoutines()
+	//requestToppsAsGoClient()
+	//requestToppsAsChrome105Client()
+	//requestWithFollowRedirectSwitch()
+	//requestWithCustomClient()
+	//rotateProxiesOnClient()
+	//downloadImageWithTlsClient()
+	//loginZalandoMobile()
 }
 
 func requestToppsAsGoClient() {
@@ -143,6 +146,64 @@ func requestToppsAsChrome105Client() {
 	}
 
 	log.Println(fmt.Sprintf("tls client cookies for url %s : %v", u.String(), client.GetCookies(u)))
+}
+
+func shareHttpClientInGoRoutines() {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeout(30),
+		tls_client.WithClientProfile(tls_client.Chrome_105),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	callInLoop := func(wg *sync.WaitGroup, id int, client tls_client.HttpClient, amount int, url string) {
+		defer wg.Done()
+		for i := 0; i < amount; i++ {
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			req.Header = http.Header{
+				"accept":          {"*/*"},
+				"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+				"user-agent":      {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"},
+				http.HeaderOrderKey: {
+					"accept",
+					"accept-language",
+					"user-agent",
+				},
+			}
+
+			resp, err := client.Do(req)
+
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			defer resp.Body.Close()
+
+			log.Println(fmt.Sprintf("Go Routine %d: %s: status code: %d", id, url, resp.StatusCode))
+
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	log.Println("starting go routines to https://example.com/")
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	go callInLoop(&wg, 1, client, 5, "https://example.com/")
+	go callInLoop(&wg, 2, client, 5, "https://example.com/")
+	go callInLoop(&wg, 3, client, 5, "https://example.com/")
+
+	wg.Wait()
 }
 
 func requestWithFollowRedirectSwitch() {
@@ -559,7 +620,7 @@ type ZalandoLoginPayload struct {
 	Uuid           string `json:"uuid"`
 }
 
-func loginZalando() {
+func loginZalandoMobile() {
 	// next to the uuid you need ts and sig and of course akamai sensor data
 	id := uuid.New()
 	akamaiBmpSensor := ""

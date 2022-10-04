@@ -30,14 +30,19 @@ type roundTripper struct {
 
 	insecureSkipVerify bool
 
-	cachedConnections map[string]net.Conn
-	cachedTransports  map[string]http.RoundTripper
+	cachedTransportsLck sync.Mutex
+	cachedConnections   map[string]net.Conn
+	cachedTransports    map[string]http.RoundTripper
 
 	dialer proxy.ContextDialer
 }
 
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	addr := rt.getDialTLSAddr(req)
+
+	rt.cachedTransportsLck.Lock()
+	defer rt.cachedTransportsLck.Unlock()
+
 	if _, ok := rt.cachedTransports[addr]; !ok {
 		if err := rt.getTransport(req, addr); err != nil {
 			return nil, err
