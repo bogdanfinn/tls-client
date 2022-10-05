@@ -20,7 +20,7 @@ var errProtocolNegotiated = errors.New("protocol negotiated")
 
 type roundTripper struct {
 	sync.Mutex
-
+	transportOptions  *TransportOptions
 	clientHelloId     utls.ClientHelloID
 	settings          map[http2.SettingID]uint32
 	settingsOrder     []http2.SettingID
@@ -54,7 +54,17 @@ func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 func (rt *roundTripper) getTransport(req *http.Request, addr string) error {
 	switch strings.ToLower(req.URL.Scheme) {
 	case "http":
-		rt.cachedTransports[addr] = &http.Transport{DialContext: rt.dialer.DialContext, PseudoHeaderOrder: rt.pseudoHeaderOrder, ConnectionFlow: rt.connectionFlow}
+		t := &http.Transport{
+			DialContext:       rt.dialer.DialContext,
+			PseudoHeaderOrder: rt.pseudoHeaderOrder,
+			ConnectionFlow:    rt.connectionFlow,
+		}
+
+		if rt.transportOptions != nil {
+			// TODO: fill settings
+		}
+
+		rt.cachedTransports[addr] = t
 		return nil
 	case "https":
 	default:
@@ -111,6 +121,20 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	case http2.NextProtoTLS:
 		t2 := http2.Transport{DialTLS: rt.dialTLSHTTP2, TLSClientConfig: &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}, ConnectionFlow: rt.connectionFlow}
 
+		if rt.transportOptions != nil {
+			t1 := t2.GetT1()
+			if t1 != nil {
+				t1.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
+				t1.DisableCompression = rt.transportOptions.DisableCompression
+				t1.MaxIdleConns = rt.transportOptions.MaxIdleConns
+				t1.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
+				t1.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
+				t1.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
+				t1.WriteBufferSize = rt.transportOptions.WriteBufferSize
+				t1.ReadBufferSize = rt.transportOptions.ReadBufferSize
+			}
+		}
+
 		if rt.pseudoHeaderOrder == nil {
 			t2.PseudoHeaderOrder = []string{}
 		} else {
@@ -148,7 +172,20 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		rt.cachedTransports[addr] = &t2
 	default:
 		// Assume the remote peer is speaking HTTP 1.x + TLS.
-		rt.cachedTransports[addr] = &http.Transport{DialTLSContext: rt.dialTLS, TLSClientConfig: &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}, ConnectionFlow: rt.connectionFlow}
+		t := &http.Transport{DialTLSContext: rt.dialTLS, TLSClientConfig: &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}, ConnectionFlow: rt.connectionFlow}
+
+		if rt.transportOptions != nil {
+			t.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
+			t.DisableCompression = rt.transportOptions.DisableCompression
+			t.MaxIdleConns = rt.transportOptions.MaxIdleConns
+			t.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
+			t.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
+			t.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
+			t.WriteBufferSize = rt.transportOptions.WriteBufferSize
+			t.ReadBufferSize = rt.transportOptions.ReadBufferSize
+		}
+
+		rt.cachedTransports[addr] = t
 	}
 
 	// Stash the connection just established for use servicing the
@@ -170,10 +207,11 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443") // we can assume port is 443 at this point
 }
 
-func newRoundTripper(clientProfile ClientProfile, insecureSkipVerify bool, dialer ...proxy.ContextDialer) http.RoundTripper {
+func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, insecureSkipVerify bool, dialer ...proxy.ContextDialer) http.RoundTripper {
 	if len(dialer) > 0 {
 		return &roundTripper{
 			dialer:             dialer[0],
+			transportOptions:   transportOptions,
 			settings:           clientProfile.settings,
 			settingsOrder:      clientProfile.settingsOrder,
 			priorities:         clientProfile.priorities,
@@ -187,6 +225,7 @@ func newRoundTripper(clientProfile ClientProfile, insecureSkipVerify bool, diale
 	} else {
 		return &roundTripper{
 			dialer:             proxy.Direct,
+			transportOptions:   transportOptions,
 			settings:           clientProfile.settings,
 			settingsOrder:      clientProfile.settingsOrder,
 			priorities:         clientProfile.priorities,
