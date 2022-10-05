@@ -127,7 +127,7 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 	return &http.Client{
 		Jar:           cJar,
 		Timeout:       config.timeout,
-		Transport:     newRoundTripper(clientProfile, config.transportOptions, config.insecureSkipVerify, dialer),
+		Transport:     newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, dialer),
 		CheckRedirect: redirectFunc,
 	}, clientProfile, nil
 }
@@ -180,7 +180,7 @@ func (c *httpClient) applyProxy() error {
 		dialer = proxyDialer
 	}
 
-	c.Transport = newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.insecureSkipVerify, dialer)
+	c.Transport = newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, dialer)
 
 	return nil
 }

@@ -164,6 +164,8 @@ WithDebug
 WithNotFollowRedirects
 WithInsecureSkipVerify
 WithClientProfile
+WithServerNameOverwrite
+WithTransportOptions
 ```
 
 #### Default Client

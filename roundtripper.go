@@ -20,13 +20,14 @@ var errProtocolNegotiated = errors.New("protocol negotiated")
 
 type roundTripper struct {
 	sync.Mutex
-	transportOptions  *TransportOptions
-	clientHelloId     utls.ClientHelloID
-	settings          map[http2.SettingID]uint32
-	settingsOrder     []http2.SettingID
-	priorities        []http2.Priority
-	pseudoHeaderOrder []string
-	connectionFlow    uint32
+	transportOptions    *TransportOptions
+	serverNameOverwrite string
+	clientHelloId       utls.ClientHelloID
+	settings            map[http2.SettingID]uint32
+	settingsOrder       []http2.SettingID
+	priorities          []http2.Priority
+	pseudoHeaderOrder   []string
+	connectionFlow      uint32
 
 	insecureSkipVerify bool
 
@@ -54,14 +55,28 @@ func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 func (rt *roundTripper) getTransport(req *http.Request, addr string) error {
 	switch strings.ToLower(req.URL.Scheme) {
 	case "http":
+		utlsConfig := &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
+
+		if rt.serverNameOverwrite != "" {
+			utlsConfig.ServerName = rt.serverNameOverwrite
+		}
+
 		t := &http.Transport{
 			DialContext:       rt.dialer.DialContext,
 			PseudoHeaderOrder: rt.pseudoHeaderOrder,
 			ConnectionFlow:    rt.connectionFlow,
+			TLSClientConfig:   utlsConfig,
 		}
 
 		if rt.transportOptions != nil {
-			// TODO: fill settings
+			t.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
+			t.DisableCompression = rt.transportOptions.DisableCompression
+			t.MaxIdleConns = rt.transportOptions.MaxIdleConns
+			t.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
+			t.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
+			t.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
+			t.WriteBufferSize = rt.transportOptions.WriteBufferSize
+			t.ReadBufferSize = rt.transportOptions.ReadBufferSize
 		}
 
 		rt.cachedTransports[addr] = t
@@ -119,7 +134,13 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	// of ALPN.
 	switch conn.ConnectionState().NegotiatedProtocol {
 	case http2.NextProtoTLS:
-		t2 := http2.Transport{DialTLS: rt.dialTLSHTTP2, TLSClientConfig: &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}, ConnectionFlow: rt.connectionFlow}
+		utlsConfig := &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
+
+		if rt.serverNameOverwrite != "" {
+			utlsConfig.ServerName = rt.serverNameOverwrite
+		}
+
+		t2 := http2.Transport{DialTLS: rt.dialTLSHTTP2, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
 
 		if rt.transportOptions != nil {
 			t1 := t2.GetT1()
@@ -172,7 +193,13 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		rt.cachedTransports[addr] = &t2
 	default:
 		// Assume the remote peer is speaking HTTP 1.x + TLS.
-		t := &http.Transport{DialTLSContext: rt.dialTLS, TLSClientConfig: &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}, ConnectionFlow: rt.connectionFlow}
+		utlsConfig := &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
+
+		if rt.serverNameOverwrite != "" {
+			utlsConfig.ServerName = rt.serverNameOverwrite
+		}
+
+		t := &http.Transport{DialTLSContext: rt.dialTLS, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
 
 		if rt.transportOptions != nil {
 			t.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
@@ -207,34 +234,36 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443") // we can assume port is 443 at this point
 }
 
-func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, insecureSkipVerify bool, dialer ...proxy.ContextDialer) http.RoundTripper {
+func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, dialer ...proxy.ContextDialer) http.RoundTripper {
 	if len(dialer) > 0 {
 		return &roundTripper{
-			dialer:             dialer[0],
-			transportOptions:   transportOptions,
-			settings:           clientProfile.settings,
-			settingsOrder:      clientProfile.settingsOrder,
-			priorities:         clientProfile.priorities,
-			pseudoHeaderOrder:  clientProfile.pseudoHeaderOrder,
-			insecureSkipVerify: insecureSkipVerify,
-			connectionFlow:     clientProfile.connectionFlow,
-			clientHelloId:      clientProfile.clientHelloId,
-			cachedTransports:   make(map[string]http.RoundTripper),
-			cachedConnections:  make(map[string]net.Conn),
+			dialer:              dialer[0],
+			transportOptions:    transportOptions,
+			serverNameOverwrite: serverNameOverwrite,
+			settings:            clientProfile.settings,
+			settingsOrder:       clientProfile.settingsOrder,
+			priorities:          clientProfile.priorities,
+			pseudoHeaderOrder:   clientProfile.pseudoHeaderOrder,
+			insecureSkipVerify:  insecureSkipVerify,
+			connectionFlow:      clientProfile.connectionFlow,
+			clientHelloId:       clientProfile.clientHelloId,
+			cachedTransports:    make(map[string]http.RoundTripper),
+			cachedConnections:   make(map[string]net.Conn),
 		}
 	} else {
 		return &roundTripper{
-			dialer:             proxy.Direct,
-			transportOptions:   transportOptions,
-			settings:           clientProfile.settings,
-			settingsOrder:      clientProfile.settingsOrder,
-			priorities:         clientProfile.priorities,
-			pseudoHeaderOrder:  clientProfile.pseudoHeaderOrder,
-			insecureSkipVerify: insecureSkipVerify,
-			connectionFlow:     clientProfile.connectionFlow,
-			clientHelloId:      clientProfile.clientHelloId,
-			cachedTransports:   make(map[string]http.RoundTripper),
-			cachedConnections:  make(map[string]net.Conn),
+			dialer:              proxy.Direct,
+			transportOptions:    transportOptions,
+			serverNameOverwrite: serverNameOverwrite,
+			settings:            clientProfile.settings,
+			settingsOrder:       clientProfile.settingsOrder,
+			priorities:          clientProfile.priorities,
+			pseudoHeaderOrder:   clientProfile.pseudoHeaderOrder,
+			insecureSkipVerify:  insecureSkipVerify,
+			connectionFlow:      clientProfile.connectionFlow,
+			clientHelloId:       clientProfile.clientHelloId,
+			cachedTransports:    make(map[string]http.RoundTripper),
+			cachedConnections:   make(map[string]net.Conn),
 		}
 	}
 }

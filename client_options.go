@@ -20,14 +20,15 @@ type TransportOptions struct {
 }
 
 type httpClientConfig struct {
-	debug              bool
-	followRedirects    bool
-	insecureSkipVerify bool
-	proxyUrl           string
-	transportOptions   *TransportOptions
-	cookieJar          http.CookieJar
-	clientProfile      ClientProfile
-	timeout            time.Duration
+	debug               bool
+	followRedirects     bool
+	insecureSkipVerify  bool
+	proxyUrl            string
+	serverNameOverwrite string
+	transportOptions    *TransportOptions
+	cookieJar           http.CookieJar
+	clientProfile       ClientProfile
+	timeout             time.Duration
 }
 
 func WithProxyUrl(proxyUrl string) HttpClientOption {
@@ -75,5 +76,11 @@ func WithInsecureSkipVerify() HttpClientOption {
 func WithClientProfile(clientProfile ClientProfile) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.clientProfile = clientProfile
+	}
+}
+
+func WithServerNameOverwrite(serverName string) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.serverNameOverwrite = serverName
 	}
 }
