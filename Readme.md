@@ -45,6 +45,7 @@ type HttpClient interface {
     - 103 (chrome_103)
     - 104 (chrome_104)
     - 105 (chrome_105)
+    - 106 (chrome_106)
 - Safari
     - 15.6.1 (safari_15_6_1)
     - 16.0 (safari_16_0)

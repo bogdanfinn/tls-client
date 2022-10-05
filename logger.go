@@ -43,19 +43,19 @@ func NewDebugLogger(logger Logger) Logger {
 }
 
 func (n debugLogger) Debug(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(format, args))
+	fmt.Println(fmt.Sprintf(format, args...))
 }
 
 func (n debugLogger) Info(format string, args ...interface{}) {
-	n.logger.Info(format, args)
+	n.logger.Info(format, args...)
 }
 
 func (n debugLogger) Warn(format string, args ...interface{}) {
-	n.logger.Warn(format, args)
+	n.logger.Warn(format, args...)
 }
 
 func (n debugLogger) Error(format string, args ...interface{}) {
-	n.logger.Error(format, args)
+	n.logger.Error(format, args...)
 }
 
 type logger struct {
@@ -70,13 +70,13 @@ func (n logger) Debug(format string, args ...interface{}) {
 }
 
 func (n logger) Info(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(format, args))
+	fmt.Println(fmt.Sprintf(format, args...))
 }
 
 func (n logger) Warn(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(format, args))
+	fmt.Println(fmt.Sprintf(format, args...))
 }
 
 func (n logger) Error(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(format, args))
+	fmt.Println(fmt.Sprintf(format, args...))
 }

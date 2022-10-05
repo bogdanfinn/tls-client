@@ -5,12 +5,13 @@ import (
 	tls "github.com/bogdanfinn/utls"
 )
 
-var DefaultClientProfile = Chrome_105
+var DefaultClientProfile = Chrome_106
 
 var MappedTLSClients = map[string]ClientProfile{
 	"chrome_103":             Chrome_103,
 	"chrome_104":             Chrome_104,
 	"chrome_105":             Chrome_105,
+	"chrome_106":             Chrome_106,
 	"safari_15_6_1":          Safari_15_6_1,
 	"safari_16_0":            Safari_16_0,
 	"safari_ipad_15_6":       Safari_Ipad_15_6,
@@ -50,6 +51,31 @@ func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.Settin
 
 func (c ClientProfile) GetClientHelloSpec() (tls.ClientHelloSpec, error) {
 	return c.clientHelloId.ToSpec()
+}
+
+var Chrome_106 = ClientProfile{
+	clientHelloId: tls.HelloChrome_106,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      65536,
+		http2.SettingEnablePush:           0,
+		http2.SettingMaxConcurrentStreams: 1000,
+		http2.SettingInitialWindowSize:    6291456,
+		http2.SettingMaxHeaderListSize:    262144,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingEnablePush,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	},
+	connectionFlow: 15663105,
 }
 
 var Chrome_105 = ClientProfile{
