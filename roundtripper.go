@@ -42,14 +42,18 @@ func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	addr := rt.getDialTLSAddr(req)
 
 	rt.cachedTransportsLck.Lock()
-	defer rt.cachedTransportsLck.Unlock()
 
 	if _, ok := rt.cachedTransports[addr]; !ok {
 		if err := rt.getTransport(req, addr); err != nil {
+			rt.cachedTransportsLck.Unlock()
 			return nil, err
 		}
 	}
-	return rt.cachedTransports[addr].RoundTrip(req)
+
+	t := rt.cachedTransports[addr]
+	rt.cachedTransportsLck.Unlock()
+
+	return t.RoundTrip(req)
 }
 
 func (rt *roundTripper) getTransport(req *http.Request, addr string) error {
