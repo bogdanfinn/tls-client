@@ -7,7 +7,6 @@ import (
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
-	"github.com/bogdanfinn/fhttp/cookiejar"
 	"golang.org/x/net/proxy"
 )
 
@@ -114,22 +113,19 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 		redirectFunc = nil
 	}
 
-	var cJar http.CookieJar
-
-	if config.cookieJar != nil {
-		cJar = config.cookieJar
-	} else {
-		cJar, _ = cookiejar.New(nil)
-	}
-
 	clientProfile := config.clientProfile
 
-	return &http.Client{
-		Jar:           cJar,
+	client := &http.Client{
 		Timeout:       config.timeout,
 		Transport:     newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, dialer),
 		CheckRedirect: redirectFunc,
-	}, clientProfile, nil
+	}
+
+	if config.cookieJar != nil {
+		client.Jar = config.cookieJar
+	}
+
+	return client, clientProfile, nil
 }
 
 func (c *httpClient) SetFollowRedirect(followRedirect bool) {
