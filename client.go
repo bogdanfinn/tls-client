@@ -7,6 +7,7 @@ import (
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
+	"github.com/bogdanfinn/fhttp/cookiejar"
 	"golang.org/x/net/proxy"
 )
 
@@ -43,7 +44,9 @@ var DefaultOptions = []HttpClientOption{
 }
 
 func ProvideDefaultClient(logger Logger) (HttpClient, error) {
-	return NewHttpClient(logger, DefaultOptions...)
+	jar, _ := cookiejar.New(nil)
+
+	return NewHttpClient(logger, append(DefaultOptions, WithCookieJar(jar))...)
 }
 
 func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, error) {
@@ -215,6 +218,7 @@ func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 		}
 
 		if alreadyInJar {
+			c.logger.Debug("cookie %s is already in jar", cookie.Name)
 			continue
 		}
 

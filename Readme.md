@@ -97,17 +97,19 @@ import (
 	"log"
 
 	http "github.com/bogdanfinn/fhttp"
+    "github.com/bogdanfinn/fhttp/cookiejar"
 	tls_client "github.com/bogdanfinn/tls-client"
 )
 
 func main() {
+    jar, _ := cookiejar.New(nil)
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
 		tls_client.WithClientProfile(tls_client.Chrome_105),
 		tls_client.WithNotFollowRedirects(), 
+		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
 		//tls_client.WithProxyUrl("http://user:pass@host:ip"),
 		//tls_client.WithInsecureSkipVerify(), 
-		//tls_client.WithCookieJar(cJar), // create cookieJar instance and pass it as argument
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
@@ -169,7 +171,7 @@ WithTransportOptions
 ```
 
 #### Default Client
-The implemented default client is currently Chrome 105 with a configured request timeout of 30 seconds and no automatic redirect following.
+The implemented default client is currently Chrome 106 with a configured request timeout of 30 seconds and no automatic redirect following and with a cookiejar.
 
 ### Compile this client as a shared library for use in other languages like Python or NodeJS
 Please take a look at the cross compile build script in `cffi_dist/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).

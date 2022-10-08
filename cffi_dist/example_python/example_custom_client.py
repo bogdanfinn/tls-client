@@ -2,7 +2,7 @@ import ctypes
 import json
 
 # load the tls-client shared package for your OS you are currently running your python script (i'm running on mac)
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-0.7.0.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-0.7.3.dylib')
 
 # extract the exposed request function from the shared package
 request = library.request
@@ -16,6 +16,7 @@ getCookiesFromSession.restype = ctypes.c_char_p
 requestPayload = {
     "followRedirects": False,
     "insecureSkipVerify": False,
+    "withoutCookieJar": False,
     "timeoutSeconds": 30,
     "sessionId": "2my-session-id",
     "customTlsClient": {
