@@ -1,16 +1,29 @@
 package tests
 
 import (
+	"io/ioutil"
 	"net/url"
 	"testing"
 
 	http "github.com/bogdanfinn/fhttp"
+	"github.com/bogdanfinn/fhttp/cookiejar"
 	tls_client "github.com/bogdanfinn/tls-client"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestClient_SkipExistingCookies(t *testing.T) {
-	client, err := tls_client.ProvideDefaultClient(tls_client.NewNoopLogger())
+func TestClient_SkipExistingCookiesOnClientSetCookies(t *testing.T) {
+	jar, _ := cookiejar.New(nil)
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithCookieJar(jar),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,6 +39,7 @@ func TestClient_SkipExistingCookies(t *testing.T) {
 		Name:  "test1",
 		Value: "test1",
 	}
+
 	client.SetCookies(u, []*http.Cookie{cookie})
 
 	assert.Equal(t, 1, len(client.GetCookies(u)))
@@ -35,7 +49,7 @@ func TestClient_SkipExistingCookies(t *testing.T) {
 		Value: "test2",
 	}
 	client.SetCookies(u, []*http.Cookie{cookie2})
-	
+
 	assert.Equal(t, 2, len(client.GetCookies(u)))
 
 	cookie3 := &http.Cookie{
@@ -45,4 +59,206 @@ func TestClient_SkipExistingCookies(t *testing.T) {
 	client.SetCookies(u, []*http.Cookie{cookie3})
 
 	assert.Equal(t, 2, len(client.GetCookies(u)))
+}
+
+func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
+	jar, _ := cookiejar.New(nil)
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithCookieJar(jar),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://de.topps.com/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = http.Header{
+		"accept":          {"*/*"},
+		"accept-encoding": {"gzip"},
+		"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+		"user-agent":      {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"accept-encoding",
+			"accept-language",
+			"user-agent",
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	u := &url.URL{
+		Scheme: "https",
+		Host:   "de.topps.com",
+		Path:   "",
+	}
+
+	cookiesAfterFirstRequest := client.GetCookies(u)
+
+	assert.Equal(t, 1, len(cookiesAfterFirstRequest))
+
+	cookie2 := &http.Cookie{
+		Name:   cookiesAfterFirstRequest[0].Name,
+		Value:  cookiesAfterFirstRequest[0].Value,
+		Domain: cookiesAfterFirstRequest[0].Domain,
+	}
+	client.SetCookies(u, []*http.Cookie{cookie2})
+
+	assert.Equal(t, 1, len(client.GetCookies(u)))
+
+	req, err = http.NewRequest(http.MethodGet, "https://de.topps.com/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = http.Header{
+		"accept":          {"*/*"},
+		"accept-encoding": {"gzip"},
+		"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+		"user-agent":      {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"accept-encoding",
+			"accept-language",
+			"user-agent",
+		},
+	}
+
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cookiesAfterSecondRequest := client.GetCookies(u)
+
+	assert.Equal(t, 1, len(cookiesAfterSecondRequest))
+}
+
+func TestClient_SkipExistingCookiesOnRequest(t *testing.T) {
+	jar, _ := cookiejar.New(nil)
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithCookieJar(jar),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://de.topps.com/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = http.Header{
+		"accept":          {"*/*"},
+		"accept-encoding": {"gzip"},
+		"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+		"user-agent":      {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"accept-encoding",
+			"accept-language",
+			"user-agent",
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	u := &url.URL{
+		Scheme: "https",
+		Host:   "de.topps.com",
+		Path:   "",
+	}
+
+	cookiesAfterFirstRequest := client.GetCookies(u)
+
+	assert.Equal(t, 1, len(cookiesAfterFirstRequest))
+
+	cookie2 := &http.Cookie{
+		Name:   cookiesAfterFirstRequest[0].Name,
+		Value:  cookiesAfterFirstRequest[0].Value,
+		Domain: cookiesAfterFirstRequest[0].Domain,
+	}
+
+	req, err = http.NewRequest(http.MethodGet, "https://de.topps.com/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.AddCookie(cookie2)
+
+	req.Header = http.Header{
+		"accept":          {"*/*"},
+		"accept-encoding": {"gzip"},
+		"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+		"user-agent":      {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"accept-encoding",
+			"accept-language",
+			"user-agent",
+		},
+	}
+
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cookiesAfterSecondRequest := client.GetCookies(u)
+
+	assert.Equal(t, 1, len(cookiesAfterSecondRequest))
+
 }

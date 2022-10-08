@@ -183,6 +183,11 @@ func (c *httpClient) applyProxy() error {
 
 func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
 	c.logger.Info(fmt.Sprintf("get cookies for url: %s", u.String()))
+	if c.Jar == nil {
+		c.logger.Warn("you did not setup a cookie jar")
+		return nil
+	}
+
 	return c.Jar.Cookies(u)
 }
 
@@ -190,6 +195,11 @@ func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	c.logger.Info(fmt.Sprintf("set cookies for url: %s", u.String()))
 
 	var filteredCookies []*http.Cookie
+
+	if c.Jar == nil {
+		c.logger.Warn("you did not setup a cookie jar")
+		return
+	}
 
 	existingCookies := c.Jar.Cookies(u)
 
