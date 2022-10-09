@@ -27,6 +27,7 @@ var MappedTLSClients = map[string]ClientProfile{
 	"zalando_android_mobile": ZalandoAndroidMobile,
 	"nike_ios_mobile":        NikeIosMobile,
 	"nike_android_mobile":    NikeAndroidMobile,
+	"cloudflare_custom":      CloudflareCustom,
 }
 
 type ClientProfile struct {

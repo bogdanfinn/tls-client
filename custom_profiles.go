@@ -291,3 +291,90 @@ var NikeAndroidMobile = ClientProfile{
 	},
 	connectionFlow: 15663105,
 }
+
+/*
+				 771,49171-49172-49161-49162-255,0-11-10-35-16-22-23-13,23
+[JA3 Fullstring: 771,49171-49172-49161-49162-255,0-11-10-35-16-22-23-13,23,0-1-2]
+[JA3: 1ba298e44112a4d4c91800ebaa6ccd2f]
+*/
+var CloudflareCustom = ClientProfile{
+	clientHelloId: tls.ClientHelloID{
+		Client:  "CloudflareCustom",
+		Version: "1",
+		Seed:    nil,
+		SpecFactory: func() (tls.ClientHelloSpec, error) {
+			return tls.ClientHelloSpec{
+				CipherSuites: []uint16{
+					tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+					tls.FAKE_TLS_EMPTY_RENEGOTIATION_INFO_SCSV,
+				},
+				CompressionMethods: []uint8{
+					tls.CompressionNone,
+				},
+				Extensions: []tls.TLSExtension{
+					&tls.SNIExtension{},
+					&tls.SupportedPointsExtension{[]uint8{
+						tls.PointFormatUncompressed,
+						1, // ansiX962_compressed_prime
+						2, // ansiX962_compressed_char2
+					}},
+					&tls.SupportedCurvesExtension{[]tls.CurveID{
+						tls.CurveP256,
+					}},
+					&tls.SessionTicketExtension{},
+					&tls.ALPNExtension{AlpnProtocols: []string{"http/1.1"}},
+					&tls.GenericExtension{Id: 22}, // encrypt_then_mac
+					&tls.UtlsExtendedMasterSecretExtension{},
+					&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
+						tls.ECDSAWithP256AndSHA256,
+						tls.ECDSAWithP384AndSHA384,
+						tls.ECDSAWithP521AndSHA512,
+						0x0807,
+						0x0808,
+						0x0809,
+						0x080a,
+						0x080b,
+						0x0804,
+						tls.PSSWithSHA384,
+						tls.PSSWithSHA512,
+						tls.PKCS1WithSHA256,
+						tls.PKCS1WithSHA384,
+						tls.PKCS1WithSHA512,
+						0x0303,
+						0x0301,
+						0x0302,
+						0x0402,
+						0x0502,
+						0x0602,
+					}},
+				},
+			}, nil
+		},
+	},
+
+	//actually the h2 settings are not relevant, because this client does only support http1
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      4096,
+		http2.SettingMaxConcurrentStreams: math.MaxUint32,
+		http2.SettingInitialWindowSize:    16777216,
+		http2.SettingMaxFrameSize:         16384,
+		http2.SettingMaxHeaderListSize:    math.MaxUint32,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxFrameSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":path",
+		":authority",
+		":scheme",
+	},
+	connectionFlow: 15663105,
+}
