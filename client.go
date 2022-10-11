@@ -231,3 +231,16 @@ func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 func (c *httpClient) GetCookieJar() http.CookieJar {
 	return c.Jar
 }
+
+func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
+	resp, err := c.Client.Do(req)
+
+	if err != nil {
+		c.logger.Debug("failed to do request: %s", err.Error())
+		return nil, err
+	}
+
+	c.logger.Debug("requested %s : status %d", req.URL.String(), resp.StatusCode)
+
+	return resp, nil
+}
