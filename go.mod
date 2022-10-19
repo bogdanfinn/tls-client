@@ -3,8 +3,9 @@ module github.com/bogdanfinn/tls-client
 go 1.18
 
 require (
-	github.com/bogdanfinn/fhttp v0.5.5
-	github.com/bogdanfinn/utls v0.5.5
+	github.com/PuerkitoBio/goquery v1.8.0
+	github.com/bogdanfinn/fhttp v0.5.6
+	github.com/bogdanfinn/utls v0.5.7
 	github.com/google/uuid v1.3.0
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/net v0.0.0-20220622184535-263ec571b305
@@ -12,6 +13,7 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

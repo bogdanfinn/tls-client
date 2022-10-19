@@ -59,6 +59,7 @@ type HttpClient interface {
     - 102 (firefox_102)
     - 104 (firefox_104)
     - 105 (firefox_105)
+    - 106 (firefox_106)
 - Opera
     - 89 (opera_89)
     - 90 (opera_90)

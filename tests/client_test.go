@@ -25,6 +25,9 @@ func TestClients(t *testing.T) {
 	t.Log("testing firefox 105")
 	firefox_105(t)
 	time.Sleep(2 * time.Second)
+	t.Log("testing firefox 106")
+	firefox_106(t)
+	time.Sleep(2 * time.Second)
 	t.Log("testing opera 91")
 	opera_91(t)
 }
@@ -140,6 +143,31 @@ func firefox_105(t *testing.T) {
 	}
 
 	compareResponse(t, "firefox", browserFingerprints[firefox][tls.HelloFirefox_105.Str()], resp)
+}
+
+func firefox_106(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Firefox_106),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "firefox", browserFingerprints[firefox][tls.HelloFirefox_106.Str()], resp)
 }
 
 func opera_91(t *testing.T) {

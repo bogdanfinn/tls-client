@@ -21,6 +21,7 @@ var MappedTLSClients = map[string]ClientProfile{
 	"firefox_102":            Firefox_102,
 	"firefox_104":            Firefox_104,
 	"firefox_105":            Firefox_105,
+	"firefox_106":            Firefox_106,
 	"opera_89":               Opera_89,
 	"opera_90":               Opera_90,
 	"opera_91":               Opera_91,
@@ -260,6 +261,59 @@ var Safari_IOS_15_6 = ClientProfile{
 		":authority",
 	},
 	connectionFlow: 10485760,
+}
+
+var Firefox_106 = ClientProfile{
+	clientHelloId: tls.HelloFirefox_106,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:   65536,
+		http2.SettingInitialWindowSize: 131072,
+		http2.SettingMaxFrameSize:      16384,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxFrameSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":path",
+		":authority",
+		":scheme",
+	},
+	connectionFlow: 12517377,
+	priorities: []http2.Priority{
+		{StreamID: 3, PriorityParam: http2.PriorityParam{
+			StreamDep: 0,
+			Exclusive: false,
+			Weight:    200,
+		}},
+		{StreamID: 5, PriorityParam: http2.PriorityParam{
+			StreamDep: 0,
+			Exclusive: false,
+			Weight:    100,
+		}},
+		{StreamID: 7, PriorityParam: http2.PriorityParam{
+			StreamDep: 0,
+			Exclusive: false,
+			Weight:    0,
+		}},
+		{StreamID: 9, PriorityParam: http2.PriorityParam{
+			StreamDep: 7,
+			Exclusive: false,
+			Weight:    0,
+		}},
+		{StreamID: 11, PriorityParam: http2.PriorityParam{
+			StreamDep: 3,
+			Exclusive: false,
+			Weight:    0,
+		}},
+		{StreamID: 13, PriorityParam: http2.PriorityParam{
+			StreamDep: 0,
+			Exclusive: false,
+			Weight:    240,
+		}},
+	},
 }
 
 var Firefox_105 = ClientProfile{
