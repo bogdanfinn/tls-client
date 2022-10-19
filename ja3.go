@@ -17,6 +17,14 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 			signatureAlgorithm, ok := signatureAlgorithms[supportedSignatureAlgorithm]
 			if ok {
 				mappedSignatureAlgorithms = append(mappedSignatureAlgorithms, signatureAlgorithm)
+			} else {
+				supportedSignatureAlgorithmAsUint, err := strconv.ParseUint(supportedSignatureAlgorithm, 16, 16)
+
+				if err != nil {
+					return tls.ClientHelloSpec{}, fmt.Errorf("%s is not a valid supportedSignatureAlgorithm", supportedSignatureAlgorithm)
+				}
+
+				mappedSignatureAlgorithms = append(mappedSignatureAlgorithms, tls.SignatureScheme(uint16(supportedSignatureAlgorithmAsUint)))
 			}
 		}
 
