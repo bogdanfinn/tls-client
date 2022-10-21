@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -25,14 +26,15 @@ import (
 )
 
 func main() {
-	shareHttpClientInGoRoutines()
-	requestToppsAsGoClient()
-	requestToppsAsChrome105Client()
-	requestWithFollowRedirectSwitch()
-	requestWithCustomClient()
-	rotateProxiesOnClient()
-	downloadImageWithTlsClient()
-	loginZalandoMobile()
+	//shareHttpClientInGoRoutines()
+	//requestToppsAsGoClient()
+	//requestToppsAsChrome105Client()
+	postAsTlsClient()
+	//requestWithFollowRedirectSwitch()
+	//requestWithCustomClient()
+	//rotateProxiesOnClient()
+	//downloadImageWithTlsClient()
+	//loginZalandoMobile()
 }
 
 func requestToppsAsGoClient() {
@@ -146,6 +148,55 @@ func requestToppsAsChrome105Client() {
 	}
 
 	log.Println(fmt.Sprintf("tls client cookies for url %s : %v", u.String(), client.GetCookies(u)))
+}
+
+func postAsTlsClient() {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeout(30),
+		tls_client.WithClientProfile(tls_client.Chrome_105),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	postData := url.Values{}
+	postData.Add("foo", "bar")
+	postData.Add("baz", "foo")
+
+	req, err := http.NewRequest(http.MethodPost, "https://eonk4gg5hquk0g6.m.pipedream.net", strings.NewReader(postData.Encode()))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req.Header = http.Header{
+		"accept":          {"*/*"},
+		"content-type":    {"application/"},
+		"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+		"user-agent":      {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"content-type",
+			"accept-language",
+			"user-agent",
+			"content-length",
+			"host",
+		},
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	log.Println(fmt.Sprintf("POST Request status code: %d", resp.StatusCode))
 }
 
 func shareHttpClientInGoRoutines() {
