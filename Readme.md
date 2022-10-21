@@ -66,6 +66,7 @@ type HttpClient interface {
     - 91 (opera_91)
 - Custom Clients
     - Zalando Android Mobile (zalando_android_mobile) 
+    - Zalando iOS Mobile (zalando_ios_mobile) 
     - Nike IOS Mobile (nike_ios_mobile)
     - Nike Android Mobile (nike_android_mobile)
 

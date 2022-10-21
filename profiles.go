@@ -26,6 +26,7 @@ var MappedTLSClients = map[string]ClientProfile{
 	"opera_90":               Opera_90,
 	"opera_91":               Opera_91,
 	"zalando_android_mobile": ZalandoAndroidMobile,
+	"zalando_ios_mobile":     ZalandoIosMobile,
 	"nike_ios_mobile":        NikeIosMobile,
 	"nike_android_mobile":    NikeAndroidMobile,
 	"cloudflare_custom":      CloudflareCustom,
