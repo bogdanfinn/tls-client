@@ -221,6 +221,55 @@ Please only load the dll once in your application and call every function `async
 * **My Post Request is not working correctly?**
 Please make sure that you set the correct `Content-Type` Header for your Post Body Payload.
 
+
+* **About `accept-encoding` and automatic decompression**
+If you are specifying `accept-encoding` header yourself and you are on `http1` connection than you have to take care of the **decompression yourself**.
+It is not done automatically. Only if you are not adding `accept-encoding` header then the library adds it for you if not explicit disabled and also handles the decompression automatically.
+
+On `http2` the automatic decompression should always be in place according to the `Content-Type` Header on the Response.
+
+So if you are trying to use "only" `accept-encoding: gzip` you have to take care of the decompression.
+`DecompressBody` is exported. You can just reuse it like that:
+
+```go
+req, err := http.NewRequest(http.MethodGet, "https://tls.browserleaks.com/json", nil)
+    if err != nil {
+        log.Println(err)
+        return
+    }
+
+    req.Header = http.Header{
+        "accept":          {"*/*"},
+        "accept-encoding": {"gzip"},
+        "accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+        "user-agent":      {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"},
+        http.HeaderOrderKey: {
+            "accept",
+            "accept-encoding",
+            "accept-language",
+            "user-agent",
+        },
+    }
+
+    resp, err := client.Do(req)
+
+    if err != nil {
+        log.Println(err)
+        return
+    }
+
+    defer resp.Body.Close()
+
+    decomBody := http.DecompressBody(resp)
+
+    all, err := ioutil.ReadAll(decomBody)
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    log.Println(string(all))
+```
+
 ### Questions?
 
 Join my discord support server: https: // discord.gg / 7Ej9eJvHqk 
