@@ -19,6 +19,26 @@ import (
 	"github.com/bogdanfinn/fhttp/http2"
 )
 
+type directDialer struct {
+	dialer net.Dialer
+}
+
+func newDirectDialer(timeout time.Duration) proxy.ContextDialer {
+	return &directDialer{
+		dialer: net.Dialer{
+			Timeout: timeout,
+		},
+	}
+}
+
+func (d *directDialer) Dial(network, addr string) (net.Conn, error) {
+	return d.dialer.Dial(network, addr)
+}
+
+func (d *directDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	return d.dialer.DialContext(ctx, network, addr)
+}
+
 type socksContextDialer struct {
 	socksDialer proxy.Dialer
 }

@@ -98,7 +98,7 @@ func validateConfig(config *httpClientConfig) error {
 
 func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, error) {
 	var dialer proxy.ContextDialer
-	dialer = proxy.Direct
+	dialer = newDirectDialer(config.timeout)
 
 	if config.proxyUrl != "" {
 		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout)
