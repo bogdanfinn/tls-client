@@ -34,7 +34,7 @@ func main() {
 	requestWithCustomClient()
 	rotateProxiesOnClient()
 	downloadImageWithTlsClient()
-	loginZalandoMobile()
+	loginZalandoMobileAndroid()
 }
 
 func requestToppsAsGoClient() {
@@ -362,6 +362,10 @@ func downloadImageWithTlsClient() {
 
 	defer resp.Body.Close()
 
+	bodyBytes, _ := ioutil.ReadAll(resp.Body)
+
+	log.Println(string(bodyBytes))
+
 	log.Println(fmt.Sprintf("requesting image => status code: %d", resp.StatusCode))
 
 	ex, err := os.Executable()
@@ -382,7 +386,7 @@ func downloadImageWithTlsClient() {
 	}
 	defer file.Close()
 
-	_, err = io.Copy(file, resp.Body)
+	_, err = io.Copy(file, bytes.NewReader(bodyBytes))
 	if err != nil {
 		log.Println(err)
 		return
@@ -671,7 +675,7 @@ type ZalandoLoginPayload struct {
 	Uuid           string `json:"uuid"`
 }
 
-func loginZalandoMobile() {
+func loginZalandoMobileAndroid() {
 	// next to the uuid you need ts and sig and of course akamai sensor data
 	id := uuid.New()
 	akamaiBmpSensor := ""
