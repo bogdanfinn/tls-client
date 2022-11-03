@@ -78,7 +78,7 @@ func requestToppsAsChrome105Client() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
 		tls_client.WithClientProfile(tls_client.Chrome_105),
-		//tls_client.WithProxyUrl("http://user:pass@host:ip"),
+		//tls_client.WithProxyUrl("http://user:pass@host:port"),
 		//tls_client.WithNotFollowRedirects(),
 		//tls_client.WithInsecureSkipVerify(),
 		tls_client.WithCookieJar(cJar), // create cookieJar instance and pass it as argument
