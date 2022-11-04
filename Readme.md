@@ -110,7 +110,7 @@ func main() {
 		tls_client.WithClientProfile(tls_client.Chrome_105),
 		tls_client.WithNotFollowRedirects(), 
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
-		//tls_client.WithProxyUrl("http://user:pass@host:ip"),
+		//tls_client.WithProxyUrl("http://user:pass@host:port"),
 		//tls_client.WithInsecureSkipVerify(), 
 	}
 
