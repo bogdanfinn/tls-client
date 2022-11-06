@@ -46,6 +46,7 @@ type HttpClient interface {
     - 104 (chrome_104)
     - 105 (chrome_105)
     - 106 (chrome_106)
+    - 107 (chrome_107)
 - Safari
     - 15.6.1 (safari_15_6_1)
     - 16.0 (safari_16_0)
@@ -173,7 +174,7 @@ WithTransportOptions
 ```
 
 #### Default Client
-The implemented default client is currently Chrome 106 with a configured request timeout of 30 seconds and no automatic redirect following and with a cookiejar.
+The implemented default client is currently Chrome 107 with a configured request timeout of 30 seconds and no automatic redirect following and with a cookiejar.
 
 ### Compile this client as a shared library for use in other languages like Python or NodeJS
 Please take a look at the cross compile build script in `cffi_dist/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).

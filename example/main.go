@@ -28,7 +28,7 @@ import (
 func main() {
 	shareHttpClientInGoRoutines()
 	requestToppsAsGoClient()
-	requestToppsAsChrome105Client()
+	requestToppsAsChrome107Client()
 	postAsTlsClient()
 	requestWithFollowRedirectSwitch()
 	requestWithCustomClient()
@@ -72,12 +72,12 @@ func requestToppsAsGoClient() {
 	log.Println(fmt.Sprintf("requesting topps as golang => status code: %d", re.StatusCode))
 }
 
-func requestToppsAsChrome105Client() {
+func requestToppsAsChrome107Client() {
 	cJar, _ := cookiejar.New(nil)
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithClientProfile(tls_client.Chrome_107),
 		//tls_client.WithProxyUrl("http://user:pass@host:port"),
 		//tls_client.WithNotFollowRedirects(),
 		//tls_client.WithInsecureSkipVerify(),
@@ -138,7 +138,7 @@ func requestToppsAsChrome105Client() {
 
 	defer resp.Body.Close()
 
-	log.Println(fmt.Sprintf("requesting topps as chrome105 => status code: %d", resp.StatusCode))
+	log.Println(fmt.Sprintf("requesting topps as chrome107 => status code: %d", resp.StatusCode))
 
 	u, err := url.Parse("https://www.topps.com/")
 
@@ -153,7 +153,7 @@ func requestToppsAsChrome105Client() {
 func postAsTlsClient() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithClientProfile(tls_client.Chrome_107),
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
@@ -202,7 +202,7 @@ func postAsTlsClient() {
 func shareHttpClientInGoRoutines() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithClientProfile(tls_client.Chrome_107),
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
@@ -260,7 +260,7 @@ func shareHttpClientInGoRoutines() {
 func requestWithFollowRedirectSwitch() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithClientProfile(tls_client.Chrome_107),
 		tls_client.WithNotFollowRedirects(),
 	}
 
@@ -337,7 +337,7 @@ func requestWithFollowRedirectSwitch() {
 func downloadImageWithTlsClient() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithClientProfile(tls_client.Chrome_107),
 		tls_client.WithNotFollowRedirects(),
 	}
 
@@ -398,7 +398,7 @@ func downloadImageWithTlsClient() {
 func rotateProxiesOnClient() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithClientProfile(tls_client.Chrome_107),
 		tls_client.WithProxyUrl("http://user:pass@host:port"),
 	}
 

@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "ffi-napi": "^4.0.3"
+  }
+}

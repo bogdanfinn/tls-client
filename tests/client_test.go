@@ -13,6 +13,8 @@ import (
 )
 
 func TestClients(t *testing.T) {
+	t.Log("testing chrome 107")
+	chrome107(t)
 	t.Log("testing chrome 105")
 	chrome105(t)
 	time.Sleep(2 * time.Second)
@@ -43,6 +45,31 @@ var defaultHeader = http.Header{
 		"accept-language",
 		"user-agent",
 	},
+}
+
+func chrome107(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_107),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_107.Str()], resp)
 }
 
 func chrome105(t *testing.T) {

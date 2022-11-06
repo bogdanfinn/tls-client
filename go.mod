@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/bogdanfinn/fhttp v0.5.6
-	github.com/bogdanfinn/utls v0.5.7
+	github.com/bogdanfinn/fhttp v0.5.7
+	github.com/bogdanfinn/utls v1.5.7
 	github.com/google/uuid v1.3.0
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/net v0.0.0-20220622184535-263ec571b305
