@@ -4,12 +4,19 @@ import base64
 import re
 
 # load the tls-client shared package for your OS you are currently running your python script (i'm running on mac)
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-0.8.2.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-0.8.3.dylib')
 
 # extract the exposed request function from the shared package
 request = library.request
 request.argtypes = [ctypes.c_char_p]
 request.restype = ctypes.c_char_p
+
+freeSession = library.freeSession
+freeSession.argtypes = [ctypes.c_char_p]
+freeSession.restype = ctypes.c_char_p
+
+freeAll = library.freeAll
+freeAll.restype = ctypes.c_char_p
 
 requestPayload = {
     "tlsClientIdentifier": "chrome_105",

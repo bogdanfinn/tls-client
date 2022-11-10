@@ -18,6 +18,31 @@ import (
 var clientsLock = sync.Mutex{}
 var clients = make(map[string]tls_client.HttpClient)
 
+func DestroyTlsClientSession(sessionId string) error {
+	clientsLock.Lock()
+	defer clientsLock.Unlock()
+
+	_, ok := clients[sessionId]
+
+	if !ok {
+		return fmt.Errorf("tls client session with id %s does not exist", sessionId)
+	}
+
+	delete(clients, sessionId)
+
+	return nil
+}
+
+func DestroyTlsClientSessions() error {
+	clientsLock.Lock()
+	defer clientsLock.Unlock()
+
+	// the remaining clients will be cleaned up by the garbage collection
+	clients = make(map[string]tls_client.HttpClient)
+
+	return nil
+}
+
 func GetTlsClientFromSession(sessionId string) (tls_client.HttpClient, error) {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()

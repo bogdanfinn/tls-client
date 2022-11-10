@@ -1,7 +1,7 @@
 import ctypes
 import json
 
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-0.8.2.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-0.8.3.dylib')
 
 # extract the exposed request function from the shared package
 request = library.request
@@ -11,6 +11,13 @@ request.restype = ctypes.c_char_p
 getCookiesFromSession = library.getCookiesFromSession
 getCookiesFromSession.argtypes = [ctypes.c_char_p]
 getCookiesFromSession.restype = ctypes.c_char_p
+
+freeSession = library.freeSession
+freeSession.argtypes = [ctypes.c_char_p]
+freeSession.restype = ctypes.c_char_p
+
+freeAll = library.freeAll
+freeAll.restype = ctypes.c_char_p
 
 requestPayload = {
     "tlsClientIdentifier": "chrome_105",

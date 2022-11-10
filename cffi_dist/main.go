@@ -10,6 +10,62 @@ import (
 	tls_client_cffi_src "github.com/bogdanfinn/tls-client/cffi_src"
 )
 
+//export freeAll
+func freeAll() *C.char {
+	err := tls_client_cffi_src.DestroyTlsClientSessions()
+
+	if err != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(err)
+		return handleErrorResponse("", false, clientErr)
+	}
+
+	out := tls_client_cffi_src.FreeOutput{
+		Success: true,
+	}
+
+	jsonResponse, marshallError := json.Marshal(out)
+
+	if marshallError != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+		return handleErrorResponse("", false, clientErr)
+	}
+
+	return C.CString(string(jsonResponse))
+}
+
+//export freeSession
+func freeSession(freeSessionParams *C.char) *C.char {
+	freeSessionParamsJson := C.GoString(freeSessionParams)
+
+	freeSessionInput := tls_client_cffi_src.FreeSessionInput{}
+	marshallError := json.Unmarshal([]byte(freeSessionParamsJson), &freeSessionInput)
+
+	if marshallError != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+		return handleErrorResponse("", false, clientErr)
+	}
+
+	err := tls_client_cffi_src.DestroyTlsClientSession(freeSessionInput.SessionId)
+
+	if err != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(err)
+		return handleErrorResponse(freeSessionInput.SessionId, true, clientErr)
+	}
+
+	out := tls_client_cffi_src.FreeOutput{
+		Success: true,
+	}
+
+	jsonResponse, marshallError := json.Marshal(out)
+
+	if marshallError != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+		return handleErrorResponse(freeSessionInput.SessionId, true, clientErr)
+	}
+
+	return C.CString(string(jsonResponse))
+}
+
 //export getCookiesFromSession
 func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 	getCookiesParamsJson := C.GoString(getCookiesParams)
