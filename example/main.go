@@ -593,7 +593,7 @@ func requestWithCustomClient() {
 				&tls.UtlsCompressCertExtension{[]tls.CertCompressionAlgo{
 					tls.CertCompressionBrotli,
 				}},
-				&tls.ALPSExtension{SupportedProtocols: []string{"h2"}},
+				&tls.ApplicationSettingsExtension{SupportedProtocols: []string{"h2"}},
 				&tls.UtlsGREASEExtension{},
 				&tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
 			},

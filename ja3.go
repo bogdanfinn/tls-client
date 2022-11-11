@@ -181,7 +181,7 @@ func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 				tls.PskModeDHE,
 			}},
 		tls.ExtensionNextProtoNeg: &tls.NPNExtension{},
-		tls.ExtensionALPS:         &tls.ALPSExtension{},
+		tls.ExtensionALPS:         &tls.ApplicationSettingsExtension{},
 		tls.ExtensionRenegotiationInfo: &tls.RenegotiationInfoExtension{
 			Renegotiation: tls.RenegotiateOnceAsClient,
 		},
