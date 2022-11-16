@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -36,7 +35,6 @@ func main() {
 	rotateProxiesOnClient()
 	downloadImageWithTlsClient()
 	loginZalandoMobileAndroid()
-	// exampleMemoryUsage()
 }
 
 func requestToppsAsGoClient() {
@@ -790,87 +788,4 @@ func loginZalandoMobileAndroid() {
 	}
 
 	log.Println(string(readBytes))
-}
-
-func exampleMemoryUsage() {
-	cJar, _ := cookiejar.New(nil)
-
-	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tls_client.Chrome_107),
-		tls_client.WithCookieJar(cJar),
-	}
-
-	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	for {
-		req, err := http.NewRequest(http.MethodGet, "https://www.topps.com/", nil)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		req.Header = http.Header{
-			"accept":                    {"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
-			"accept-encoding":           {"gzip"},
-			"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
-			"cache-control":             {"max-age=0"},
-			"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-			"sec-ch-ua":                 {`"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"`},
-			"sec-ch-ua-mobile":          {"?0"},
-			"sec-ch-ua-platform":        {`"macOS"`},
-			"sec-fetch-dest":            {"document"},
-			"sec-fetch-mode":            {"navigate"},
-			"sec-fetch-site":            {"none"},
-			"sec-fetch-user":            {"?1"},
-			"upgrade-insecure-requests": {"1"},
-			"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"},
-			http.HeaderOrderKey: {
-				"accept",
-				"accept-encoding",
-				"accept-language",
-				"cache-control",
-				"if-none-match",
-				"sec-ch-ua",
-				"sec-ch-ua-mobile",
-				"sec-ch-ua-platform",
-				"sec-fetch-dest",
-				"sec-fetch-mode",
-				"sec-fetch-site",
-				"sec-fetch-user",
-				"upgrade-insecure-requests",
-				"user-agent",
-			},
-		}
-
-		resp, err := client.Do(req)
-
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		resp.Body.Close()
-
-		printMemUsage()
-		time.Sleep(5 * time.Second)
-	}
-}
-
-func printMemUsage() {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-	// For info on each, see: https://golang.org/pkg/runtime/#MemStats
-	fmt.Printf("Alloc = %v MiB", bToMb(m.Alloc))
-	fmt.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
-	fmt.Printf("\tSys = %v MiB", bToMb(m.Sys))
-	fmt.Printf("\tNumGC = %v\n", m.NumGC)
-}
-
-func bToMb(b uint64) uint64 {
-	return b / 1024 / 1024
 }

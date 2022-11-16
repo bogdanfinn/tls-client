@@ -338,7 +338,7 @@ func cookiesToMap(cookies []*http.Cookie) map[string]string {
 	ret := make(map[string]string, 0)
 
 	for _, c := range cookies {
-		ret[c.Name] = c.String()
+		ret[c.Name] = c.Value
 	}
 
 	return ret
