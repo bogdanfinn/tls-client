@@ -4,7 +4,7 @@ import asyncio
 import os, psutil
 
 # load the tls-client shared package for your OS you are currently running your python script (i'm running on mac)
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-0.8.3.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-0.9.0.dylib')
 
 # extract the exposed request function from the shared package
 request = library.request
@@ -27,6 +27,7 @@ async def main():
             "followRedirects": False,
             "insecureSkipVerify": False,
             "withoutCookieJar": False,
+            "withRandomTLSExtensionOrder": False,
             "session": i,
             "timeoutSeconds": 30,
             "proxyUrl": "",

@@ -29,7 +29,8 @@ type roundTripper struct {
 	pseudoHeaderOrder   []string
 	connectionFlow      uint32
 
-	insecureSkipVerify bool
+	insecureSkipVerify          bool
+	withRandomTlsExtensionOrder bool
 
 	cachedTransportsLck sync.Mutex
 	cachedConnections   map[string]net.Conn
@@ -124,7 +125,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		host = addr
 	}
 
-	conn := utls.UClient(rawConn, &utls.Config{ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify}, rt.clientHelloId)
+	conn := utls.UClient(rawConn, &utls.Config{ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify}, rt.clientHelloId, rt.withRandomTlsExtensionOrder)
 	if err = conn.Handshake(); err != nil {
 		_ = conn.Close()
 		return nil, err
@@ -238,36 +239,28 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443") // we can assume port is 443 at this point
 }
 
-func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, dialer ...proxy.ContextDialer) http.RoundTripper {
-	if len(dialer) > 0 {
-		return &roundTripper{
-			dialer:              dialer[0],
-			transportOptions:    transportOptions,
-			serverNameOverwrite: serverNameOverwrite,
-			settings:            clientProfile.settings,
-			settingsOrder:       clientProfile.settingsOrder,
-			priorities:          clientProfile.priorities,
-			pseudoHeaderOrder:   clientProfile.pseudoHeaderOrder,
-			insecureSkipVerify:  insecureSkipVerify,
-			connectionFlow:      clientProfile.connectionFlow,
-			clientHelloId:       clientProfile.clientHelloId,
-			cachedTransports:    make(map[string]http.RoundTripper),
-			cachedConnections:   make(map[string]net.Conn),
-		}
-	} else {
-		return &roundTripper{
-			dialer:              proxy.Direct,
-			transportOptions:    transportOptions,
-			serverNameOverwrite: serverNameOverwrite,
-			settings:            clientProfile.settings,
-			settingsOrder:       clientProfile.settingsOrder,
-			priorities:          clientProfile.priorities,
-			pseudoHeaderOrder:   clientProfile.pseudoHeaderOrder,
-			insecureSkipVerify:  insecureSkipVerify,
-			connectionFlow:      clientProfile.connectionFlow,
-			clientHelloId:       clientProfile.clientHelloId,
-			cachedTransports:    make(map[string]http.RoundTripper),
-			cachedConnections:   make(map[string]net.Conn),
-		}
+func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, dialer ...proxy.ContextDialer) http.RoundTripper {
+	rt := &roundTripper{
+		dialer:                      dialer[0],
+		transportOptions:            transportOptions,
+		serverNameOverwrite:         serverNameOverwrite,
+		settings:                    clientProfile.settings,
+		settingsOrder:               clientProfile.settingsOrder,
+		priorities:                  clientProfile.priorities,
+		pseudoHeaderOrder:           clientProfile.pseudoHeaderOrder,
+		insecureSkipVerify:          insecureSkipVerify,
+		withRandomTlsExtensionOrder: withRandomTlsExtensionOrder,
+		connectionFlow:              clientProfile.connectionFlow,
+		clientHelloId:               clientProfile.clientHelloId,
+		cachedTransports:            make(map[string]http.RoundTripper),
+		cachedConnections:           make(map[string]net.Conn),
 	}
+
+	if len(dialer) > 0 {
+		rt.dialer = dialer[0]
+	} else {
+		rt.dialer = proxy.Direct
+	}
+
+	return rt
 }

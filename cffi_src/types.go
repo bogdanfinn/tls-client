@@ -34,21 +34,22 @@ type GetCookiesFromSessionInput struct {
 }
 
 type RequestInput struct {
-	SessionId           *string           `json:"sessionId"`
-	TLSClientIdentifier string            `json:"tlsClientIdentifier"`
-	CustomTlsClient     *CustomTlsClient  `json:"customTlsClient"`
-	FollowRedirects     bool              `json:"followRedirects"`
-	IsByteResponse      bool              `json:"isByteResponse"`
-	WithoutCookieJar    bool              `json:"withoutCookieJar"`
-	InsecureSkipVerify  bool              `json:"insecureSkipVerify"`
-	TimeoutSeconds      int               `json:"timeoutSeconds"`
-	ProxyUrl            *string           `json:"proxyUrl"`
-	Headers             map[string]string `json:"headers"`
-	HeaderOrder         []string          `json:"headerOrder"`
-	RequestUrl          string            `json:"requestUrl"`
-	RequestMethod       string            `json:"requestMethod"`
-	RequestBody         *string           `json:"requestBody"`
-	RequestCookies      []CookieInput     `json:"requestCookies"`
+	SessionId                   *string           `json:"sessionId"`
+	TLSClientIdentifier         string            `json:"tlsClientIdentifier"`
+	CustomTlsClient             *CustomTlsClient  `json:"customTlsClient"`
+	FollowRedirects             bool              `json:"followRedirects"`
+	IsByteResponse              bool              `json:"isByteResponse"`
+	WithoutCookieJar            bool              `json:"withoutCookieJar"`
+	WithRandomTLSExtensionOrder bool              `json:"withRandomTLSExtensionOrder"`
+	InsecureSkipVerify          bool              `json:"insecureSkipVerify"`
+	TimeoutSeconds              int               `json:"timeoutSeconds"`
+	ProxyUrl                    *string           `json:"proxyUrl"`
+	Headers                     map[string]string `json:"headers"`
+	HeaderOrder                 []string          `json:"headerOrder"`
+	RequestUrl                  string            `json:"requestUrl"`
+	RequestMethod               string            `json:"requestMethod"`
+	RequestBody                 *string           `json:"requestBody"`
+	RequestCookies              []CookieInput     `json:"requestCookies"`
 }
 
 type CustomTlsClient struct {

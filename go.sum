@@ -4,10 +4,10 @@ github.com/andybalholm/brotli v1.0.4 h1:V7DdXeJtZscaqfNuAdSRuRFzuiKlHSC/Zh3zl9qY
 github.com/andybalholm/brotli v1.0.4/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
 github.com/andybalholm/cascadia v1.3.1 h1:nhxRkql1kdYCc8Snf7D5/D3spOX+dBgjA6u8x004T2c=
 github.com/andybalholm/cascadia v1.3.1/go.mod h1:R4bJ1UQfqADjvDa4P6HZHLh/3OxWWEqc0Sk8XGwHqvA=
-github.com/bogdanfinn/fhttp v0.5.8 h1:zPZkWlIqaffnUm0HEXpnXfrZuDL3qf7Z/mY/SVGL/FI=
-github.com/bogdanfinn/fhttp v0.5.8/go.mod h1:ooy0Px9CE2LANqzMfYXsw20mCGsuMjMHpQbBGSX9lcQ=
-github.com/bogdanfinn/utls v1.5.8 h1:7hsbCdOmbdaoKhHRy/33a4MGbod+fZD+y41u+jEliMk=
-github.com/bogdanfinn/utls v1.5.8/go.mod h1:1UTl702vnhYVtMCI1KIzoju8P4/dHnrCHRSzvBiRDMA=
+github.com/bogdanfinn/fhttp v0.5.9 h1:J2VXWQP09ljqAk8Z0z0CMRelgOmYwcThOcLMzF5FbHU=
+github.com/bogdanfinn/fhttp v0.5.9/go.mod h1:sG3i2OwhEgSMgmQ6CBZcvGpf47WyP7WRaoiQQB7Qx7U=
+github.com/bogdanfinn/utls v1.5.9 h1:pRyzdVdVieYg5HuVWDMn7K/moSjh14TbCXCntMvGcYI=
+github.com/bogdanfinn/utls v1.5.9/go.mod h1:mHeRCi69cUiEyVBkKONB1cAbLjRcZnlJbGzttmiuK4o=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -17,7 +17,6 @@ github.com/klauspost/compress v1.15.12 h1:YClS/PImqYbn+UILDnqxQCZ3RehC9N318SU3kE
 github.com/klauspost/compress v1.15.12/go.mod h1:QPwzmACJjUTFsnSHH934V6woptycfrDDJnH7hvFVbGM=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/refraction-networking/utls v1.1.5 h1:JtrojoNhbUQkBqEg05sP3gDgDj6hIEAAVKbI9lx4n6w=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=

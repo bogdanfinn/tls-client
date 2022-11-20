@@ -10,8 +10,10 @@ import (
 )
 
 func TestJA3(t *testing.T) {
-	t.Log("testing ja3 chrome")
+	t.Log("testing ja3 chrome 105")
 	ja3_chrome_105(t)
+	t.Log("testing ja3 chrome 107")
+	ja3_chrome_107(t)
 	t.Log("testing ja3 firefox")
 	ja3_firefox_105(t)
 	t.Log("testing ja3 opera")
@@ -20,6 +22,28 @@ func TestJA3(t *testing.T) {
 
 func ja3_chrome_105(t *testing.T) {
 	input := browserFingerprints[chrome][utls.HelloChrome_105.Str()][ja3String]
+
+	ssa := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
+	sv := []string{"1.3", "1.2"}
+	sc := []string{"GREASE", "X25519"}
+
+	specFunc, err := tls_client.GetSpecFactoryFromJa3String(input, ssa, sv, sc, "zlib")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	spec, err := specFunc()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, len(spec.CipherSuites), 15, "Client should have 15 CipherSuites")
+	assert.Equal(t, len(spec.Extensions), 16, "Client should have 16 extensions")
+}
+
+func ja3_chrome_107(t *testing.T) {
+	input := browserFingerprints[chrome][utls.HelloChrome_107.Str()][ja3String]
 
 	ssa := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
 	sv := []string{"1.3", "1.2"}
@@ -64,7 +88,7 @@ func ja3_firefox_105(t *testing.T) {
 
 func ja3_opera_91(t *testing.T) {
 	input := browserFingerprints[opera][utls.HelloOpera_91.Str()][ja3String]
-	
+
 	ssa := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
 	sv := []string{"1.3", "1.2"}
 	sc := []string{"GREASE", "X25519"}

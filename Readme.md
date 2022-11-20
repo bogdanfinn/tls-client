@@ -73,6 +73,9 @@ type HttpClient interface {
 
 You can also provide your own client. See the example how to do it.
 
+All Clients support Random TLS Extension Order by setting the option on the Http Client itself `WithRandomTLSExtensionOrder()`.
+This is needed for Chrome 107+
+
 #### Need other clients?
 
 Please open an issue on this github repository. In the best case you provide the response of https://tls.peet.ws/api/all requested by the client you want to be implemented.
@@ -199,9 +202,13 @@ ja3. Be aware that also peets api does not show every extension/cipher a tls cli
 If you are not using go and do not want to implement the shared library but want to use the functionality check out this repository https://github.com/bogdanfinn/tls-client-api
 
 ### Frequently Asked Questions / Errors
+* **I receive PROTOCOL_ERROR on POST Request**
+
+This is a very generic error and can have many root causes. Most likely users of this client are setting the `content-length` header manually with a (wrong) fixed value.
+
 * **This client fails when I test on www.google.com**
 
-Please check this issue for explanation: https://github.com/bogdanfinn/tls-client/issues/6
+Please check this issue for explanation: https://github.com/bogdanfinn/tls-client/issues/6. Should be fixed since 0.8.3
  
 * **I'm receiving `tls: error decoding message` when using this TLS Client.**
 

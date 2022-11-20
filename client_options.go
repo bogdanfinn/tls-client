@@ -20,15 +20,16 @@ type TransportOptions struct {
 }
 
 type httpClientConfig struct {
-	debug               bool
-	followRedirects     bool
-	insecureSkipVerify  bool
-	proxyUrl            string
-	serverNameOverwrite string
-	transportOptions    *TransportOptions
-	cookieJar           http.CookieJar
-	clientProfile       ClientProfile
-	timeout             time.Duration
+	debug                       bool
+	followRedirects             bool
+	insecureSkipVerify          bool
+	proxyUrl                    string
+	serverNameOverwrite         string
+	transportOptions            *TransportOptions
+	cookieJar                   http.CookieJar
+	clientProfile               ClientProfile
+	withRandomTlsExtensionOrder bool
+	timeout                     time.Duration
 }
 
 func WithProxyUrl(proxyUrl string) HttpClientOption {
@@ -52,6 +53,12 @@ func WithTimeout(timeout int) HttpClientOption {
 func WithNotFollowRedirects() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.followRedirects = false
+	}
+}
+
+func WithRandomTLSExtensionOrder() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.withRandomTlsExtensionOrder = true
 	}
 }
 

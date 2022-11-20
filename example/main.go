@@ -33,8 +33,8 @@ func main() {
 	requestWithFollowRedirectSwitch()
 	requestWithCustomClient()
 	rotateProxiesOnClient()
-	downloadImageWithTlsClient()
 	loginZalandoMobileAndroid()
+	downloadImageWithTlsClient()
 }
 
 func requestToppsAsGoClient() {
@@ -363,8 +363,6 @@ func downloadImageWithTlsClient() {
 	defer resp.Body.Close()
 
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-
-	log.Println(string(bodyBytes))
 
 	log.Println(fmt.Sprintf("requesting image => status code: %d", resp.StatusCode))
 
