@@ -1,10 +1,14 @@
 package main
 
+/*
+#include <stdlib.h>
+*/
 import "C"
 import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"unsafe"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client_cffi_src "github.com/bogdanfinn/tls-client/cffi_src"
@@ -30,7 +34,10 @@ func freeAll() *C.char {
 		return handleErrorResponse("", false, clientErr)
 	}
 
-	return C.CString(string(jsonResponse))
+	responseString := C.CString(string(jsonResponse))
+
+	defer C.free(unsafe.Pointer(responseString))
+	return responseString
 }
 
 //export freeSession
@@ -63,7 +70,10 @@ func freeSession(freeSessionParams *C.char) *C.char {
 		return handleErrorResponse(freeSessionInput.SessionId, true, clientErr)
 	}
 
-	return C.CString(string(jsonResponse))
+	responseString := C.CString(string(jsonResponse))
+
+	defer C.free(unsafe.Pointer(responseString))
+	return responseString
 }
 
 //export getCookiesFromSession
@@ -100,7 +110,10 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
 	}
 
-	return C.CString(string(jsonResponse))
+	responseString := C.CString(string(jsonResponse))
+
+	defer C.free(unsafe.Pointer(responseString))
+	return responseString
 }
 
 //export request
@@ -155,7 +168,10 @@ func request(requestParams *C.char) *C.char {
 		return handleErrorResponse(sessionId, withSession, clientErr)
 	}
 
-	return C.CString(string(jsonResponse))
+	responseString := C.CString(string(jsonResponse))
+
+	defer C.free(unsafe.Pointer(responseString))
+	return responseString
 }
 
 func handleErrorResponse(sessionId string, withSession bool, err *tls_client_cffi_src.TLSClientError) *C.char {
@@ -173,10 +189,16 @@ func handleErrorResponse(sessionId string, withSession bool, err *tls_client_cff
 	jsonResponse, marshallError := json.Marshal(response)
 
 	if marshallError != nil {
-		return C.CString(marshallError.Error())
+		errStr := C.CString(marshallError.Error())
+		defer C.free(unsafe.Pointer(errStr))
+
+		return errStr
 	}
 
-	return C.CString(string(jsonResponse))
+	responseString := C.CString(string(jsonResponse))
+
+	defer C.free(unsafe.Pointer(responseString))
+	return responseString
 }
 
 func buildCookies(cookies []tls_client_cffi_src.CookieInput) []*http.Cookie {

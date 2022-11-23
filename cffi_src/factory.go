@@ -96,13 +96,6 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	}
 
 	if input.RequestBody != nil && *input.RequestBody != "" {
-		_, ok1 := input.Headers["content-type"]
-		_, ok2 := input.Headers["Content-Type"]
-
-		if !ok1 && !ok2 {
-			return nil, NewTLSClientError(fmt.Errorf("if you are using a request post body please specify a Content-Type Header"))
-		}
-
 		requestBody := bytes.NewBuffer([]byte(*input.RequestBody))
 		tlsReq, err = http.NewRequest(input.RequestMethod, input.RequestUrl, requestBody)
 	} else {
