@@ -26,6 +26,7 @@ import (
 )
 
 func main() {
+	overwriteCookieInJar()
 	shareHttpClientInGoRoutines()
 	requestToppsAsGoClient()
 	requestToppsAsChrome107Client()
@@ -35,6 +36,129 @@ func main() {
 	rotateProxiesOnClient()
 	loginZalandoMobileAndroid()
 	downloadImageWithTlsClient()
+}
+
+var footlockerHeaders = http.Header{
+	"accept":             {"*/*"},
+	"accept-encoding":    {"gzip, deflate, br"},
+	"accept-language":    {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+	"cache-control":      {"no-cache"},
+	"sec-ch-ua":          {`"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"`},
+	"sec-ch-ua-mobile":   {"?0"},
+	"sec-ch-ua-platform": {`"macOS"`},
+	"sec-fetch-dest":     {"empty"},
+	"user-agent":         {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"},
+	http.HeaderOrderKey: {
+		"accept",
+		"accept-encoding",
+		"accept-language",
+		"cache-control",
+		"sec-ch-ua",
+		"sec-ch-ua-mobile",
+		"sec-ch-ua-platform",
+		"sec-fetch-dest",
+		"user-agent",
+	},
+}
+
+func overwriteCookieInJar() {
+	jarOptions := []tls_client.CookieJarOption{
+		tls_client.WithLogger(tls_client.NewNoopLogger()),
+		// tls_client.WithSkipExisting(), there is actually no need for this option!
+	}
+
+	jar := tls_client.NewCookieJar(jarOptions...)
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeout(60),
+		tls_client.WithClientProfile(tls_client.Chrome_107),
+		tls_client.WithRandomTLSExtensionOrder(),
+		tls_client.WithCookieJar(jar),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+
+	u := "https://www.footlocker.de/"
+	parsedUrl, _ := url.Parse(u)
+	req, err := http.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req.Header = footlockerHeaders
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(fmt.Sprintf("GET %s : %d", u, resp.StatusCode))
+
+	log.Println("cookies on request:")
+	for _, c := range resp.Request.Cookies() {
+		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+	}
+
+	log.Println("cookies on response:")
+	for _, c := range resp.Cookies() {
+		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+	}
+
+	log.Println("cookies on client:")
+	for _, c := range client.GetCookies(parsedUrl) {
+		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+	}
+
+	cookie := http.Cookie{
+		Name:  "datadome",
+		Value: "overwrittenValue",
+	}
+
+	log.Println(fmt.Sprintf("manual overwrite cookie in jar: %s: %s", cookie.Name, cookie.Value))
+
+	client.SetCookies(parsedUrl, []*http.Cookie{&cookie})
+	req.Header = footlockerHeaders
+
+	resp, err = client.Do(req)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(fmt.Sprintf("GET %s : %d", u, resp.StatusCode))
+
+	log.Println("cookies on request:")
+	for _, c := range resp.Request.Cookies() {
+		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+	}
+
+	log.Println("cookies on response:")
+	for _, c := range resp.Cookies() {
+		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+	}
+
+	log.Println("cookies on client:")
+	for _, c := range client.GetCookies(parsedUrl) {
+		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+	}
 }
 
 func requestToppsAsGoClient() {
