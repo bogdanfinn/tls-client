@@ -36,6 +36,8 @@ type roundTripper struct {
 	cachedConnections   map[string]net.Conn
 	cachedTransports    map[string]http.RoundTripper
 
+	forceHttp1 bool
+
 	dialer proxy.ContextDialer
 }
 
@@ -60,31 +62,7 @@ func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 func (rt *roundTripper) getTransport(req *http.Request, addr string) error {
 	switch strings.ToLower(req.URL.Scheme) {
 	case "http":
-		utlsConfig := &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
-
-		if rt.serverNameOverwrite != "" {
-			utlsConfig.ServerName = rt.serverNameOverwrite
-		}
-
-		t := &http.Transport{
-			DialContext:       rt.dialer.DialContext,
-			PseudoHeaderOrder: rt.pseudoHeaderOrder,
-			ConnectionFlow:    rt.connectionFlow,
-			TLSClientConfig:   utlsConfig,
-		}
-
-		if rt.transportOptions != nil {
-			t.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
-			t.DisableCompression = rt.transportOptions.DisableCompression
-			t.MaxIdleConns = rt.transportOptions.MaxIdleConns
-			t.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
-			t.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
-			t.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
-			t.WriteBufferSize = rt.transportOptions.WriteBufferSize
-			t.ReadBufferSize = rt.transportOptions.ReadBufferSize
-		}
-
-		rt.cachedTransports[addr] = t
+		rt.cachedTransports[addr] = rt.buildHttp1Transport()
 		return nil
 	case "https":
 	default:
@@ -136,88 +114,74 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	}
 
 	// No http.Transport constructed yet, create one based on the results
-	// of ALPN.
-	switch conn.ConnectionState().NegotiatedProtocol {
-	case http2.NextProtoTLS:
-		utlsConfig := &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
+	// of ALPN if no http1 is enforced.
 
-		if rt.serverNameOverwrite != "" {
-			utlsConfig.ServerName = rt.serverNameOverwrite
-		}
+	if rt.forceHttp1 {
+		rt.cachedTransports[addr] = rt.buildHttp1Transport()
+	} else {
 
-		t2 := http2.Transport{DialTLS: rt.dialTLSHTTP2, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
+		switch conn.ConnectionState().NegotiatedProtocol {
+		case http2.NextProtoTLS:
+			utlsConfig := &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
 
-		if rt.transportOptions != nil {
-			t1 := t2.GetT1()
-			if t1 != nil {
-				t1.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
-				t1.DisableCompression = rt.transportOptions.DisableCompression
-				t1.MaxIdleConns = rt.transportOptions.MaxIdleConns
-				t1.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
-				t1.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
-				t1.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
-				t1.WriteBufferSize = rt.transportOptions.WriteBufferSize
-				t1.ReadBufferSize = rt.transportOptions.ReadBufferSize
-			}
-		}
-
-		if rt.pseudoHeaderOrder == nil {
-			t2.PseudoHeaderOrder = []string{}
-		} else {
-			t2.PseudoHeaderOrder = rt.pseudoHeaderOrder
-		}
-
-		if rt.settings == nil {
-			// when we not provide a map of custom http2 settings
-			t2.Settings = map[http2.SettingID]uint32{
-				http2.SettingMaxConcurrentStreams: 1000,
-				http2.SettingMaxFrameSize:         16384,
-				http2.SettingInitialWindowSize:    6291456,
-				http2.SettingHeaderTableSize:      65536,
+			if rt.serverNameOverwrite != "" {
+				utlsConfig.ServerName = rt.serverNameOverwrite
 			}
 
-			keys := make([]http2.SettingID, len(t2.Settings))
+			t2 := http2.Transport{DialTLS: rt.dialTLSHTTP2, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
 
-			i := 0
-			// attention: the order might be random here for default values!
-			for k := range t2.Settings {
-				keys[i] = k
-				i++
+			if rt.transportOptions != nil {
+				t1 := t2.GetT1()
+				if t1 != nil {
+					t1.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
+					t1.DisableCompression = rt.transportOptions.DisableCompression
+					t1.MaxIdleConns = rt.transportOptions.MaxIdleConns
+					t1.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
+					t1.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
+					t1.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
+					t1.WriteBufferSize = rt.transportOptions.WriteBufferSize
+					t1.ReadBufferSize = rt.transportOptions.ReadBufferSize
+				}
 			}
 
-			t2.SettingsOrder = keys
-		} else {
-			// use custom http2 settings
-			t2.Settings = rt.settings
-			t2.SettingsOrder = rt.settingsOrder
+			if rt.pseudoHeaderOrder == nil {
+				t2.PseudoHeaderOrder = []string{}
+			} else {
+				t2.PseudoHeaderOrder = rt.pseudoHeaderOrder
+			}
+
+			if rt.settings == nil {
+				// when we not provide a map of custom http2 settings
+				t2.Settings = map[http2.SettingID]uint32{
+					http2.SettingMaxConcurrentStreams: 1000,
+					http2.SettingMaxFrameSize:         16384,
+					http2.SettingInitialWindowSize:    6291456,
+					http2.SettingHeaderTableSize:      65536,
+				}
+
+				keys := make([]http2.SettingID, len(t2.Settings))
+
+				i := 0
+				// attention: the order might be random here for default values!
+				for k := range t2.Settings {
+					keys[i] = k
+					i++
+				}
+
+				t2.SettingsOrder = keys
+			} else {
+				// use custom http2 settings
+				t2.Settings = rt.settings
+				t2.SettingsOrder = rt.settingsOrder
+			}
+
+			t2.Priorities = rt.priorities
+
+			t2.PushHandler = &http2.DefaultPushHandler{}
+			rt.cachedTransports[addr] = &t2
+		default:
+			rt.cachedTransports[addr] = rt.buildHttp1Transport()
 		}
-
-		t2.Priorities = rt.priorities
-
-		t2.PushHandler = &http2.DefaultPushHandler{}
-		rt.cachedTransports[addr] = &t2
-	default:
-		// Assume the remote peer is speaking HTTP 1.x + TLS.
-		utlsConfig := &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
-
-		if rt.serverNameOverwrite != "" {
-			utlsConfig.ServerName = rt.serverNameOverwrite
-		}
-
-		t := &http.Transport{DialTLSContext: rt.dialTLS, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
-
-		if rt.transportOptions != nil {
-			t.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
-			t.DisableCompression = rt.transportOptions.DisableCompression
-			t.MaxIdleConns = rt.transportOptions.MaxIdleConns
-			t.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
-			t.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
-			t.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
-			t.WriteBufferSize = rt.transportOptions.WriteBufferSize
-			t.ReadBufferSize = rt.transportOptions.ReadBufferSize
-		}
-
-		rt.cachedTransports[addr] = t
 	}
 
 	// Stash the connection just established for use servicing the
@@ -225,6 +189,29 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	rt.cachedConnections[addr] = conn
 
 	return nil, errProtocolNegotiated
+}
+
+func (rt *roundTripper) buildHttp1Transport() *http.Transport {
+	utlsConfig := &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
+
+	if rt.serverNameOverwrite != "" {
+		utlsConfig.ServerName = rt.serverNameOverwrite
+	}
+
+	t := &http.Transport{DialTLSContext: rt.dialTLS, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
+
+	if rt.transportOptions != nil {
+		t.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
+		t.DisableCompression = rt.transportOptions.DisableCompression
+		t.MaxIdleConns = rt.transportOptions.MaxIdleConns
+		t.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
+		t.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
+		t.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
+		t.WriteBufferSize = rt.transportOptions.WriteBufferSize
+		t.ReadBufferSize = rt.transportOptions.ReadBufferSize
+	}
+
+	return t
 }
 
 func (rt *roundTripper) dialTLSHTTP2(network, addr string, _ *utls.Config) (net.Conn, error) {
@@ -239,7 +226,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443") // we can assume port is 443 at this point
 }
 
-func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, dialer ...proxy.ContextDialer) http.RoundTripper {
+func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, dialer ...proxy.ContextDialer) http.RoundTripper {
 	rt := &roundTripper{
 		dialer:                      dialer[0],
 		transportOptions:            transportOptions,
@@ -249,6 +236,7 @@ func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOpt
 		priorities:                  clientProfile.priorities,
 		pseudoHeaderOrder:           clientProfile.pseudoHeaderOrder,
 		insecureSkipVerify:          insecureSkipVerify,
+		forceHttp1:                  forceHttp1,
 		withRandomTlsExtensionOrder: withRandomTlsExtensionOrder,
 		connectionFlow:              clientProfile.connectionFlow,
 		clientHelloId:               clientProfile.clientHelloId,

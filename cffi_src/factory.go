@@ -219,6 +219,10 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithRandomTLSExtensionOrder())
 	}
 
+	if requestInput.ForceHttp1 {
+		options = append(options, tls_client.WithForceHttp1())
+	}
+
 	if !requestInput.WithoutCookieJar {
 		jar, err := cookiejar.New(nil)
 

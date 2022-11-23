@@ -173,6 +173,8 @@ WithNotFollowRedirects
 WithInsecureSkipVerify
 WithClientProfile
 WithServerNameOverwrite
+WithForceHttp1
+WithRandomTLSExtensionOrder
 WithTransportOptions
 ```
 

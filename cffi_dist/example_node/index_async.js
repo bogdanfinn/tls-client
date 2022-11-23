@@ -14,6 +14,7 @@ const requestPayload = {
     "insecureSkipVerify": false,
     "withoutCookieJar": false,
     "isByteRequest": false,
+    "forceHttp1": false,
     "withRandomTLSExtensionOrder": false,
     "timeoutSeconds": 30,
     "sessionId": "my-session-id",

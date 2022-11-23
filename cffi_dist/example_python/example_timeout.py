@@ -25,6 +25,7 @@ requestPayload = {
     "insecureSkipVerify": False,
     "withoutCookieJar": False,
     "isByteRequest": False,
+    "forceHttp1": False,
     "withRandomTLSExtensionOrder": False,
     "timeoutSeconds": 1,
     "proxyUrl": "",

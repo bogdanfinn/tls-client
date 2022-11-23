@@ -29,6 +29,7 @@ type httpClientConfig struct {
 	cookieJar                   http.CookieJar
 	clientProfile               ClientProfile
 	withRandomTlsExtensionOrder bool
+	forceHttp1                  bool
 	timeout                     time.Duration
 }
 
@@ -77,6 +78,12 @@ func WithTransportOptions(transportOptions *TransportOptions) HttpClientOption {
 func WithInsecureSkipVerify() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.insecureSkipVerify = true
+	}
+}
+
+func WithForceHttp1() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.forceHttp1 = true
 	}
 }
 
