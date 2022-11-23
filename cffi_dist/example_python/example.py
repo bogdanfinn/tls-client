@@ -25,6 +25,7 @@ requestPayload = {
     "followRedirects": False,
     "insecureSkipVerify": False,
     "withoutCookieJar": False,
+    "isByteRequest": False,
     "withRandomTLSExtensionOrder": False,
     "timeoutSeconds": 30,
     "sessionId": "my-session-id",

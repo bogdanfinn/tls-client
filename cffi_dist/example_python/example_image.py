@@ -23,6 +23,7 @@ requestPayload = {
     "followRedirects": False,
     "insecureSkipVerify": False,
     "withoutCookieJar": False,
+    "isByteRequest": False,
     "withRandomTLSExtensionOrder": False,
     "isByteResponse": True,
     "timeoutSeconds": 30,

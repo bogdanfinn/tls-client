@@ -27,6 +27,7 @@ async def main():
             "followRedirects": False,
             "insecureSkipVerify": False,
             "withoutCookieJar": False,
+            "isByteRequest": False,
             "withRandomTLSExtensionOrder": False,
             "session": i,
             "timeoutSeconds": 30,

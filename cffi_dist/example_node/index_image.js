@@ -16,6 +16,7 @@ const requestPayload = {
     "withoutCookieJar": false,
     "withRandomTLSExtensionOrder": false,
     "isByteResponse": true,
+    "isByteRequest": false,
     "timeoutSeconds": 30,
     "proxyUrl": "",
     "headers": {

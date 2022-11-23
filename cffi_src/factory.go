@@ -96,7 +96,16 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	}
 
 	if input.RequestBody != nil && *input.RequestBody != "" {
-		requestBody := bytes.NewBuffer([]byte(*input.RequestBody))
+		requestBodyString := []byte(*input.RequestBody)
+		if input.IsByteRequest {
+			requestBodyString, err = base64.StdEncoding.DecodeString(*input.RequestBody)
+
+			if err != nil {
+				return nil, NewTLSClientError(fmt.Errorf("failed to base64 decode request body: %w", err))
+			}
+		}
+
+		requestBody := bytes.NewBuffer(requestBodyString)
 		tlsReq, err = http.NewRequest(input.RequestMethod, input.RequestUrl, requestBody)
 	} else {
 		tlsReq, err = http.NewRequest(input.RequestMethod, input.RequestUrl, nil)

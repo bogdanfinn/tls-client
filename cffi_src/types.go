@@ -39,6 +39,7 @@ type RequestInput struct {
 	CustomTlsClient             *CustomTlsClient  `json:"customTlsClient"`
 	FollowRedirects             bool              `json:"followRedirects"`
 	IsByteResponse              bool              `json:"isByteResponse"`
+	IsByteRequest               bool              `json:"isByteRequest"`
 	WithoutCookieJar            bool              `json:"withoutCookieJar"`
 	WithRandomTLSExtensionOrder bool              `json:"withRandomTLSExtensionOrder"`
 	InsecureSkipVerify          bool              `json:"insecureSkipVerify"`

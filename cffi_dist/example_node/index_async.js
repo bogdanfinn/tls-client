@@ -13,6 +13,7 @@ const requestPayload = {
     "followRedirects": false,
     "insecureSkipVerify": false,
     "withoutCookieJar": false,
+    "isByteRequest": false,
     "withRandomTLSExtensionOrder": false,
     "timeoutSeconds": 30,
     "sessionId": "my-session-id",
