@@ -6,13 +6,16 @@ import (
 	"testing"
 
 	http "github.com/bogdanfinn/fhttp"
-	"github.com/bogdanfinn/fhttp/cookiejar"
 	tls_client "github.com/bogdanfinn/tls-client"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestClient_SkipExistingCookiesOnClientSetCookies(t *testing.T) {
-	jar, _ := cookiejar.New(nil)
+	jarOptions := []tls_client.CookieJarOption{
+		tls_client.WithSkipExisting(),
+	}
+
+	jar := tls_client.NewCookieJar(jarOptions...)
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(tls_client.Chrome_105),
@@ -62,7 +65,11 @@ func TestClient_SkipExistingCookiesOnClientSetCookies(t *testing.T) {
 }
 
 func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
-	jar, _ := cookiejar.New(nil)
+	jarOptions := []tls_client.CookieJarOption{
+		tls_client.WithSkipExisting(),
+	}
+
+	jar := tls_client.NewCookieJar(jarOptions...)
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(tls_client.Chrome_105),
@@ -163,7 +170,11 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 }
 
 func TestClient_SkipExistingCookiesOnRequest(t *testing.T) {
-	jar, _ := cookiejar.New(nil)
+	jarOptions := []tls_client.CookieJarOption{
+		tls_client.WithSkipExisting(),
+	}
+
+	jar := tls_client.NewCookieJar(jarOptions...)
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(tls_client.Chrome_105),

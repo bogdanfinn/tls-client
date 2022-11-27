@@ -17,7 +17,6 @@ import (
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
-	"github.com/bogdanfinn/fhttp/cookiejar"
 	"github.com/bogdanfinn/fhttp/http2"
 	tls_client "github.com/bogdanfinn/tls-client"
 	"github.com/bogdanfinn/tls-client/shared"
@@ -197,7 +196,7 @@ func requestToppsAsGoClient() {
 }
 
 func requestToppsAsChrome107Client() {
-	cJar, _ := cookiejar.New(nil)
+	jar := tls_client.NewCookieJar()
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
@@ -205,7 +204,7 @@ func requestToppsAsChrome107Client() {
 		//tls_client.WithProxyUrl("http://user:pass@host:port"),
 		//tls_client.WithNotFollowRedirects(),
 		//tls_client.WithInsecureSkipVerify(),
-		tls_client.WithCookieJar(cJar), // create cookieJar instance and pass it as argument
+		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)

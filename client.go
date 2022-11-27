@@ -42,7 +42,7 @@ var DefaultOptions = []HttpClientOption{
 }
 
 func ProvideDefaultClient(logger Logger) (HttpClient, error) {
-	jar := NewCookieJar(nil)
+	jar := NewCookieJar()
 
 	return NewHttpClient(logger, append(DefaultOptions, WithCookieJar(jar))...)
 }
@@ -205,6 +205,8 @@ func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	resp, err := c.Client.Do(req)
+
+	c.logger.Debug("cookies on request: %v", resp.Request.Cookies())
 
 	if err != nil {
 		c.logger.Debug("failed to do request: %s", err.Error())

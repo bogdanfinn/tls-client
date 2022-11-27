@@ -40,6 +40,7 @@ type RequestInput struct {
 	FollowRedirects             bool              `json:"followRedirects"`
 	ForceHttp1                  bool              `json:"forceHttp1"`
 	IsByteResponse              bool              `json:"isByteResponse"`
+	WithDebug                   bool              `json:"withDebug"`
 	IsByteRequest               bool              `json:"isByteRequest"`
 	WithoutCookieJar            bool              `json:"withoutCookieJar"`
 	WithRandomTLSExtensionOrder bool              `json:"withRandomTLSExtensionOrder"`
