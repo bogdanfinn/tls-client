@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"unsafe"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client_cffi_src "github.com/bogdanfinn/tls-client/cffi_src"
@@ -36,7 +35,6 @@ func freeAll() *C.char {
 
 	responseString := C.CString(string(jsonResponse))
 
-	defer C.free(unsafe.Pointer(responseString))
 	return responseString
 }
 
@@ -72,7 +70,6 @@ func freeSession(freeSessionParams *C.char) *C.char {
 
 	responseString := C.CString(string(jsonResponse))
 
-	defer C.free(unsafe.Pointer(responseString))
 	return responseString
 }
 
@@ -112,7 +109,6 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 
 	responseString := C.CString(string(jsonResponse))
 
-	defer C.free(unsafe.Pointer(responseString))
 	return responseString
 }
 
@@ -170,7 +166,6 @@ func request(requestParams *C.char) *C.char {
 
 	responseString := C.CString(string(jsonResponse))
 
-	defer C.free(unsafe.Pointer(responseString))
 	return responseString
 }
 
@@ -190,14 +185,12 @@ func handleErrorResponse(sessionId string, withSession bool, err *tls_client_cff
 
 	if marshallError != nil {
 		errStr := C.CString(marshallError.Error())
-		defer C.free(unsafe.Pointer(errStr))
 
 		return errStr
 	}
 
 	responseString := C.CString(string(jsonResponse))
 
-	defer C.free(unsafe.Pointer(responseString))
 	return responseString
 }
 
