@@ -85,7 +85,8 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, "https://de.topps.com/", nil)
+	urlString := "https://de.topps.com/"
+	req, err := http.NewRequest(http.MethodGet, urlString, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,11 +116,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   "de.topps.com",
-		Path:   "",
-	}
+	u, _ := url.Parse(urlString)
 
 	cookiesAfterFirstRequest := client.GetCookies(u)
 
