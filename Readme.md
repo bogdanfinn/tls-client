@@ -46,6 +46,7 @@ type HttpClient interface {
     - 105 (chrome_105)
     - 106 (chrome_106)
     - 107 (chrome_107)
+    - 108 (chrome_108)
 - Safari
     - 15.6.1 (safari_15_6_1)
     - 16.0 (safari_16_0)
@@ -69,6 +70,7 @@ type HttpClient interface {
     - Zalando iOS Mobile (zalando_ios_mobile) 
     - Nike IOS Mobile (nike_ios_mobile)
     - Nike Android Mobile (nike_android_mobile)
+    - Cloudscraper
 
 You can also provide your own client. See the example how to do it.
 

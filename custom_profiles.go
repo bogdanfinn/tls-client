@@ -393,11 +393,6 @@ var NikeAndroidMobile = ClientProfile{
 	connectionFlow: 15663105,
 }
 
-/*
-				 771,49171-49172-49161-49162-255,0-11-10-35-16-22-23-13,23
-[JA3 Fullstring: 771,49171-49172-49161-49162-255,0-11-10-35-16-22-23-13,23,0-1-2]
-[JA3: 1ba298e44112a4d4c91800ebaa6ccd2f]
-*/
 var CloudflareCustom = ClientProfile{
 	clientHelloId: tls.ClientHelloID{
 		Client:  "CloudflareCustom",
