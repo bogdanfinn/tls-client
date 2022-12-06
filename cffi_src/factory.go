@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	http "github.com/bogdanfinn/fhttp"
-	"github.com/bogdanfinn/fhttp/cookiejar"
 	"github.com/bogdanfinn/fhttp/http2"
 	tls_client "github.com/bogdanfinn/tls-client"
 	tls "github.com/bogdanfinn/utls"
@@ -223,12 +222,12 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithForceHttp1())
 	}
 
-	if !requestInput.WithoutCookieJar {
-		jar, err := cookiejar.New(nil)
+	if requestInput.WithDebug {
+		options = append(options, tls_client.WithDebug())
+	}
 
-		if err != nil {
-			return nil, fmt.Errorf("failed to build cookiejar")
-		}
+	if !requestInput.WithoutCookieJar {
+		jar := tls_client.NewCookieJar()
 
 		options = append(options, tls_client.WithCookieJar(jar))
 	}

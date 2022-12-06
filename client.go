@@ -7,7 +7,6 @@ import (
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
-	"github.com/bogdanfinn/fhttp/cookiejar"
 	"golang.org/x/net/proxy"
 )
 
@@ -16,7 +15,6 @@ var defaultRedirectFunc = func(req *http.Request, via []*http.Request) error {
 }
 
 type HttpClient interface {
-	GetCookieJar() http.CookieJar
 	GetCookies(u *url.URL) []*http.Cookie
 	SetCookies(u *url.URL, cookies []*http.Cookie)
 	SetProxy(proxyUrl string) error
@@ -44,7 +42,7 @@ var DefaultOptions = []HttpClientOption{
 }
 
 func ProvideDefaultClient(logger Logger) (HttpClient, error) {
-	jar, _ := cookiejar.New(nil)
+	jar := NewCookieJar()
 
 	return NewHttpClient(logger, append(DefaultOptions, WithCookieJar(jar))...)
 }
@@ -197,43 +195,18 @@ func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
 func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	c.logger.Info(fmt.Sprintf("set cookies for url: %s", u.String()))
 
-	var filteredCookies []*http.Cookie
-
 	if c.Jar == nil {
 		c.logger.Warn("you did not setup a cookie jar")
 		return
 	}
 
-	existingCookies := c.Jar.Cookies(u)
-
-	for _, cookie := range cookies {
-		alreadyInJar := false
-
-		for _, existingCookie := range existingCookies {
-			alreadyInJar = cookie.Name == existingCookie.Name
-
-			if alreadyInJar {
-				break
-			}
-		}
-
-		if alreadyInJar {
-			c.logger.Debug("cookie %s is already in jar", cookie.Name)
-			continue
-		}
-
-		filteredCookies = append(filteredCookies, cookie)
-	}
-
-	c.Jar.SetCookies(u, filteredCookies)
-}
-
-func (c *httpClient) GetCookieJar() http.CookieJar {
-	return c.Jar
+	c.Jar.SetCookies(u, cookies)
 }
 
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	resp, err := c.Client.Do(req)
+
+	c.logger.Debug("cookies on request: %v", resp.Request.Cookies())
 
 	if err != nil {
 		c.logger.Debug("failed to do request: %s", err.Error())

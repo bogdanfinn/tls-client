@@ -25,7 +25,6 @@ The Interface of the HTTP Client looks like the following and extends the base n
 Most likely you will use the `Do()` function like you did before with net/http Client.
 ```go
 type HttpClient interface {
-    GetCookieJar() http.CookieJar
     GetCookies(u *url.URL) []*http.Cookie
     SetCookies(u *url.URL, cookies []*http.Cookie)
     SetProxy(proxyUrl string) error
@@ -108,7 +107,7 @@ import (
 )
 
 func main() {
-    jar, _ := cookiejar.New(nil)
+    jar := tls_client.NewCookieJar(nil)
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
 		tls_client.WithClientProfile(tls_client.Chrome_105),
