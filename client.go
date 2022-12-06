@@ -7,6 +7,7 @@ import (
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
+	"github.com/bogdanfinn/fhttp/httputil"
 	"golang.org/x/net/proxy"
 )
 
@@ -204,6 +205,16 @@ func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 }
 
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
+	if c.config.debug {
+		requestBytes, err := httputil.DumpRequestOut(req, req.ContentLength > 0)
+
+		if err != nil {
+			return nil, err
+		}
+
+		c.logger.Debug("raw request bytes sent over wire: %d (%d kb)", len(requestBytes), len(requestBytes)/1024)
+	}
+
 	resp, err := c.Client.Do(req)
 
 	c.logger.Debug("cookies on request: %v", resp.Request.Cookies())
@@ -214,6 +225,16 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	c.logger.Debug("requested %s : status %d", req.URL.String(), resp.StatusCode)
+
+	if c.config.debug {
+		responseBytes, err := httputil.DumpResponse(resp, resp.ContentLength > 0)
+
+		if err != nil {
+			return nil, err
+		}
+
+		c.logger.Debug("raw response bytes received over wire: %d (%d kb)", len(responseBytes), len(responseBytes)/1024)
+	}
 
 	return resp, nil
 }
