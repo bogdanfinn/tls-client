@@ -53,4 +53,7 @@ type TlsApiResponse struct {
 			} `json:"priority,omitempty"`
 		} `json:"sent_frames"`
 	} `json:"http2"`
+	HTTP1 struct {
+		Headers []string `json:"headers"`
+	} `json:"http1"`
 }
