@@ -103,7 +103,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		host = addr
 	}
 
-	conn := utls.UClient(rawConn, &utls.Config{ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify}, rt.clientHelloId, rt.withRandomTlsExtensionOrder)
+	conn := utls.UClient(rawConn, &utls.Config{ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify}, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
 	if err = conn.Handshake(); err != nil {
 		_ = conn.Close()
 		return nil, err
@@ -116,72 +116,67 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	// No http.Transport constructed yet, create one based on the results
 	// of ALPN if no http1 is enforced.
 
-	if rt.forceHttp1 {
-		rt.cachedTransports[addr] = rt.buildHttp1Transport()
-	} else {
+	switch conn.ConnectionState().NegotiatedProtocol {
+	case http2.NextProtoTLS:
+		utlsConfig := &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
 
-		switch conn.ConnectionState().NegotiatedProtocol {
-		case http2.NextProtoTLS:
-			utlsConfig := &utls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
-
-			if rt.serverNameOverwrite != "" {
-				utlsConfig.ServerName = rt.serverNameOverwrite
-			}
-
-			t2 := http2.Transport{DialTLS: rt.dialTLSHTTP2, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
-
-			if rt.transportOptions != nil {
-				t1 := t2.GetT1()
-				if t1 != nil {
-					t1.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
-					t1.DisableCompression = rt.transportOptions.DisableCompression
-					t1.MaxIdleConns = rt.transportOptions.MaxIdleConns
-					t1.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
-					t1.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
-					t1.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
-					t1.WriteBufferSize = rt.transportOptions.WriteBufferSize
-					t1.ReadBufferSize = rt.transportOptions.ReadBufferSize
-				}
-			}
-
-			if rt.pseudoHeaderOrder == nil {
-				t2.PseudoHeaderOrder = []string{}
-			} else {
-				t2.PseudoHeaderOrder = rt.pseudoHeaderOrder
-			}
-
-			if rt.settings == nil {
-				// when we not provide a map of custom http2 settings
-				t2.Settings = map[http2.SettingID]uint32{
-					http2.SettingMaxConcurrentStreams: 1000,
-					http2.SettingMaxFrameSize:         16384,
-					http2.SettingInitialWindowSize:    6291456,
-					http2.SettingHeaderTableSize:      65536,
-				}
-
-				keys := make([]http2.SettingID, len(t2.Settings))
-
-				i := 0
-				// attention: the order might be random here for default values!
-				for k := range t2.Settings {
-					keys[i] = k
-					i++
-				}
-
-				t2.SettingsOrder = keys
-			} else {
-				// use custom http2 settings
-				t2.Settings = rt.settings
-				t2.SettingsOrder = rt.settingsOrder
-			}
-
-			t2.Priorities = rt.priorities
-
-			t2.PushHandler = &http2.DefaultPushHandler{}
-			rt.cachedTransports[addr] = &t2
-		default:
-			rt.cachedTransports[addr] = rt.buildHttp1Transport()
+		if rt.serverNameOverwrite != "" {
+			utlsConfig.ServerName = rt.serverNameOverwrite
 		}
+
+		t2 := http2.Transport{DialTLS: rt.dialTLSHTTP2, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
+
+		if rt.transportOptions != nil {
+			t1 := t2.GetT1()
+			if t1 != nil {
+				t1.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
+				t1.DisableCompression = rt.transportOptions.DisableCompression
+				t1.MaxIdleConns = rt.transportOptions.MaxIdleConns
+				t1.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
+				t1.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
+				t1.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
+				t1.WriteBufferSize = rt.transportOptions.WriteBufferSize
+				t1.ReadBufferSize = rt.transportOptions.ReadBufferSize
+			}
+		}
+
+		if rt.pseudoHeaderOrder == nil {
+			t2.PseudoHeaderOrder = []string{}
+		} else {
+			t2.PseudoHeaderOrder = rt.pseudoHeaderOrder
+		}
+
+		if rt.settings == nil {
+			// when we not provide a map of custom http2 settings
+			t2.Settings = map[http2.SettingID]uint32{
+				http2.SettingMaxConcurrentStreams: 1000,
+				http2.SettingMaxFrameSize:         16384,
+				http2.SettingInitialWindowSize:    6291456,
+				http2.SettingHeaderTableSize:      65536,
+			}
+
+			keys := make([]http2.SettingID, len(t2.Settings))
+
+			i := 0
+			// attention: the order might be random here for default values!
+			for k := range t2.Settings {
+				keys[i] = k
+				i++
+			}
+
+			t2.SettingsOrder = keys
+		} else {
+			// use custom http2 settings
+			t2.Settings = rt.settings
+			t2.SettingsOrder = rt.settingsOrder
+		}
+
+		t2.Priorities = rt.priorities
+
+		t2.PushHandler = &http2.DefaultPushHandler{}
+		rt.cachedTransports[addr] = &t2
+	default:
+		rt.cachedTransports[addr] = rt.buildHttp1Transport()
 	}
 
 	// Stash the connection just established for use servicing the
