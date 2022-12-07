@@ -164,7 +164,7 @@ func main() {
 For more configured clients check `./profiles.go`, `./custom_profiles.go` or use your own custom client. See `examples` folder how to use a complete custom tls client.
 
 #### Client Options
-List of current available client options
+List of current available client options.
 ```go
 WithTimeout
 WithProxyUrl
@@ -180,7 +180,7 @@ WithTransportOptions
 ```
 
 #### Default Client
-The implemented default client is currently Chrome 107 with a configured request timeout of 30 seconds and no automatic redirect following and with a cookiejar.
+The implemented default client is currently Chrome 108 with a configured request timeout of 30 seconds and no automatic redirect following and with a cookiejar. Also Random Extension Order is activated for the default client.
 
 ### Compile this client as a shared library for use in other languages like Python or NodeJS
 Please take a look at the cross compile build script in `cffi_dist/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
@@ -197,6 +197,14 @@ A NodeJS example on how to load and call the functionality can be found in `cffi
 The basic logic behind the shared library is, that you pass all required information in a JSON string to the shared lib function which then creates the client, the request and the request data out of it and forwards the request.
 For more documentation on this JSON string please take a look at: https://github.com/bogdanfinn/tls-client-api
 
+Every Response from the shared library will contain an id field like that: `"id":"some-uuid-v4-value"`. You can use the id to free the memory. Otherwise you will end up with growing allocated memory.
+Basic Nodejs example:
+```js
+const response = tlsClientLibrary.request(JSON.stringify(requestPayload));
+const responseObject = JSON.parse(response)
+tlsClientLibrary.freeMemory(responseObject.Id)
+```
+
 ### Further Information
 
 This library uses the following api: https://tls.peet.ws/api/all to verify the hashes and fingerprints for akamai and
@@ -205,6 +213,10 @@ ja3. Be aware that also peets api does not show every extension/cipher a tls cli
 If you are not using go and do not want to implement the shared library but want to use the functionality check out this repository https://github.com/bogdanfinn/tls-client-api
 
 ### Frequently Asked Questions / Errors
+* **How can I add `GREASE` to Custom Client Profiles when using the shared library?**
+
+Please refer to `index_custom_client.js` or `example_custom_client.py` in either NodeJS examples or Python Examples. You can use the Magic Number `2570`. You can add it in a ja3 string for example to turn that into a `GREASE` cipher or tls extension. 
+
 * **I receive PROTOCOL_ERROR on POST Request**
 
 This is a very generic error and can have many root causes. Most likely users of this client are setting the `content-length` header manually with a (wrong) fixed value.
@@ -215,7 +227,7 @@ Please check this issue for explanation: https://github.com/bogdanfinn/tls-clien
  
 * **I'm receiving `tls: error decoding message` when using this TLS Client.**
 
-This issue should be fixed since `v.0.3.0`. There was an issue with the CompressCertExtension in the utls package dependency.
+This issue should be fixed since `v0.3.0`. There was an issue with the CompressCertExtension in the utls package dependency.
 
 * **The TLS-Client does not set the user-agent header correctly**
 
@@ -231,7 +243,6 @@ Please only load the dll once in your application and call every function `async
 
 * **My Post Request is not working correctly?**
 Please make sure that you set the correct `Content-Type` Header for your Post Body Payload.
-
 
 * **About `accept-encoding` and automatic decompression**
 If you are specifying `accept-encoding` header yourself and you are on `http1` connection than you have to take care of the **decompression yourself**.

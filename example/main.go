@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	goHttp "net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -32,7 +33,7 @@ func main() {
 	postAsTlsClient()
 	requestWithFollowRedirectSwitch()
 	requestWithCustomClient()
-	rotateProxiesOnClient()
+	// rotateProxiesOnClient() commented out because no proxies committed
 	loginZalandoMobileAndroid()
 	downloadImageWithTlsClient()
 }
@@ -183,6 +184,15 @@ func requestToppsAsGoClient() {
 		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"},
 	}
 
+	requestBytes, err := httputil.DumpRequestOut(r, r.ContentLength > 0)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(fmt.Sprintf("raw request bytes sent over wire: %d (%d kb)", len(requestBytes), len(requestBytes)/1024))
+
 	re, err := c.Do(r)
 
 	if err != nil {
@@ -191,6 +201,15 @@ func requestToppsAsGoClient() {
 	}
 
 	defer re.Body.Close()
+
+	responseBytes, err := httputil.DumpResponse(re, re.ContentLength > 0)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(fmt.Sprintf("raw response bytes received over wire: %d (%d kb)", len(responseBytes), len(responseBytes)/1024))
 
 	log.Println(fmt.Sprintf("requesting topps as golang => status code: %d", re.StatusCode))
 }
@@ -201,6 +220,7 @@ func requestToppsAsChrome107Client() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
 		tls_client.WithClientProfile(tls_client.Chrome_107),
+		tls_client.WithDebug(),
 		//tls_client.WithProxyUrl("http://user:pass@host:port"),
 		//tls_client.WithNotFollowRedirects(),
 		//tls_client.WithInsecureSkipVerify(),

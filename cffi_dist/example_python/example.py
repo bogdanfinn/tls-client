@@ -2,7 +2,7 @@ import ctypes
 import json
 
 # load the tls-client shared package for your OS you are currently running your python script (i'm running on mac)
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-0.9.1.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.0.0.dylib')
 
 # extract the exposed request function from the shared package
 request = library.request
@@ -13,12 +13,15 @@ getCookiesFromSession = library.getCookiesFromSession
 getCookiesFromSession.argtypes = [ctypes.c_char_p]
 getCookiesFromSession.restype = ctypes.c_char_p
 
-freeSession = library.freeSession
-freeSession.argtypes = [ctypes.c_char_p]
-freeSession.restype = ctypes.c_char_p
+freeMemory = library.freeMemory
+freeMemory.argtypes = [ctypes.c_char_p]
 
-freeAll = library.freeAll
-freeAll.restype = ctypes.c_char_p
+destroySession = library.destroySession
+destroySession.argtypes = [ctypes.c_char_p]
+destroySession.restype = ctypes.c_char_p
+
+destroyAll = library.destroyAll
+destroyAll.restype = ctypes.c_char_p
 
 requestPayload = {
     "tlsClientIdentifier": "chrome_105",
@@ -27,6 +30,7 @@ requestPayload = {
     "withoutCookieJar": False,
     "isByteRequest": False,
     "forceHttp1": False,
+    "withDebug": False,
     "withRandomTLSExtensionOrder": False,
     "timeoutSeconds": 30,
     "sessionId": "my-session-id",
@@ -81,17 +85,17 @@ cookieResponse_object = json.loads(cookieResponse_string)
 print(cookieResponse_object)
 
 
-freeSessionPayload = {
+destroySessionPayload = {
     "sessionId": "my-session-id",
 }
 
-freeSessionResponse = freeSession(json.dumps(freeSessionPayload).encode('utf-8'))
+destroySessionResponse = destroySession(json.dumps(destroySessionPayload).encode('utf-8'))
 # we dereference the pointer to a byte array
-freeSessionResponse_bytes = ctypes.string_at(freeSessionResponse)
+destroySessionResponse_bytes = ctypes.string_at(destroySessionResponse)
 # convert our byte array to a string (tls client returns json)
-freeSessionResponse_string = freeSessionResponse_bytes.decode('utf-8')
+destroySessionResponse_string = destroySessionResponse_bytes.decode('utf-8')
 # convert response string to json
-freeSessionResponse_object = json.loads(freeSessionResponse_string)
+destroySessionResponse_object = json.loads(destroySessionResponse_string)
 
 # print out output
-print(freeSessionResponse_object)
+print(destroySessionResponse_object)

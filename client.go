@@ -39,6 +39,7 @@ var DefaultTimeoutSeconds = 30
 var DefaultOptions = []HttpClientOption{
 	WithTimeout(DefaultTimeoutSeconds),
 	WithClientProfile(DefaultClientProfile),
+	WithRandomTLSExtensionOrder(),
 	WithNotFollowRedirects(),
 }
 
@@ -217,13 +218,12 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 	resp, err := c.Client.Do(req)
 
-	c.logger.Debug("cookies on request: %v", resp.Request.Cookies())
-
 	if err != nil {
 		c.logger.Debug("failed to do request: %s", err.Error())
 		return nil, err
 	}
 
+	c.logger.Debug("cookies on request: %v", resp.Request.Cookies())
 	c.logger.Debug("requested %s : status %d", req.URL.String(), resp.StatusCode)
 
 	if c.config.debug {

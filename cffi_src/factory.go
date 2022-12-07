@@ -147,6 +147,7 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	}
 
 	response := Response{
+		Id:      uuid.New().String(),
 		Status:  resp.StatusCode,
 		Body:    finalResponse,
 		Headers: resp.Header,

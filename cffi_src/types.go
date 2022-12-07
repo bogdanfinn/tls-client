@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	http "github.com/bogdanfinn/fhttp"
 )
 
 type TLSClientError struct {
@@ -20,17 +22,23 @@ func (e *TLSClientError) Error() string {
 	return e.err.Error()
 }
 
-type FreeSessionInput struct {
+type DestroySessionInput struct {
 	SessionId string `json:"sessionId"`
 }
 
-type FreeOutput struct {
-	Success bool `json:"success"`
+type DestroyOutput struct {
+	Id      string `json:"id"`
+	Success bool   `json:"success"`
 }
 
 type GetCookiesFromSessionInput struct {
 	SessionId string `json:"sessionId"`
 	Url       string `json:"url"`
+}
+
+type CookiesFromSessionOutput struct {
+	Id      string         `json:"id"`
+	Cookies []*http.Cookie `json:"cookies"`
 }
 
 type RequestInput struct {
@@ -102,6 +110,7 @@ func (p *Timestamp) UnmarshalJSON(bytes []byte) error {
 }
 
 type Response struct {
+	Id        string              `json:"id"`
 	SessionId string              `json:"sessionId,omitempty"`
 	Status    int                 `json:"status"`
 	Target    string              `json:"target"`

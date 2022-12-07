@@ -8,13 +8,37 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"sync"
+	"unsafe"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client_cffi_src "github.com/bogdanfinn/tls-client/cffi_src"
+	"github.com/google/uuid"
 )
 
-//export freeAll
-func freeAll() *C.char {
+var unsafePointers = make(map[string]*C.char)
+var unsafePointersLck = sync.Mutex{}
+
+//export freeMemory
+func freeMemory(responseId *C.char) {
+	responseIdString := C.GoString(responseId)
+
+	unsafePointersLck.Lock()
+	defer unsafePointersLck.Unlock()
+
+	ptr, ok := unsafePointers[responseIdString]
+
+	if !ok {
+		return
+	}
+
+	C.free(unsafe.Pointer(ptr))
+
+	delete(unsafePointers, responseIdString)
+}
+
+//export destroyAll
+func destroyAll() *C.char {
 	err := tls_client_cffi_src.DestroyTlsClientSessions()
 
 	if err != nil {
@@ -22,7 +46,8 @@ func freeAll() *C.char {
 		return handleErrorResponse("", false, clientErr)
 	}
 
-	out := tls_client_cffi_src.FreeOutput{
+	out := tls_client_cffi_src.DestroyOutput{
+		Id:      uuid.New().String(),
 		Success: true,
 	}
 
@@ -34,30 +59,35 @@ func freeAll() *C.char {
 	}
 
 	responseString := C.CString(string(jsonResponse))
+
+	unsafePointersLck.Lock()
+	unsafePointers[out.Id] = responseString
+	unsafePointersLck.Unlock()
 
 	return responseString
 }
 
-//export freeSession
-func freeSession(freeSessionParams *C.char) *C.char {
-	freeSessionParamsJson := C.GoString(freeSessionParams)
+//export destroySession
+func destroySession(destroySessionParams *C.char) *C.char {
+	destroySessionParamsJson := C.GoString(destroySessionParams)
 
-	freeSessionInput := tls_client_cffi_src.FreeSessionInput{}
-	marshallError := json.Unmarshal([]byte(freeSessionParamsJson), &freeSessionInput)
+	destroySessionInput := tls_client_cffi_src.DestroySessionInput{}
+	marshallError := json.Unmarshal([]byte(destroySessionParamsJson), &destroySessionInput)
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
 		return handleErrorResponse("", false, clientErr)
 	}
 
-	err := tls_client_cffi_src.DestroyTlsClientSession(freeSessionInput.SessionId)
+	err := tls_client_cffi_src.DestroyTlsClientSession(destroySessionInput.SessionId)
 
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
-		return handleErrorResponse(freeSessionInput.SessionId, true, clientErr)
+		return handleErrorResponse(destroySessionInput.SessionId, true, clientErr)
 	}
 
-	out := tls_client_cffi_src.FreeOutput{
+	out := tls_client_cffi_src.DestroyOutput{
+		Id:      uuid.New().String(),
 		Success: true,
 	}
 
@@ -65,10 +95,14 @@ func freeSession(freeSessionParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
-		return handleErrorResponse(freeSessionInput.SessionId, true, clientErr)
+		return handleErrorResponse(destroySessionInput.SessionId, true, clientErr)
 	}
 
 	responseString := C.CString(string(jsonResponse))
+
+	unsafePointersLck.Lock()
+	unsafePointers[out.Id] = responseString
+	unsafePointersLck.Unlock()
 
 	return responseString
 }
@@ -100,7 +134,12 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 
 	cookies := tlsClient.GetCookies(u)
 
-	jsonResponse, marshallError := json.Marshal(cookies)
+	out := tls_client_cffi_src.CookiesFromSessionOutput{
+		Id:      uuid.New().String(),
+		Cookies: cookies,
+	}
+
+	jsonResponse, marshallError := json.Marshal(out)
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
@@ -108,6 +147,10 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 	}
 
 	responseString := C.CString(string(jsonResponse))
+
+	unsafePointersLck.Lock()
+	unsafePointers[out.Id] = responseString
+	unsafePointersLck.Unlock()
 
 	return responseString
 }
@@ -166,11 +209,16 @@ func request(requestParams *C.char) *C.char {
 
 	responseString := C.CString(string(jsonResponse))
 
+	unsafePointersLck.Lock()
+	unsafePointers[response.Id] = responseString
+	unsafePointersLck.Unlock()
+
 	return responseString
 }
 
 func handleErrorResponse(sessionId string, withSession bool, err *tls_client_cffi_src.TLSClientError) *C.char {
 	response := tls_client_cffi_src.Response{
+		Id:      uuid.New().String(),
 		Status:  0,
 		Body:    err.Error(),
 		Headers: nil,
@@ -190,6 +238,10 @@ func handleErrorResponse(sessionId string, withSession bool, err *tls_client_cff
 	}
 
 	responseString := C.CString(string(jsonResponse))
+
+	unsafePointersLck.Lock()
+	unsafePointers[response.Id] = responseString
+	unsafePointersLck.Unlock()
 
 	return responseString
 }

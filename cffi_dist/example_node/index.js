@@ -1,11 +1,12 @@
 const ffi = require('ffi-napi');
 
 // load the tls-client shared package for your OS you are currently running your nodejs script (i'm running on mac)
-const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-0.9.1.dylib', {
+const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-1.0.0.dylib', {
     'request': ['string', ['string']],
     'getCookiesFromSession': ['string', ['string']],
-    'freeAll': ['string', []],
-    'freeSession': ['string', ['string']]
+    'freeMemory': ["void", ['string']],
+    'destroyAll': ['string', []],
+    'destroySession': ['string', ['string']]
 });
 
 const requestPayload = {
@@ -14,6 +15,7 @@ const requestPayload = {
     "insecureSkipVerify": false,
     "withoutCookieJar": false,
     "isByteRequest": false,
+    "withDebug": false,
     "forceHttp1": false,
     "withRandomTLSExtensionOrder": false,
     "timeoutSeconds": 30,
@@ -40,10 +42,12 @@ const requestPayload = {
 // call the library with the requestPayload as string
 const response = tlsClientLibrary.request(JSON.stringify(requestPayload));
 
+
 // convert response string to json
 const responseObject = JSON.parse(response)
 
 console.log(responseObject)
+tlsClientLibrary.freeMemory(responseObject.Id)
 
 const payload = {
     sessionId: 'my-session-id',
@@ -57,12 +61,12 @@ const cookiesInSession = JSON.parse(cookiesResponse)
 console.log(cookiesInSession)
 
 
-const freeSessionPayload = {
+const destroySessionPayload = {
     sessionId: 'my-session-id',
 }
 
-const freeSessionResponse = tlsClientLibrary.freeSession(JSON.stringify(freeSessionPayload))
+const destroySessionResponse = tlsClientLibrary.destroySession(JSON.stringify(destroySessionPayload))
 
-const freeSessionResponseParsed = JSON.parse(freeSessionResponse)
+const destroySessionResponseParsed = JSON.parse(destroySessionResponse)
 
-console.log(freeSessionResponseParsed)
+console.log(destroySessionResponseParsed)

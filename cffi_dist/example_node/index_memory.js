@@ -6,12 +6,13 @@ class TLS {
     }
 
     initTLS() {
-        let tlsLib = "./../dist/tls-client-darwin-amd64-0.9.1.dylib";
+        let tlsLib = "./../dist/tls-client-darwin-amd64-1.0.0.dylib";
         return ffi.Library(tlsLib, {
             request: ["string", ["string"]],
+            freeMemory: ["void", ['string']],
             getCookiesFromSession: ["string", ["string"]],
-            freeAll: ["string", []],
-            freeSession: ["string", ["string"]],
+            destroyAll: ["string", []],
+            destroySession: ["string", ["string"]],
         });
     }
 
@@ -23,12 +24,12 @@ class TLS {
                 insecureSkipVerify: false,
                 withoutCookieJar: false,
                 timeoutSeconds: 30,
-                //sessionId: "12345",
                 ...payload,
             };
             this.tls.request.async(JSON.stringify(defaultPayload), (error, resp) => {
                 if (error) reject(error);
                 const response = JSON.parse(resp);
+                this.tls.freeMemory(response.id)
                 resolve(response);
             });
         });
@@ -92,7 +93,6 @@ class TEST {
         try {
             console.log(`Monitoring...`);
             await this.getPicks();
-            /* this.items = filteredPicks; */
         } catch (error) {
             console.log(`[${this.query}]`, error);
         }
