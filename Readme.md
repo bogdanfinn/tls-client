@@ -104,7 +104,6 @@ import (
 	"log"
 
 	http "github.com/bogdanfinn/fhttp"
-    "github.com/bogdanfinn/fhttp/cookiejar"
 	tls_client "github.com/bogdanfinn/tls-client"
 )
 

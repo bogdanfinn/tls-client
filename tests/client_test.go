@@ -22,6 +22,12 @@ func TestClients(t *testing.T) {
 	t.Log("testing chrome 105")
 	chrome105(t)
 	time.Sleep(2 * time.Second)
+	t.Log("testing chrome 104")
+	chrome104(t)
+	time.Sleep(2 * time.Second)
+	t.Log("testing chrome 103")
+	chrome103(t)
+	time.Sleep(2 * time.Second)
 	t.Log("testing safari 16")
 	safari_16_0(t)
 	time.Sleep(2 * time.Second)
@@ -124,6 +130,56 @@ func chrome105(t *testing.T) {
 	}
 
 	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_105.Str()], resp)
+}
+
+func chrome104(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_104),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_104.Str()], resp)
+}
+
+func chrome103(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_103),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_103.Str()], resp)
 }
 
 func safari_16_0(t *testing.T) {

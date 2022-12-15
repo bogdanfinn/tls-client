@@ -137,14 +137,12 @@ var Chrome_105 = ClientProfile{
 	clientHelloId: tls.HelloChrome_105,
 	settings: map[http2.SettingID]uint32{
 		http2.SettingHeaderTableSize:      65536,
-		http2.SettingEnablePush:           0,
 		http2.SettingMaxConcurrentStreams: 1000,
 		http2.SettingInitialWindowSize:    6291456,
 		http2.SettingMaxHeaderListSize:    262144,
 	},
 	settingsOrder: []http2.SettingID{
 		http2.SettingHeaderTableSize,
-		http2.SettingEnablePush,
 		http2.SettingMaxConcurrentStreams,
 		http2.SettingInitialWindowSize,
 		http2.SettingMaxHeaderListSize,
@@ -162,14 +160,12 @@ var Chrome_104 = ClientProfile{
 	clientHelloId: tls.HelloChrome_104,
 	settings: map[http2.SettingID]uint32{
 		http2.SettingHeaderTableSize:      65536,
-		http2.SettingEnablePush:           0,
 		http2.SettingMaxConcurrentStreams: 1000,
 		http2.SettingInitialWindowSize:    6291456,
 		http2.SettingMaxHeaderListSize:    262144,
 	},
 	settingsOrder: []http2.SettingID{
 		http2.SettingHeaderTableSize,
-		http2.SettingEnablePush,
 		http2.SettingMaxConcurrentStreams,
 		http2.SettingInitialWindowSize,
 		http2.SettingMaxHeaderListSize,
@@ -187,14 +183,12 @@ var Chrome_103 = ClientProfile{
 	clientHelloId: tls.HelloChrome_103,
 	settings: map[http2.SettingID]uint32{
 		http2.SettingHeaderTableSize:      65536,
-		http2.SettingEnablePush:           0,
 		http2.SettingMaxConcurrentStreams: 1000,
 		http2.SettingInitialWindowSize:    6291456,
 		http2.SettingMaxHeaderListSize:    262144,
 	},
 	settingsOrder: []http2.SettingID{
 		http2.SettingHeaderTableSize,
-		http2.SettingEnablePush,
 		http2.SettingMaxConcurrentStreams,
 		http2.SettingInitialWindowSize,
 		http2.SettingMaxHeaderListSize,
