@@ -33,7 +33,8 @@ func main() {
 	postAsTlsClient()
 	requestWithFollowRedirectSwitch()
 	requestWithCustomClient()
-	// rotateProxiesOnClient() commented out because no proxies committed
+	//rotateProxiesOnClient() //commented out because no proxies committed
+	http2HeaderFrameOrder()
 	loginZalandoMobileAndroid()
 	downloadImageWithTlsClient()
 }
@@ -536,6 +537,94 @@ func downloadImageWithTlsClient() {
 	log.Println(fmt.Sprintf("wrote file to: %s", fileName))
 }
 
+func http2HeaderFrameOrder() {
+	firefoxOptions := []tls_client.HttpClientOption{
+		tls_client.WithTimeout(30),
+		tls_client.WithClientProfile(tls_client.Firefox_106),
+	}
+
+	chromeOptions := []tls_client.HttpClientOption{
+		tls_client.WithTimeout(30),
+		tls_client.WithClientProfile(tls_client.Chrome_108),
+	}
+
+	firefoxClient, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), firefoxOptions...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	chromeClient, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), chromeOptions...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://tls.peet.ws/api/all", nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	firefoxResp, err := firefoxClient.Do(req)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer firefoxResp.Body.Close()
+
+	chromeResp, err := chromeClient.Do(req)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer chromeResp.Body.Close()
+
+	firefoxReadBytes, err := ioutil.ReadAll(firefoxResp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	tlsApiResponse := shared.TlsApiResponse{}
+	if err := json.Unmarshal(firefoxReadBytes, &tlsApiResponse); err != nil {
+		log.Println(err)
+		return
+	}
+
+	for i, frame := range tlsApiResponse.HTTP2.SentFrames {
+		log.Println(fmt.Sprintf("Firefox Frame %d: %s", i, frame.FrameType))
+
+		if frame.FrameType == "HEADERS" {
+			log.Println(fmt.Sprintf("Firefox Header Priority: %v", frame.Priority))
+		}
+	}
+
+	chromeReadBytes, err := ioutil.ReadAll(chromeResp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	tlsApiResponse = shared.TlsApiResponse{}
+	if err := json.Unmarshal(chromeReadBytes, &tlsApiResponse); err != nil {
+		log.Println(err)
+		return
+	}
+
+	for i, frame := range tlsApiResponse.HTTP2.SentFrames {
+		log.Println(fmt.Sprintf("Chrome Frame %d: %s", i, frame.FrameType))
+
+		if frame.FrameType == "HEADERS" {
+			log.Println(fmt.Sprintf("Chrome Header Priority: %v", frame.Priority))
+		}
+	}
+}
+
 func rotateProxiesOnClient() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
@@ -744,7 +833,7 @@ func requestWithCustomClient() {
 		Version:     "1",
 		Seed:        nil,
 		SpecFactory: specFactory,
-	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil)
+	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil)
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(60),

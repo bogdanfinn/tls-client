@@ -53,7 +53,8 @@ const requestPayload = {
             ":path"
         ],
         "connectionFlow": 15663105,
-        "priorityFrames": []
+        "priorityFrames": [],
+        "headerPriority": null,
     },
     "proxyUrl": "",
     "headers": {

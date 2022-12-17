@@ -74,15 +74,18 @@ type CustomTlsClient struct {
 	PseudoHeaderOrder            []string          `json:"pseudoHeaderOrder"`
 	ConnectionFlow               uint32            `json:"connectionFlow"`
 	PriorityFrames               []PriorityFrames  `json:"priorityFrames"`
+	HeaderPriority               *PriorityParam    `json:"headerPriority"`
 }
 
 type PriorityFrames struct {
-	StreamID      uint32 `json:"streamID"`
-	PriorityParam struct {
-		StreamDep uint32 `json:"streamDep"`
-		Exclusive bool   `json:"exclusive"`
-		Weight    uint8  `json:"weight"`
-	} `json:"priorityParam"`
+	StreamID      uint32        `json:"streamID"`
+	PriorityParam PriorityParam `json:"priorityParam"`
+}
+
+type PriorityParam struct {
+	StreamDep uint32 `json:"streamDep"`
+	Exclusive bool   `json:"exclusive"`
+	Weight    uint8  `json:"weight"`
 }
 
 type CookieInput struct {

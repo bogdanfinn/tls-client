@@ -67,7 +67,8 @@ requestPayload = {
             ":path"
         ],
         "connectionFlow": 15663105,
-        "priorityFrames": []
+        "priorityFrames": [],
+        "headerPriority": None,
     },
     "proxyUrl": "",
     "headers": {

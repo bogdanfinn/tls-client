@@ -41,9 +41,10 @@ type ClientProfile struct {
 	pseudoHeaderOrder []string
 	connectionFlow    uint32
 	priorities        []http2.Priority
+	headerPriority    *http2.PriorityParam
 }
 
-func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, pseudoHeaderOrder []string, connectionFlow uint32, priorities []http2.Priority) ClientProfile {
+func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, pseudoHeaderOrder []string, connectionFlow uint32, priorities []http2.Priority, headerPriority *http2.PriorityParam) ClientProfile {
 	return ClientProfile{
 		clientHelloId:     clientHelloId,
 		settings:          settings,
@@ -51,6 +52,7 @@ func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.Settin
 		pseudoHeaderOrder: pseudoHeaderOrder,
 		connectionFlow:    connectionFlow,
 		priorities:        priorities,
+		headerPriority:    headerPriority,
 	}
 }
 
@@ -335,6 +337,11 @@ var Firefox_106 = ClientProfile{
 		":scheme",
 	},
 	connectionFlow: 12517377,
+	headerPriority: &http2.PriorityParam{
+		StreamDep: 13,
+		Exclusive: false,
+		Weight:    41,
+	},
 	priorities: []http2.Priority{
 		{StreamID: 3, PriorityParam: http2.PriorityParam{
 			StreamDep: 0,
@@ -388,6 +395,11 @@ var Firefox_105 = ClientProfile{
 		":scheme",
 	},
 	connectionFlow: 12517377,
+	headerPriority: &http2.PriorityParam{
+		StreamDep: 13,
+		Exclusive: false,
+		Weight:    41,
+	},
 	priorities: []http2.Priority{
 		{StreamID: 3, PriorityParam: http2.PriorityParam{
 			StreamDep: 0,
@@ -441,6 +453,11 @@ var Firefox_104 = ClientProfile{
 		":scheme",
 	},
 	connectionFlow: 12517377,
+	headerPriority: &http2.PriorityParam{
+		StreamDep: 13,
+		Exclusive: false,
+		Weight:    41,
+	},
 	priorities: []http2.Priority{
 		{StreamID: 3, PriorityParam: http2.PriorityParam{
 			StreamDep: 0,
@@ -494,6 +511,11 @@ var Firefox_102 = ClientProfile{
 		":scheme",
 	},
 	connectionFlow: 12517377,
+	headerPriority: &http2.PriorityParam{
+		StreamDep: 13,
+		Exclusive: false,
+		Weight:    41,
+	},
 	priorities: []http2.Priority{
 		{StreamID: 3, PriorityParam: http2.PriorityParam{
 			StreamDep: 0,

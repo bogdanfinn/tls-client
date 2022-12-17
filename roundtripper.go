@@ -26,6 +26,7 @@ type roundTripper struct {
 	settings            map[http2.SettingID]uint32
 	settingsOrder       []http2.SettingID
 	priorities          []http2.Priority
+	headerPriority      *http2.PriorityParam
 	pseudoHeaderOrder   []string
 	connectionFlow      uint32
 
@@ -124,7 +125,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 			utlsConfig.ServerName = rt.serverNameOverwrite
 		}
 
-		t2 := http2.Transport{DialTLS: rt.dialTLSHTTP2, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
+		t2 := http2.Transport{DialTLS: rt.dialTLSHTTP2, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow, HeaderPriority: rt.headerPriority}
 
 		if rt.transportOptions != nil {
 			t1 := t2.GetT1()
@@ -229,6 +230,7 @@ func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOpt
 		settings:                    clientProfile.settings,
 		settingsOrder:               clientProfile.settingsOrder,
 		priorities:                  clientProfile.priorities,
+		headerPriority:              clientProfile.headerPriority,
 		pseudoHeaderOrder:           clientProfile.pseudoHeaderOrder,
 		insecureSkipVerify:          insecureSkipVerify,
 		forceHttp1:                  forceHttp1,
