@@ -63,8 +63,6 @@ func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 func (rt *roundTripper) getTransport(req *http.Request, addr string) error {
 	switch strings.ToLower(req.URL.Scheme) {
 	case "http":
-		rt.cachedTransports[addr] = rt.buildHttp1Transport()
-		return nil
 	case "https":
 	default:
 		return fmt.Errorf("invalid URL scheme: [%v]", req.URL.Scheme)
@@ -97,6 +95,14 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	rawConn, err := rt.dialer.DialContext(ctx, network, addr)
 	if err != nil {
 		return nil, err
+	}
+
+	// target is http:// and does not require a tls handshake. how to identify?
+	if strings.Contains(addr, ":80") {
+		rt.cachedTransports[addr] = rt.buildHttp1Transport()
+		rt.cachedConnections[addr] = rawConn
+
+		return nil, errProtocolNegotiated
 	}
 
 	var host string
@@ -194,7 +200,7 @@ func (rt *roundTripper) buildHttp1Transport() *http.Transport {
 		utlsConfig.ServerName = rt.serverNameOverwrite
 	}
 
-	t := &http.Transport{DialTLSContext: rt.dialTLS, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
+	t := &http.Transport{DialContext: rt.dialTLS, DialTLSContext: rt.dialTLS, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
 
 	if rt.transportOptions != nil {
 		t.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
@@ -219,7 +225,14 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	if err == nil {
 		return net.JoinHostPort(host, port)
 	}
-	return net.JoinHostPort(req.URL.Host, "443") // we can assume port is 443 at this point
+
+	port = "443"
+
+	if req.URL.Scheme == "http" {
+		port = "80"
+	}
+
+	return net.JoinHostPort(req.URL.Host, port)
 }
 
 func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, dialer ...proxy.ContextDialer) http.RoundTripper {
