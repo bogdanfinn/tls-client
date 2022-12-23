@@ -1,4 +1,4 @@
-// tls_client_cffi_src provides and manages a CFFI (C Foreign Function Interface) which allows Python code to interact with the module.
+// tls_client_cffi_src provides and manages a CFFI (C Foreign Function Interface) which allows code in other languages to interact with the module.
 package tls_client_cffi_src
 
 import (
@@ -128,7 +128,7 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	return tlsReq, nil
 }
 
-// BuildResponse constructs a client response from a given HTTP response. The client response can then be sent to the Python client.
+// BuildResponse constructs a client response from a given HTTP response. The client response can then be sent to the interface consumer.
 func BuildResponse(sessionId string, withSession bool, resp *http.Response, cookies []*http.Cookie, isByteResponse bool) (Response, *TLSClientError) {
 	defer resp.Body.Close()
 
