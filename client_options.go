@@ -68,6 +68,8 @@ func WithNotFollowRedirects() HttpClientOption {
 }
 
 // WithRandomTLSExtensionOrder configures a TLS client to randomize the order of TLS extensions being sent in the ClientHello.
+//
+// Placement of GREASE and padding is fixed and will not be affected by this.
 func WithRandomTLSExtensionOrder() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.withRandomTlsExtensionOrder = true
