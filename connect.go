@@ -217,8 +217,16 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 
 		deadline := time.Now().Add(c.Timeout)
 
-		rawConn.SetReadDeadline(deadline)
-		rawConn.SetWriteDeadline(deadline)
+		err = rawConn.SetReadDeadline(deadline)
+		if err != nil {
+			_ = rawConn.Close()
+			return nil, err
+		}
+		err = rawConn.SetWriteDeadline(deadline)
+		if err != nil {
+			_ = rawConn.Close()
+			return nil, err
+		}
 
 		resp, err := http.ReadResponse(bufio.NewReader(rawConn), req)
 		if err != nil {

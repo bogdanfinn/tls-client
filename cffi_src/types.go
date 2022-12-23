@@ -41,6 +41,7 @@ type CookiesFromSessionOutput struct {
 	Cookies []*http.Cookie `json:"cookies"`
 }
 
+// RequestInput is the data a Python client can construct a client and request from.
 type RequestInput struct {
 	SessionId                   *string           `json:"sessionId"`
 	TLSClientIdentifier         string            `json:"tlsClientIdentifier"`
@@ -63,6 +64,7 @@ type RequestInput struct {
 	RequestCookies              []CookieInput     `json:"requestCookies"`
 }
 
+// CustomTlsClient contains custom TLS specifications to construct a client from.
 type CustomTlsClient struct {
 	Ja3String                    string            `json:"ja3String"`
 	SupportedSignatureAlgorithms []string          `json:"supportedSignatureAlgorithms"`
@@ -108,10 +110,11 @@ func (p *Timestamp) UnmarshalJSON(bytes []byte) error {
 		return fmt.Errorf("error decoding timestamp: %w", err)
 	}
 
-	*&p.Time = time.Unix(raw, 0)
+	p.Time = time.Unix(raw, 0)
 	return nil
 }
 
+// Response is the response that is sent back to the Python client.
 type Response struct {
 	Id        string              `json:"id"`
 	SessionId string              `json:"sessionId,omitempty"`

@@ -2,7 +2,7 @@ package tests
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -46,7 +46,7 @@ func TestClient_HeaderOrder(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	readBytes, err := ioutil.ReadAll(resp.Body)
+	readBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +81,7 @@ func TestClient_HeaderOrder(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	readBytes, err = ioutil.ReadAll(resp.Body)
+	readBytes, err = io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,7 +134,7 @@ func TestClient_HeaderOrderHttp1(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	readBytes, err := ioutil.ReadAll(resp.Body)
+	readBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -169,7 +169,7 @@ func TestClient_HeaderOrderHttp1(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	readBytes, err = ioutil.ReadAll(resp.Body)
+	readBytes, err = io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -66,8 +66,8 @@ type HttpClient interface {
     - 90 (opera_90)
     - 91 (opera_91)
 - Custom Clients
-    - Zalando Android Mobile (zalando_android_mobile) 
-    - Zalando iOS Mobile (zalando_ios_mobile) 
+    - Zalando Android Mobile (zalando_android_mobile)
+    - Zalando iOS Mobile (zalando_ios_mobile)
     - Nike IOS Mobile (nike_ios_mobile)
     - Nike Android Mobile (nike_android_mobile)
     - Cloudscraper
@@ -112,10 +112,10 @@ func main() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeout(30),
 		tls_client.WithClientProfile(tls_client.Chrome_105),
-		tls_client.WithNotFollowRedirects(), 
+		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
 		//tls_client.WithProxyUrl("http://user:pass@host:port"),
-		//tls_client.WithInsecureSkipVerify(), 
+		//tls_client.WithInsecureSkipVerify(),
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
@@ -151,7 +151,7 @@ func main() {
 
 	log.Println(fmt.Sprintf("status code: %d", resp.StatusCode))
 
-	readBytes, err := ioutil.ReadAll(resp.Body)
+	readBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println(err)
 		return
@@ -214,7 +214,7 @@ If you are not using go and do not want to implement the shared library but want
 ### Frequently Asked Questions / Errors
 * **How can I add `GREASE` to Custom Client Profiles when using the shared library?**
 
-Please refer to `index_custom_client.js` or `example_custom_client.py` in either NodeJS examples or Python Examples. You can use the Magic Number `2570`. You can add it in a ja3 string for example to turn that into a `GREASE` cipher or tls extension. 
+Please refer to `index_custom_client.js` or `example_custom_client.py` in either NodeJS examples or Python Examples. You can use the Magic Number `2570`. You can add it in a ja3 string for example to turn that into a `GREASE` cipher or tls extension.
 
 * **I receive PROTOCOL_ERROR on POST Request**
 
@@ -223,7 +223,7 @@ This is a very generic error and can have many root causes. Most likely users of
 * **This client fails when I test on www.google.com**
 
 Please check this issue for explanation: https://github.com/bogdanfinn/tls-client/issues/6. Should be fixed since 0.8.3
- 
+
 * **I'm receiving `tls: error decoding message` when using this TLS Client.**
 
 This issue should be fixed since `v0.3.0`. There was an issue with the CompressCertExtension in the utls package dependency.
@@ -283,7 +283,7 @@ req, err := http.NewRequest(http.MethodGet, "https://tls.browserleaks.com/json",
 
     decomBody := http.DecompressBody(resp)
 
-    all, err := ioutil.ReadAll(decomBody)
+    all, err := io.ReadAll(decomBody)
     if err != nil {
         log.Println(err)
         return
@@ -293,5 +293,5 @@ req, err := http.NewRequest(http.MethodGet, "https://tls.browserleaks.com/json",
 
 ### Questions?
 
-Join my discord support server: https: // discord.gg / 7Ej9eJvHqk 
+Join my discord support server: https: // discord.gg / 7Ej9eJvHqk
 No Support in DMs!

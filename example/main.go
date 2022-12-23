@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	goHttp "net/http"
 	"net/http/httputil"
@@ -78,6 +77,10 @@ func overwriteCookieInJar() {
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	u := "https://www.footlocker.de/"
 	parsedUrl, _ := url.Parse(u)
@@ -103,21 +106,21 @@ func overwriteCookieInJar() {
 		return
 	}
 
-	log.Println(fmt.Sprintf("GET %s : %d", u, resp.StatusCode))
+	log.Printf("GET %s : %d\n", u, resp.StatusCode)
 
 	log.Println("cookies on request:")
 	for _, c := range resp.Request.Cookies() {
-		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+		log.Printf("%s : %s | %s %s\n", c.Name, c.Value, c.Domain, c.Path)
 	}
 
 	log.Println("cookies on response:")
 	for _, c := range resp.Cookies() {
-		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+		log.Printf("%s : %s | %s %s\n", c.Name, c.Value, c.Domain, c.Path)
 	}
 
 	log.Println("cookies on client:")
 	for _, c := range client.GetCookies(parsedUrl) {
-		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+		log.Printf("%s : %s | %s %s\n", c.Name, c.Value, c.Domain, c.Path)
 	}
 
 	cookie := http.Cookie{
@@ -125,7 +128,7 @@ func overwriteCookieInJar() {
 		Value: "overwrittenValue",
 	}
 
-	log.Println(fmt.Sprintf("manual overwrite cookie in jar: %s: %s", cookie.Name, cookie.Value))
+	log.Printf("manual overwrite cookie in jar: %s: %s\n", cookie.Name, cookie.Value)
 
 	client.SetCookies(parsedUrl, []*http.Cookie{&cookie})
 	req.Header = footlockerHeaders
@@ -144,21 +147,21 @@ func overwriteCookieInJar() {
 		return
 	}
 
-	log.Println(fmt.Sprintf("GET %s : %d", u, resp.StatusCode))
+	log.Printf("GET %s : %d\n", u, resp.StatusCode)
 
 	log.Println("cookies on request:")
 	for _, c := range resp.Request.Cookies() {
-		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+		log.Printf("%s : %s | %s %s\n", c.Name, c.Value, c.Domain, c.Path)
 	}
 
 	log.Println("cookies on response:")
 	for _, c := range resp.Cookies() {
-		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+		log.Printf("%s : %s | %s %s\n", c.Name, c.Value, c.Domain, c.Path)
 	}
 
 	log.Println("cookies on client:")
 	for _, c := range client.GetCookies(parsedUrl) {
-		log.Println(fmt.Sprintf("%s : %s | %s %s", c.Name, c.Value, c.Domain, c.Path))
+		log.Printf("%s : %s | %s %s\n", c.Name, c.Value, c.Domain, c.Path)
 	}
 }
 
@@ -166,6 +169,10 @@ func requestToppsAsGoClient() {
 	c := &goHttp.Client{}
 
 	r, err := goHttp.NewRequest(http.MethodGet, "https://www.topps.com/", nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	r.Header = goHttp.Header{
 		"accept":                    {"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
@@ -192,7 +199,7 @@ func requestToppsAsGoClient() {
 		return
 	}
 
-	log.Println(fmt.Sprintf("raw request bytes sent over wire: %d (%d kb)", len(requestBytes), len(requestBytes)/1024))
+	log.Printf("raw request bytes sent over wire: %d (%d kb)\n", len(requestBytes), len(requestBytes)/1024)
 
 	re, err := c.Do(r)
 
@@ -210,9 +217,9 @@ func requestToppsAsGoClient() {
 		return
 	}
 
-	log.Println(fmt.Sprintf("raw response bytes received over wire: %d (%d kb)", len(responseBytes), len(responseBytes)/1024))
+	log.Printf("raw response bytes received over wire: %d (%d kb)\n", len(responseBytes), len(responseBytes)/1024)
 
-	log.Println(fmt.Sprintf("requesting topps as golang => status code: %d", re.StatusCode))
+	log.Printf("requesting topps as golang => status code: %d\n", re.StatusCode)
 }
 
 func requestToppsAsChrome107Client() {
@@ -282,7 +289,7 @@ func requestToppsAsChrome107Client() {
 
 	defer resp.Body.Close()
 
-	log.Println(fmt.Sprintf("requesting topps as chrome107 => status code: %d", resp.StatusCode))
+	log.Printf("requesting topps as chrome107 => status code: %d\n", resp.StatusCode)
 
 	u, err := url.Parse("https://www.topps.com/")
 
@@ -291,7 +298,7 @@ func requestToppsAsChrome107Client() {
 		return
 	}
 
-	log.Println(fmt.Sprintf("tls client cookies for url %s : %v", u.String(), client.GetCookies(u)))
+	log.Printf("tls client cookies for url %s : %v\n", u.String(), client.GetCookies(u))
 }
 
 func postAsTlsClient() {
@@ -340,7 +347,7 @@ func postAsTlsClient() {
 
 	defer resp.Body.Close()
 
-	log.Println(fmt.Sprintf("POST Request status code: %d", resp.StatusCode))
+	log.Printf("POST Request status code: %d\n", resp.StatusCode)
 }
 
 func shareHttpClientInGoRoutines() {
@@ -384,7 +391,7 @@ func shareHttpClientInGoRoutines() {
 
 			defer resp.Body.Close()
 
-			log.Println(fmt.Sprintf("Go Routine %d: %s: status code: %d", id, url, resp.StatusCode))
+			log.Printf("Go Routine %d: %s: status code: %d\n", id, url, resp.StatusCode)
 
 			time.Sleep(2 * time.Second)
 		}
@@ -463,7 +470,7 @@ func requestWithFollowRedirectSwitch() {
 
 	defer resp.Body.Close()
 
-	log.Println(fmt.Sprintf("requesting currys.co.uk without automatic redirect follow => status code: %d (Redirect Not Folloed)", resp.StatusCode))
+	log.Printf("requesting currys.co.uk without automatic redirect follow => status code: %d (Redirect Not Folloed)\n", resp.StatusCode)
 
 	client.SetFollowRedirect(true)
 
@@ -475,7 +482,7 @@ func requestWithFollowRedirectSwitch() {
 
 	defer resp.Body.Close()
 
-	log.Println(fmt.Sprintf("requesting currys.co.uk with automatic redirect follow => status code: %d (Redirect Followed)", resp.StatusCode))
+	log.Printf("requesting currys.co.uk with automatic redirect follow => status code: %d (Redirect Followed)\n", resp.StatusCode)
 }
 
 func downloadImageWithTlsClient() {
@@ -506,9 +513,9 @@ func downloadImageWithTlsClient() {
 
 	defer resp.Body.Close()
 
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
+	bodyBytes, _ := io.ReadAll(resp.Body)
 
-	log.Println(fmt.Sprintf("requesting image => status code: %d", resp.StatusCode))
+	log.Printf("requesting image => status code: %d\n", resp.StatusCode)
 
 	ex, err := os.Executable()
 
@@ -534,7 +541,7 @@ func downloadImageWithTlsClient() {
 		return
 	}
 
-	log.Println(fmt.Sprintf("wrote file to: %s", fileName))
+	log.Printf("wrote file to: %s\n", fileName)
 }
 
 func http2HeaderFrameOrder() {
@@ -584,7 +591,7 @@ func http2HeaderFrameOrder() {
 
 	defer chromeResp.Body.Close()
 
-	firefoxReadBytes, err := ioutil.ReadAll(firefoxResp.Body)
+	firefoxReadBytes, err := io.ReadAll(firefoxResp.Body)
 	if err != nil {
 		log.Println(err)
 		return
@@ -597,14 +604,14 @@ func http2HeaderFrameOrder() {
 	}
 
 	for i, frame := range tlsApiResponse.HTTP2.SentFrames {
-		log.Println(fmt.Sprintf("Firefox Frame %d: %s", i, frame.FrameType))
+		log.Printf("Firefox Frame %d: %s\n", i, frame.FrameType)
 
 		if frame.FrameType == "HEADERS" {
-			log.Println(fmt.Sprintf("Firefox Header Priority: %v", frame.Priority))
+			log.Printf("Firefox Header Priority: %v\n", frame.Priority)
 		}
 	}
 
-	chromeReadBytes, err := ioutil.ReadAll(chromeResp.Body)
+	chromeReadBytes, err := io.ReadAll(chromeResp.Body)
 	if err != nil {
 		log.Println(err)
 		return
@@ -617,119 +624,119 @@ func http2HeaderFrameOrder() {
 	}
 
 	for i, frame := range tlsApiResponse.HTTP2.SentFrames {
-		log.Println(fmt.Sprintf("Chrome Frame %d: %s", i, frame.FrameType))
+		log.Printf("Chrome Frame %d: %s\n", i, frame.FrameType)
 
 		if frame.FrameType == "HEADERS" {
-			log.Println(fmt.Sprintf("Chrome Header Priority: %v", frame.Priority))
+			log.Printf("Chrome Header Priority: %v\n", frame.Priority)
 		}
 	}
 }
 
-func rotateProxiesOnClient() {
-	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
-		tls_client.WithClientProfile(tls_client.Chrome_107),
-		tls_client.WithProxyUrl("http://user:pass@host:port"),
-	}
+// func rotateProxiesOnClient() {
+// 	options := []tls_client.HttpClientOption{
+// 		tls_client.WithTimeout(30),
+// 		tls_client.WithClientProfile(tls_client.Chrome_107),
+// 		tls_client.WithProxyUrl("http://user:pass@host:port"),
+// 	}
 
-	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+// 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
 
-	req, err := http.NewRequest(http.MethodGet, "https://tls.peet.ws/api/all", nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+// 	req, err := http.NewRequest(http.MethodGet, "https://tls.peet.ws/api/all", nil)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
 
-	req.Header = http.Header{
-		"accept":                    {"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
-		"accept-encoding":           {"gzip"},
-		"Accept-Encoding":           {"gzip"},
-		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
-		"cache-control":             {"max-age=0"},
-		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
-		"sec-ch-ua":                 {`"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"`},
-		"sec-ch-ua-mobile":          {"?0"},
-		"sec-ch-ua-platform":        {`"macOS"`},
-		"sec-fetch-dest":            {"document"},
-		"sec-fetch-mode":            {"navigate"},
-		"sec-fetch-site":            {"none"},
-		"sec-fetch-user":            {"?1"},
-		"upgrade-insecure-requests": {"1"},
-		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"},
-		http.HeaderOrderKey: {
-			"accept",
-			"accept-encoding",
-			"accept-language",
-			"cache-control",
-			"if-none-match",
-			"sec-ch-ua",
-			"sec-ch-ua-mobile",
-			"sec-ch-ua-platform",
-			"sec-fetch-dest",
-			"sec-fetch-mode",
-			"sec-fetch-site",
-			"sec-fetch-user",
-			"upgrade-insecure-requests",
-			"user-agent",
-		},
-	}
+// 	req.Header = http.Header{
+// 		"accept":                    {"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
+// 		"accept-encoding":           {"gzip"},
+// 		"Accept-Encoding":           {"gzip"},
+// 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+// 		"cache-control":             {"max-age=0"},
+// 		"if-none-match":             {`W/"4d0b1-K9LHIpKrZsvKsqNBKd13iwXkWxQ"`},
+// 		"sec-ch-ua":                 {`"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"`},
+// 		"sec-ch-ua-mobile":          {"?0"},
+// 		"sec-ch-ua-platform":        {`"macOS"`},
+// 		"sec-fetch-dest":            {"document"},
+// 		"sec-fetch-mode":            {"navigate"},
+// 		"sec-fetch-site":            {"none"},
+// 		"sec-fetch-user":            {"?1"},
+// 		"upgrade-insecure-requests": {"1"},
+// 		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"},
+// 		http.HeaderOrderKey: {
+// 			"accept",
+// 			"accept-encoding",
+// 			"accept-language",
+// 			"cache-control",
+// 			"if-none-match",
+// 			"sec-ch-ua",
+// 			"sec-ch-ua-mobile",
+// 			"sec-ch-ua-platform",
+// 			"sec-fetch-dest",
+// 			"sec-fetch-mode",
+// 			"sec-fetch-site",
+// 			"sec-fetch-user",
+// 			"upgrade-insecure-requests",
+// 			"user-agent",
+// 		},
+// 	}
 
-	resp, err := client.Do(req)
+// 	resp, err := client.Do(req)
 
-	if err != nil {
-		log.Println(err)
-		return
-	}
+// 	if err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
 
-	defer resp.Body.Close()
+// 	defer resp.Body.Close()
 
-	readBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+// 	readBytes, err := io.ReadAll(resp.Body)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
 
-	tlsApiResponse := shared.TlsApiResponse{}
-	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
-		log.Println(err)
-		return
-	}
+// 	tlsApiResponse := shared.TlsApiResponse{}
+// 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
 
-	log.Println(fmt.Sprintf("requesting tls.peet.ws with proxy 1 => ip: %s", tlsApiResponse.IP))
+// 	log.Println(fmt.Sprintf("requesting tls.peet.ws with proxy 1 => ip: %s", tlsApiResponse.IP))
 
-	// you need to put in here a valid proxy to make the example work
-	err = client.SetProxy("http://user:pass@host:port")
-	if err != nil {
-		log.Println(err)
-		return
-	}
+// 	// you need to put in here a valid proxy to make the example work
+// 	err = client.SetProxy("http://user:pass@host:port")
+// 	if err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
 
-	resp, err = client.Do(req)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+// 	resp, err = client.Do(req)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
 
-	defer resp.Body.Close()
+// 	defer resp.Body.Close()
 
-	readBytes, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+// 	readBytes, err = io.ReadAll(resp.Body)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
 
-	tlsApiResponse = shared.TlsApiResponse{}
-	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
-		log.Println(err)
-		return
-	}
+// 	tlsApiResponse = shared.TlsApiResponse{}
+// 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
 
-	log.Println(fmt.Sprintf("requesting tls.peet.ws with proxy 2 => ip: %s", tlsApiResponse.IP))
-}
+// 	log.Println(fmt.Sprintf("requesting tls.peet.ws with proxy 2 => ip: %s", tlsApiResponse.IP))
+// }
 
 func requestWithCustomClient() {
 	settings := map[http2.SettingID]uint32{
@@ -782,7 +789,7 @@ func requestWithCustomClient() {
 				&tls.SNIExtension{},
 				&tls.UtlsExtendedMasterSecretExtension{},
 				&tls.RenegotiationInfoExtension{Renegotiation: tls.RenegotiateOnceAsClient},
-				&tls.SupportedCurvesExtension{[]tls.CurveID{
+				&tls.SupportedCurvesExtension{Curves: []tls.CurveID{
 					tls.CurveID(tls.GREASE_PLACEHOLDER),
 					tls.X25519,
 					tls.CurveP256,
@@ -805,20 +812,20 @@ func requestWithCustomClient() {
 					tls.PKCS1WithSHA512,
 				}},
 				&tls.SCTExtension{},
-				&tls.KeyShareExtension{[]tls.KeyShare{
+				&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
 					{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
 					{Group: tls.X25519},
 				}},
-				&tls.PSKKeyExchangeModesExtension{[]uint8{
+				&tls.PSKKeyExchangeModesExtension{Modes: []uint8{
 					tls.PskModeDHE,
 				}},
-				&tls.SupportedVersionsExtension{[]uint16{
+				&tls.SupportedVersionsExtension{Versions: []uint16{
 					tls.VersionTLS13,
 					tls.VersionTLS12,
 					tls.VersionTLS11,
 					tls.VersionTLS10,
 				}},
-				&tls.UtlsCompressCertExtension{[]tls.CertCompressionAlgo{
+				&tls.UtlsCompressCertExtension{Algorithms: []tls.CertCompressionAlgo{
 					tls.CertCompressionBrotli,
 				}},
 				&tls.ApplicationSettingsExtension{SupportedProtocols: []string{"h2"}},
@@ -841,6 +848,10 @@ func requestWithCustomClient() {
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	req, err := http.NewRequest(http.MethodGet, "https://www.topps.com/", nil)
 	if err != nil {
@@ -890,7 +901,7 @@ func requestWithCustomClient() {
 
 	defer resp.Body.Close()
 
-	log.Println(fmt.Sprintf("requesting topps as customClient1 => status code: %d", resp.StatusCode))
+	log.Printf("requesting topps as customClient1 => status code: %d\n", resp.StatusCode)
 }
 
 type ZalandoLoginPayload struct {
@@ -1009,9 +1020,9 @@ func loginZalandoMobileAndroid() {
 
 	defer resp.Body.Close()
 
-	log.Println(fmt.Sprintf("requesting zalando login as zalando android client => status code: %d", resp.StatusCode))
+	log.Printf("requesting zalando login as zalando android client => status code: %d\n", resp.StatusCode)
 
-	readBytes, err := ioutil.ReadAll(resp.Body)
+	readBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println(err)
 		return
