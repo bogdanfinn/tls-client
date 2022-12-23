@@ -6,7 +6,7 @@ class TLS {
     }
 
     initTLS() {
-        let tlsLib = "./../dist/tls-client-darwin-amd64-1.1.1.dylib";
+        let tlsLib = "./../dist/tls-client-darwin-amd64-1.1.2.dylib";
         return ffi.Library(tlsLib, {
             request: ["string", ["string"]],
             freeMemory: ["void", ['string']],
