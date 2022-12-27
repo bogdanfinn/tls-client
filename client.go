@@ -52,6 +52,7 @@ func ProvideDefaultClient(logger Logger) (HttpClient, error) {
 	return NewHttpClient(logger, append(DefaultOptions, WithCookieJar(jar))...)
 }
 
+// NewHttpClient constructs a new HTTP client with the given logger and client options.
 func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, error) {
 	config := &httpClientConfig{
 		followRedirects: true,
@@ -134,6 +135,7 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 	return client, clientProfile, nil
 }
 
+// SetFollowRedirect configures the client's HTTP redirect following policy.
 func (c *httpClient) SetFollowRedirect(followRedirect bool) {
 	c.logger.Debug("set follow redirect from %v to %v", c.config.followRedirects, followRedirect)
 
@@ -141,6 +143,7 @@ func (c *httpClient) SetFollowRedirect(followRedirect bool) {
 	c.applyFollowRedirect()
 }
 
+// GetFollowredirect returns the client's HTTP redirect following policy.
 func (c *httpClient) GetFollowRedirect() bool {
 	return c.config.followRedirects
 }
@@ -155,6 +158,11 @@ func (c *httpClient) applyFollowRedirect() {
 	}
 }
 
+// SetProxy configures the client to use the given proxy URL.
+//
+// proxyUrl should be formatted as:
+//
+//	"http://user:pass@host:port"
 func (c *httpClient) SetProxy(proxyUrl string) error {
 	c.logger.Debug("set proxy from %s to %s", c.config.proxyUrl, proxyUrl)
 	c.config.proxyUrl = proxyUrl
@@ -163,6 +171,7 @@ func (c *httpClient) SetProxy(proxyUrl string) error {
 	return c.applyProxy()
 }
 
+// GetProxy returns the proxy URL used by the client.
 func (c *httpClient) GetProxy() string {
 	return c.config.proxyUrl
 }
@@ -187,6 +196,7 @@ func (c *httpClient) applyProxy() error {
 	return nil
 }
 
+// GetCookies returns the cookies in the client's cookie jar for a given URL.
 func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
 	c.logger.Info(fmt.Sprintf("get cookies for url: %s", u.String()))
 	if c.Jar == nil {
@@ -197,6 +207,7 @@ func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
 	return c.Jar.Cookies(u)
 }
 
+// SetCookies sets a list of cookies for a given URL in the client's cookie jar.
 func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	c.logger.Info(fmt.Sprintf("set cookies for url: %s", u.String()))
 
@@ -208,6 +219,9 @@ func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	c.Jar.SetCookies(u, cookies)
 }
 
+// Do issues a given HTTP request and returns the corresponding response.
+//
+// If the returned error is nil, the response contains a non-nil body, which the user is expected to close.
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	if c.config.debug {
 		debugReq := req.Clone(context.Background())

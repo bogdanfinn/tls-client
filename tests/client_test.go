@@ -2,7 +2,7 @@ package tests
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"testing"
 	"time"
 
@@ -310,7 +310,7 @@ func opera_91(t *testing.T) {
 func compareResponse(t *testing.T, clientName string, expectedValues map[string]string, resp *http.Response) {
 	defer resp.Body.Close()
 
-	readBytes, err := ioutil.ReadAll(resp.Body)
+	readBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

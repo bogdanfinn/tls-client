@@ -16,21 +16,13 @@ func NewNoopLogger() Logger {
 	return &noopLogger{}
 }
 
-func (n noopLogger) Debug(format string, args ...interface{}) {
-	return
-}
+func (n noopLogger) Debug(format string, args ...interface{}) {}
 
-func (n noopLogger) Info(format string, args ...interface{}) {
-	return
-}
+func (n noopLogger) Info(format string, args ...interface{}) {}
 
-func (n noopLogger) Warn(format string, args ...interface{}) {
-	return
-}
+func (n noopLogger) Warn(format string, args ...interface{}) {}
 
-func (n noopLogger) Error(format string, args ...interface{}) {
-	return
-}
+func (n noopLogger) Error(format string, args ...interface{}) {}
 
 type debugLogger struct {
 	logger Logger
@@ -43,7 +35,7 @@ func NewDebugLogger(logger Logger) Logger {
 }
 
 func (n debugLogger) Debug(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(format, args...))
+	fmt.Printf(format+"\n", args...)
 }
 
 func (n debugLogger) Info(format string, args ...interface{}) {
@@ -58,25 +50,22 @@ func (n debugLogger) Error(format string, args ...interface{}) {
 	n.logger.Error(format, args...)
 }
 
-type logger struct {
-}
+type logger struct{}
 
 func NewLogger() Logger {
 	return &logger{}
 }
 
-func (n logger) Debug(format string, args ...interface{}) {
-	return
-}
+func (n logger) Debug(format string, args ...interface{}) {}
 
 func (n logger) Info(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(format, args...))
+	fmt.Printf(format+"\n", args...)
 }
 
 func (n logger) Warn(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(format, args...))
+	fmt.Printf(format+"\n", args...)
 }
 
 func (n logger) Error(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(format, args...))
+	fmt.Printf(format+"\n", args...)
 }

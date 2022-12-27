@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"io/ioutil"
+	"io"
 	"net/url"
 	"testing"
 
@@ -111,7 +111,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	_, err = ioutil.ReadAll(resp.Body)
+	_, err = io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +156,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	_, err = ioutil.ReadAll(resp.Body)
+	_, err = io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -38,7 +38,7 @@ var ZalandoAndroidMobile = ClientProfile{
 					&tls.SNIExtension{},
 					&tls.UtlsExtendedMasterSecretExtension{},
 					&tls.RenegotiationInfoExtension{Renegotiation: tls.RenegotiateOnceAsClient},
-					&tls.SupportedCurvesExtension{[]tls.CurveID{
+					&tls.SupportedCurvesExtension{Curves: []tls.CurveID{
 						tls.X25519,
 						tls.CurveP256,
 						tls.CurveP384,
@@ -61,13 +61,13 @@ var ZalandoAndroidMobile = ClientProfile{
 						tls.PKCS1WithSHA1,
 					}},
 					&tls.SCTExtension{},
-					&tls.KeyShareExtension{[]tls.KeyShare{
+					&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
 						{Group: tls.X25519},
 					}},
-					&tls.PSKKeyExchangeModesExtension{[]uint8{
+					&tls.PSKKeyExchangeModesExtension{Modes: []uint8{
 						tls.PskModeDHE,
 					}},
-					&tls.SupportedVersionsExtension{[]uint16{
+					&tls.SupportedVersionsExtension{Versions: []uint16{
 						tls.VersionTLS13,
 						tls.VersionTLS12,
 					}},
@@ -130,7 +130,7 @@ var ZalandoIosMobile = ClientProfile{
 					&tls.SNIExtension{},
 					&tls.UtlsExtendedMasterSecretExtension{},
 					&tls.RenegotiationInfoExtension{Renegotiation: tls.RenegotiateOnceAsClient},
-					&tls.SupportedCurvesExtension{[]tls.CurveID{
+					&tls.SupportedCurvesExtension{Curves: []tls.CurveID{
 						tls.CurveID(tls.GREASE_PLACEHOLDER),
 						tls.X25519,
 						tls.CurveP256,
@@ -156,19 +156,19 @@ var ZalandoIosMobile = ClientProfile{
 						tls.PKCS1WithSHA1,
 					}},
 					&tls.SCTExtension{},
-					&tls.KeyShareExtension{[]tls.KeyShare{
+					&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
 						{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
 						{Group: tls.X25519},
 					}},
-					&tls.PSKKeyExchangeModesExtension{[]uint8{
+					&tls.PSKKeyExchangeModesExtension{Modes: []uint8{
 						tls.PskModeDHE,
 					}},
-					&tls.SupportedVersionsExtension{[]uint16{
+					&tls.SupportedVersionsExtension{Versions: []uint16{
 						tls.GREASE_PLACEHOLDER,
 						tls.VersionTLS13,
 						tls.VersionTLS12,
 					}},
-					&tls.UtlsCompressCertExtension{[]tls.CertCompressionAlgo{
+					&tls.UtlsCompressCertExtension{Algorithms: []tls.CertCompressionAlgo{
 						tls.CertCompressionZlib,
 					}},
 					&tls.UtlsGREASEExtension{},
@@ -231,7 +231,7 @@ var NikeIosMobile = ClientProfile{
 					&tls.SNIExtension{},
 					&tls.UtlsExtendedMasterSecretExtension{},
 					&tls.RenegotiationInfoExtension{Renegotiation: tls.RenegotiateOnceAsClient},
-					&tls.SupportedCurvesExtension{[]tls.CurveID{
+					&tls.SupportedCurvesExtension{Curves: []tls.CurveID{
 						tls.CurveID(tls.GREASE_PLACEHOLDER),
 						tls.X25519,
 						tls.CurveP256,
@@ -257,19 +257,19 @@ var NikeIosMobile = ClientProfile{
 						tls.PKCS1WithSHA1,
 					}},
 					&tls.SCTExtension{},
-					&tls.KeyShareExtension{[]tls.KeyShare{
+					&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
 						{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
 						{Group: tls.X25519},
 					}},
-					&tls.PSKKeyExchangeModesExtension{[]uint8{
+					&tls.PSKKeyExchangeModesExtension{Modes: []uint8{
 						tls.PskModeDHE,
 					}},
-					&tls.SupportedVersionsExtension{[]uint16{
+					&tls.SupportedVersionsExtension{Versions: []uint16{
 						tls.GREASE_PLACEHOLDER,
 						tls.VersionTLS13,
 						tls.VersionTLS12,
 					}},
-					&tls.UtlsCompressCertExtension{[]tls.CertCompressionAlgo{
+					&tls.UtlsCompressCertExtension{Algorithms: []tls.CertCompressionAlgo{
 						tls.CertCompressionZlib,
 					}},
 					&tls.UtlsGREASEExtension{},
@@ -332,7 +332,7 @@ var NikeAndroidMobile = ClientProfile{
 					&tls.SNIExtension{},
 					&tls.UtlsExtendedMasterSecretExtension{},
 					&tls.RenegotiationInfoExtension{Renegotiation: tls.RenegotiateOnceAsClient},
-					&tls.SupportedCurvesExtension{[]tls.CurveID{
+					&tls.SupportedCurvesExtension{Curves: []tls.CurveID{
 						tls.X25519,
 						tls.CurveP256,
 						tls.CurveP384,
@@ -354,14 +354,14 @@ var NikeAndroidMobile = ClientProfile{
 						tls.PKCS1WithSHA512,
 						tls.PKCS1WithSHA1,
 					}},
-					&tls.KeyShareExtension{[]tls.KeyShare{
+					&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
 						{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
 						{Group: tls.X25519},
 					}},
-					&tls.PSKKeyExchangeModesExtension{[]uint8{
+					&tls.PSKKeyExchangeModesExtension{Modes: []uint8{
 						tls.PskModeDHE,
 					}},
-					&tls.SupportedVersionsExtension{[]uint16{
+					&tls.SupportedVersionsExtension{Versions: []uint16{
 						tls.VersionTLS13,
 						tls.VersionTLS12,
 					}},
@@ -412,12 +412,12 @@ var CloudflareCustom = ClientProfile{
 				},
 				Extensions: []tls.TLSExtension{
 					&tls.SNIExtension{},
-					&tls.SupportedPointsExtension{[]uint8{
+					&tls.SupportedPointsExtension{SupportedPoints: []uint8{
 						tls.PointFormatUncompressed,
 						1, // ansiX962_compressed_prime
 						2, // ansiX962_compressed_char2
 					}},
-					&tls.SupportedCurvesExtension{[]tls.CurveID{
+					&tls.SupportedCurvesExtension{Curves: []tls.CurveID{
 						tls.CurveP256,
 					}},
 					&tls.SessionTicketExtension{},

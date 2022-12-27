@@ -39,12 +39,7 @@ func freeMemory(responseId *C.char) {
 
 //export destroyAll
 func destroyAll() *C.char {
-	err := tls_client_cffi_src.DestroyTlsClientSessions()
-
-	if err != nil {
-		clientErr := tls_client_cffi_src.NewTLSClientError(err)
-		return handleErrorResponse("", false, clientErr)
-	}
+	tls_client_cffi_src.ClearSessionCache()
 
 	out := tls_client_cffi_src.DestroyOutput{
 		Id:      uuid.New().String(),
@@ -79,12 +74,7 @@ func destroySession(destroySessionParams *C.char) *C.char {
 		return handleErrorResponse("", false, clientErr)
 	}
 
-	err := tls_client_cffi_src.DestroyTlsClientSession(destroySessionInput.SessionId)
-
-	if err != nil {
-		clientErr := tls_client_cffi_src.NewTLSClientError(err)
-		return handleErrorResponse(destroySessionInput.SessionId, true, clientErr)
-	}
+	tls_client_cffi_src.RemoveSession(destroySessionInput.SessionId)
 
 	out := tls_client_cffi_src.DestroyOutput{
 		Id:      uuid.New().String(),
@@ -119,7 +109,7 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 		return handleErrorResponse("", false, clientErr)
 	}
 
-	tlsClient, err := tls_client_cffi_src.GetTlsClientFromSession(cookiesInput.SessionId)
+	tlsClient, err := tls_client_cffi_src.GetClient(cookiesInput.SessionId)
 
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
@@ -167,7 +157,7 @@ func request(requestParams *C.char) *C.char {
 		return handleErrorResponse("", false, clientErr)
 	}
 
-	tlsClient, sessionId, withSession, err := tls_client_cffi_src.GetTlsClientFromInput(requestInput)
+	tlsClient, sessionId, withSession, err := tls_client_cffi_src.CreateClient(requestInput)
 
 	if err != nil {
 		return handleErrorResponse(sessionId, withSession, err)

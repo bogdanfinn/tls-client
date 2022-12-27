@@ -3,7 +3,7 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 
@@ -36,7 +36,7 @@ func TestClient_RandomExtensionOrderChrome(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	readBytes, err := ioutil.ReadAll(resp.Body)
+	readBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestClient_RandomExtensionOrderCustom(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	readBytes, err := ioutil.ReadAll(resp.Body)
+	readBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

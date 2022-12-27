@@ -1,10 +1,11 @@
+// tls_client_cffi_src provides and manages a CFFI (C Foreign Function Interface) which allows code in other languages to interact with the module.
 package tls_client_cffi_src
 
 import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"sync"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -15,34 +16,30 @@ import (
 )
 
 var clientsLock = sync.Mutex{}
+
+// clients contains all registered clients, mapped by their individual IDs
 var clients = make(map[string]tls_client.HttpClient)
 
-func DestroyTlsClientSession(sessionId string) error {
+// RemoveSession deletes the client with the given sessionId from the client session storage.
+func RemoveSession(sessionId string) {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
 
-	_, ok := clients[sessionId]
-
-	if !ok {
-		return fmt.Errorf("tls client session with id %s does not exist", sessionId)
-	}
-
 	delete(clients, sessionId)
-
-	return nil
 }
 
-func DestroyTlsClientSessions() error {
+// ClearSessionCache empties the client session storage.
+func ClearSessionCache() {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
 
 	// the remaining clients will be cleaned up by the garbage collection
 	clients = make(map[string]tls_client.HttpClient)
-
-	return nil
 }
 
-func GetTlsClientFromSession(sessionId string) (tls_client.HttpClient, error) {
+// GetClient returns the client with the given sessionId from the client session storage.
+// If there is no client with the given sessionId, it returns an error.
+func GetClient(sessionId string) (tls_client.HttpClient, error) {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
 
@@ -55,37 +52,41 @@ func GetTlsClientFromSession(sessionId string) (tls_client.HttpClient, error) {
 	return client, nil
 }
 
-func GetTlsClientFromInput(requestInput RequestInput) (tls_client.HttpClient, string, bool, *TLSClientError) {
-	withSession := true
+// CreateClient creates a new client from a given RequestInput.
+//
+// The RequestInput should only contain a TLSClientIdentifier or a CustomTlsClient. If both are provided, an error will be returned.
+func CreateClient(requestInput RequestInput) (client tls_client.HttpClient, sessionID string, withSession bool, clientErr *TLSClientError) {
+	useSession := true
 	sessionId := requestInput.SessionId
 
 	newSessionId := uuid.New().String()
 	if sessionId != nil && *sessionId != "" {
 		newSessionId = *sessionId
 	} else {
-		withSession = false
+		useSession = false
 	}
 
 	if requestInput.TLSClientIdentifier != "" && requestInput.CustomTlsClient != nil {
-		clientErr := NewTLSClientError(fmt.Errorf("can not built client out of client identifier and custom tls client information. Please provide only one of them"))
-		return nil, newSessionId, withSession, clientErr
+		clientErr := NewTLSClientError(fmt.Errorf("cannot build client out of client identifier and custom tls client information. Please provide only one of them"))
+		return nil, newSessionId, useSession, clientErr
 	}
 
 	if requestInput.TLSClientIdentifier == "" && requestInput.CustomTlsClient == nil {
-		clientErr := NewTLSClientError(fmt.Errorf("can not built client without client identifier and without custom tls client information. Please provide at least one of them"))
-		return nil, newSessionId, withSession, clientErr
+		clientErr := NewTLSClientError(fmt.Errorf("cannot build client without client identifier or custom tls client information. Please provide at least one of them"))
+		return nil, newSessionId, useSession, clientErr
 	}
 
-	tlsClient, err := getTlsClient(requestInput, newSessionId, withSession)
+	tlsClient, err := getTlsClient(requestInput, newSessionId, useSession)
 
 	if err != nil {
 		clientErr := NewTLSClientError(fmt.Errorf("failed to build client out of request input: %w", err))
-		return nil, newSessionId, withSession, clientErr
+		return nil, newSessionId, useSession, clientErr
 	}
 
-	return tlsClient, newSessionId, withSession, nil
+	return tlsClient, newSessionId, useSession, nil
 }
 
+// BuildRequest constructs a HTTP request from a given RequestInput.
 func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	var tlsReq *http.Request
 	var err error
@@ -127,10 +128,11 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	return tlsReq, nil
 }
 
+// BuildResponse constructs a client response from a given HTTP response. The client response can then be sent to the interface consumer.
 func BuildResponse(sessionId string, withSession bool, resp *http.Response, cookies []*http.Cookie, isByteResponse bool) (Response, *TLSClientError) {
 	defer resp.Body.Close()
 
-	respBodyBytes, err := ioutil.ReadAll(resp.Body)
+	respBodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		clientErr := NewTLSClientError(err)
 		return Response{}, clientErr
