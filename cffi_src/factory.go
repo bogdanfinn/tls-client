@@ -71,6 +71,11 @@ func CreateClient(requestInput RequestInput) (client tls_client.HttpClient, sess
 		return nil, newSessionId, useSession, clientErr
 	}
 
+	if requestInput.TimeoutSeconds != 0 && requestInput.TimeoutMilliseconds != 0 {
+		clientErr := NewTLSClientError(fmt.Errorf("cannot build client with both defined timeout in seconds and timeout in milliseconds. Please provide only one of them"))
+		return nil, newSessionId, useSession, clientErr
+	}
+
 	if requestInput.TLSClientIdentifier == "" && requestInput.CustomTlsClient == nil {
 		clientErr := NewTLSClientError(fmt.Errorf("cannot build client without client identifier or custom tls client information. Please provide at least one of them"))
 		return nil, newSessionId, useSession, clientErr
@@ -206,14 +211,18 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		clientProfile = getTlsClientProfile(tlsClientIdentifier)
 	}
 
-	timeoutSeconds := tls_client.DefaultTimeoutSeconds
+	timeoutOption := tls_client.WithTimeoutSeconds(tls_client.DefaultTimeoutSeconds)
 
 	if requestInput.TimeoutSeconds != 0 {
-		timeoutSeconds = requestInput.TimeoutSeconds
+		timeoutOption = tls_client.WithTimeoutSeconds(requestInput.TimeoutSeconds)
+	}
+
+	if requestInput.TimeoutMilliseconds != 0 {
+		timeoutOption = tls_client.WithTimeoutMilliseconds(requestInput.TimeoutMilliseconds)
 	}
 
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(timeoutSeconds),
+		timeoutOption,
 		tls_client.WithClientProfile(clientProfile),
 	}
 

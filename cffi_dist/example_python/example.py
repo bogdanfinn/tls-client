@@ -33,6 +33,7 @@ requestPayload = {
     "withDebug": False,
     "withRandomTLSExtensionOrder": False,
     "timeoutSeconds": 30,
+    "timeoutMilliseconds": 0,
     "sessionId": "my-session-id",
     "proxyUrl": "",
     "headers": {

@@ -100,7 +100,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -110,7 +110,7 @@ import (
 func main() {
     jar := tls_client.NewCookieJar(nil)
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
+		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(tls_client.Chrome_105),
 		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
@@ -165,7 +165,8 @@ For more configured clients check `./profiles.go`, `./custom_profiles.go` or use
 #### Client Options
 List of current available client options.
 ```go
-WithTimeout
+WithTimeoutSeconds
+WithTimeoutMilliseconds
 WithProxyUrl
 WithCookieJar
 WithDebug

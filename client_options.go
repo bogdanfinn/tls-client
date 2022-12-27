@@ -51,16 +51,35 @@ func WithCookieJar(jar http.CookieJar) HttpClientOption {
 	}
 }
 
-// WithTimeout configures a HTTP client to use the specified request timeout.
+// WithTimeoutMilliseconds configures an HTTP client to use the specified request timeout.
+//
+// timeout is the request timeout in milliseconds.
+func WithTimeoutMilliseconds(timeout int) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.timeout = time.Millisecond * time.Duration(timeout)
+	}
+}
+
+// WithTimeoutSeconds configures an HTTP client to use the specified request timeout.
 //
 // timeout is the request timeout in seconds.
+func WithTimeoutSeconds(timeout int) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.timeout = time.Second * time.Duration(timeout)
+	}
+}
+
+// WithTimeout configures an HTTP client to use the specified request timeout.
+//
+// timeout is the request timeout in seconds.
+// Deprecated: use either WithTimeoutSeconds or WithTimeoutMilliseconds
 func WithTimeout(timeout int) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.timeout = time.Second * time.Duration(timeout)
 	}
 }
 
-// WithNotFollowRedirects configures a HTTP client to not follow HTTP redirects.
+// WithNotFollowRedirects configures an HTTP client to not follow HTTP redirects.
 func WithNotFollowRedirects() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.followRedirects = false

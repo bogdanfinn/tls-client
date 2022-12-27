@@ -18,6 +18,7 @@ const requestPayload = {
     "forceHttp1": false,
     "withRandomTLSExtensionOrder": false,
     "timeoutSeconds": 30,
+    "timeoutMilliseconds": 0,
     "sessionId": "my-session-id",
     "proxyUrl": "",
     "headers": {

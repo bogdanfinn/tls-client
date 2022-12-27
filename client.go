@@ -40,7 +40,7 @@ type httpClient struct {
 var DefaultTimeoutSeconds = 30
 
 var DefaultOptions = []HttpClientOption{
-	WithTimeout(DefaultTimeoutSeconds),
+	WithTimeoutSeconds(DefaultTimeoutSeconds),
 	WithClientProfile(DefaultClientProfile),
 	WithRandomTLSExtensionOrder(),
 	WithNotFollowRedirects(),

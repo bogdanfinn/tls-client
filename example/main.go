@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	goHttp "net/http"
 	"net/http/httputil"
@@ -72,7 +73,7 @@ func overwriteCookieInJar() {
 	jar := tls_client.NewCookieJar(jarOptions...)
 
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(60),
+		tls_client.WithTimeoutSeconds(60),
 		tls_client.WithClientProfile(tls_client.Chrome_107),
 		tls_client.WithRandomTLSExtensionOrder(),
 		tls_client.WithCookieJar(jar),
@@ -228,7 +229,7 @@ func requestToppsAsChrome107Client() {
 	jar := tls_client.NewCookieJar()
 
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
+		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(tls_client.Chrome_107),
 		tls_client.WithDebug(),
 		//tls_client.WithProxyUrl("http://user:pass@host:port"),
@@ -305,7 +306,7 @@ func requestToppsAsChrome107Client() {
 
 func postAsTlsClient() {
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
+		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(tls_client.Chrome_107),
 	}
 
@@ -354,7 +355,7 @@ func postAsTlsClient() {
 
 func shareHttpClientInGoRoutines() {
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
+		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(tls_client.Chrome_107),
 	}
 
@@ -412,7 +413,7 @@ func shareHttpClientInGoRoutines() {
 
 func requestWithFollowRedirectSwitch() {
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
+		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(tls_client.Chrome_107),
 		tls_client.WithNotFollowRedirects(),
 	}
@@ -489,7 +490,7 @@ func requestWithFollowRedirectSwitch() {
 
 func downloadImageWithTlsClient() {
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
+		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(tls_client.Chrome_107),
 		tls_client.WithNotFollowRedirects(),
 	}
@@ -548,12 +549,12 @@ func downloadImageWithTlsClient() {
 
 func http2HeaderFrameOrder() {
 	firefoxOptions := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
+		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(tls_client.Firefox_106),
 	}
 
 	chromeOptions := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
+		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(tls_client.Chrome_108),
 	}
 
@@ -636,7 +637,7 @@ func http2HeaderFrameOrder() {
 
 // func rotateProxiesOnClient() {
 // 	options := []tls_client.HttpClientOption{
-// 		tls_client.WithTimeout(30),
+// 		tls_client.WithTimeoutSeconds(30),
 // 		tls_client.WithClientProfile(tls_client.Chrome_107),
 // 		tls_client.WithProxyUrl("http://user:pass@host:port"),
 // 	}
@@ -845,7 +846,7 @@ func requestWithCustomClient() {
 	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil)
 
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(60),
+		tls_client.WithTimeoutSeconds(60),
 		tls_client.WithClientProfile(customClientProfile), // use custom profile here
 	}
 
@@ -926,7 +927,7 @@ func loginZalandoMobileAndroid() {
 	sig := "f01ae091f136195da14333dc7485e0099dd8fb3a"
 
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(60),
+		tls_client.WithTimeoutSeconds(60),
 		tls_client.WithClientProfile(tls_client.ZalandoAndroidMobile),
 	}
 
@@ -1035,7 +1036,7 @@ func loginZalandoMobileAndroid() {
 
 func http2ReuseTlsClient() {
 	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeout(30),
+		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(tls_client.Chrome_108),
 	}
 

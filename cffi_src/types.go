@@ -61,6 +61,7 @@ type RequestInput struct {
 	WithRandomTLSExtensionOrder bool              `json:"withRandomTLSExtensionOrder"`
 	InsecureSkipVerify          bool              `json:"insecureSkipVerify"`
 	TimeoutSeconds              int               `json:"timeoutSeconds"`
+	TimeoutMilliseconds         int               `json:"timeoutMilliseconds"`
 	ProxyUrl                    *string           `json:"proxyUrl"`
 	Headers                     map[string]string `json:"headers"`
 	HeaderOrder                 []string          `json:"headerOrder"`

@@ -95,14 +95,14 @@ func TestClient_TestFailWithTimeout(t *testing.T) {
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(tls_client.Chrome_105),
-		tls_client.WithTimeout(3),
+		tls_client.WithTimeoutSeconds(3),
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	redirectEndpoint := fmt.Sprintf("%s%s", testServer.URL, "/timeout")
 
 	req, err := http.NewRequest(http.MethodGet, redirectEndpoint, nil)
