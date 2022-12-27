@@ -325,7 +325,7 @@ func postAsTlsClient() {
 
 	req.Header = http.Header{
 		"accept":          {"*/*"},
-		"content-type":    {"application/"},
+		"content-type":    {"application/x-www-form-urlencoded"},
 		"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
 		"user-agent":      {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"},
 		http.HeaderOrderKey: {
@@ -604,7 +604,7 @@ func http2HeaderFrameOrder() {
 	}
 
 	for i, frame := range tlsApiResponse.HTTP2.SentFrames {
-		log.Printf("Firefox Frame %d: %s\n", i, frame.FrameType)
+		log.Printf("Firefox Frame %d: %s: %d\n", i, frame.FrameType, frame.StreamID)
 
 		if frame.FrameType == "HEADERS" {
 			log.Printf("Firefox Header Priority: %v\n", frame.Priority)
@@ -624,7 +624,7 @@ func http2HeaderFrameOrder() {
 	}
 
 	for i, frame := range tlsApiResponse.HTTP2.SentFrames {
-		log.Printf("Chrome Frame %d: %s\n", i, frame.FrameType)
+		log.Printf("Chrome Frame %d: %s: %d\n", i, frame.FrameType, frame.StreamID)
 
 		if frame.FrameType == "HEADERS" {
 			log.Printf("Chrome Header Priority: %v\n", frame.Priority)

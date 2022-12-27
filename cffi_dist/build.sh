@@ -6,6 +6,11 @@ echo 'Build OSX'
 GOOS=darwin CGO_ENABLED=1 GOARCH=arm64 go build -buildmode=c-shared -o ./dist/tls-client-darwin-arm64-$1.dylib
 GOOS=darwin CGO_ENABLED=1 GOARCH=amd64 go build -buildmode=c-shared -o ./dist/tls-client-darwin-amd64-$1.dylib
 
+echo 'Build Linux ARM64'
+# CC is needed when you cross compile from OSX to Linux
+GOOS=linux CGO_ENABLED=1 GOARCH=arm64 CC="aarch64-unknown-linux-gnu-gcc" go build -buildmode=c-shared -o ./dist/tls-client-linux-arm64-$1.so
+
+
 # CC is needed when you cross compile from OSX to Linux
 echo 'Build Linux Alpine'
 # For some reason my OSX gcc cross compiler does not work. Therefore i use a alpine docker image

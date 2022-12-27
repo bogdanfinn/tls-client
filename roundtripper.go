@@ -219,7 +219,8 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	if err == nil {
 		return net.JoinHostPort(host, port)
 	}
-	return net.JoinHostPort(req.URL.Host, "443") // we can assume port is 443 at this point
+
+	return net.JoinHostPort(req.URL.Host, "443")
 }
 
 func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, dialer ...proxy.ContextDialer) http.RoundTripper {

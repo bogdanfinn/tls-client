@@ -1,8 +1,11 @@
 package tls_client
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/url"
 	"time"
 
@@ -221,7 +224,23 @@ func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 // If the returned error is nil, the response contains a non-nil body, which the user is expected to close.
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	if c.config.debug {
-		requestBytes, err := httputil.DumpRequestOut(req, req.ContentLength > 0)
+		debugReq := req.Clone(context.Background())
+
+		if req.Body != nil {
+			buf, err := ioutil.ReadAll(req.Body)
+
+			if err != nil {
+				return nil, err
+			}
+
+			debugBody := ioutil.NopCloser(bytes.NewBuffer(buf))
+			requestBody := ioutil.NopCloser(bytes.NewBuffer(buf))
+
+			debugReq.Body = debugBody
+			req.Body = requestBody
+		}
+
+		requestBytes, err := httputil.DumpRequestOut(debugReq, debugReq.ContentLength > 0)
 
 		if err != nil {
 			return nil, err
