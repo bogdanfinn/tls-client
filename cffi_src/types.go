@@ -31,6 +31,12 @@ type DestroyOutput struct {
 	Success bool   `json:"success"`
 }
 
+type AddCookiesToSessionInput struct {
+	SessionId string         `json:"sessionId"`
+	Url       string         `json:"url"`
+	Cookies   []*http.Cookie `json:"cookies"`
+}
+
 type GetCookiesFromSessionInput struct {
 	SessionId string `json:"sessionId"`
 	Url       string `json:"url"`
