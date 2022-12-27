@@ -18,6 +18,7 @@ import (
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/http2"
+	"github.com/bogdanfinn/fhttp/httptrace"
 	tls_client "github.com/bogdanfinn/tls-client"
 	"github.com/bogdanfinn/tls-client/shared"
 	tls "github.com/bogdanfinn/utls"
@@ -32,6 +33,7 @@ func main() {
 	postAsTlsClient()
 	requestWithFollowRedirectSwitch()
 	requestWithCustomClient()
+	http2ReuseTlsClient()
 	//rotateProxiesOnClient() //commented out because no proxies committed
 	http2HeaderFrameOrder()
 	loginZalandoMobileAndroid()
@@ -389,7 +391,7 @@ func shareHttpClientInGoRoutines() {
 				return
 			}
 
-			defer resp.Body.Close()
+			resp.Body.Close()
 
 			log.Printf("Go Routine %d: %s: status code: %d\n", id, url, resp.StatusCode)
 
@@ -1029,4 +1031,74 @@ func loginZalandoMobileAndroid() {
 	}
 
 	log.Println(string(readBytes))
+}
+
+func http2ReuseTlsClient() {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeout(30),
+		tls_client.WithClientProfile(tls_client.Chrome_108),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	callInLoop := func(wg *sync.WaitGroup, id int, client tls_client.HttpClient, amount int, url string) {
+		defer wg.Done()
+		for i := 0; i < amount; i++ {
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			req.Header = http.Header{
+				"accept":          {"*/*"},
+				"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+				"user-agent":      {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"},
+				http.HeaderOrderKey: {
+					"accept",
+					"accept-language",
+					"user-agent",
+				},
+			}
+
+			clientTrace := &httptrace.ClientTrace{
+				GotConn: func(info httptrace.GotConnInfo) {
+					log.Printf("Connection was reused in routine %d: %t", id, info.Reused)
+				},
+			}
+
+			req = req.WithContext(httptrace.WithClientTrace(req.Context(), clientTrace))
+
+			resp, err := client.Do(req)
+
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			if _, err := io.Copy(ioutil.Discard, resp.Body); err != nil {
+				log.Fatal(err)
+				return
+			}
+
+			resp.Body.Close()
+
+			log.Println(fmt.Sprintf("Go Routine %d: %s: status code: %d", id, url, resp.StatusCode))
+
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	log.Println("starting go routines to https://www.google.de/")
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go callInLoop(&wg, 1, client, 3, "https://www.google.de/")
+	go callInLoop(&wg, 2, client, 3, "https://www.google.de/")
+
+	wg.Wait()
 }
