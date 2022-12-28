@@ -58,6 +58,7 @@ type RequestInput struct {
 	WithDebug                   bool              `json:"withDebug"`
 	IsByteRequest               bool              `json:"isByteRequest"`
 	WithoutCookieJar            bool              `json:"withoutCookieJar"`
+	WithDefaultCookieJar        bool              `json:"withDefaultCookieJar"`
 	WithRandomTLSExtensionOrder bool              `json:"withRandomTLSExtensionOrder"`
 	InsecureSkipVerify          bool              `json:"insecureSkipVerify"`
 	TimeoutSeconds              int               `json:"timeoutSeconds"`

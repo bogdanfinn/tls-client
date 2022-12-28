@@ -1,7 +1,9 @@
 package tls_client
 
 import (
+	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -29,13 +31,13 @@ func WithLogger(logger Logger) CookieJarOption {
 
 type CookieJar interface {
 	http.CookieJar
-	GetAllCookies() map[url.URL][]*http.Cookie
+	GetAllCookies() map[string][]*http.Cookie
 }
 
 type cookieJar struct {
 	jar        *cookiejar.Jar
 	config     *cookieJarConfig
-	allCookies map[url.URL][]*http.Cookie
+	allCookies map[string][]*http.Cookie
 	sync.RWMutex
 }
 
@@ -55,19 +57,20 @@ func NewCookieJar(options ...CookieJarOption) CookieJar {
 	c := &cookieJar{
 		jar:        realJar,
 		config:     config,
-		allCookies: make(map[url.URL][]*http.Cookie),
+		allCookies: make(map[string][]*http.Cookie),
 	}
 
 	return c
-
 }
 
 func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	jar.Lock()
 	defer jar.Unlock()
 
+	hostKey := jar.buildCookieHostKey(u)
+
 	if !jar.config.skipExisting {
-		existingCookies := jar.allCookies[*u]
+		existingCookies := jar.allCookies[hostKey]
 
 		var remainingExistingCookies []*http.Cookie
 
@@ -92,14 +95,14 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 		newCookies := append(remainingExistingCookies, cookies...)
 
 		jar.jar.SetCookies(u, newCookies)
-		jar.allCookies[*u] = newCookies
+		jar.allCookies[hostKey] = newCookies
 
 		return
 	}
 
 	var filteredCookies []*http.Cookie
 
-	existingCookies := jar.allCookies[*u]
+	existingCookies := jar.allCookies[hostKey]
 
 	for _, cookie := range cookies {
 		alreadyInJar := false
@@ -122,24 +125,48 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 
 	newCookies := append(existingCookies, filteredCookies...)
 	jar.jar.SetCookies(u, newCookies)
-	jar.allCookies[*u] = newCookies
+	jar.allCookies[hostKey] = newCookies
 }
 
 func (jar *cookieJar) Cookies(u *url.URL) []*http.Cookie {
 	jar.RLock()
 	defer jar.RUnlock()
 
-	return jar.allCookies[*u]
+	hostKey := jar.buildCookieHostKey(u)
+
+	return jar.allCookies[hostKey]
 }
 
-func (jar *cookieJar) GetAllCookies() map[url.URL][]*http.Cookie {
+func (jar *cookieJar) GetAllCookies() map[string][]*http.Cookie {
 	jar.RLock()
 	defer jar.RUnlock()
 
-	copied := make(map[url.URL][]*http.Cookie)
+	copied := make(map[string][]*http.Cookie)
 	for u, c := range jar.allCookies {
 		copied[u] = c
 	}
 
 	return copied
+}
+
+func (jar *cookieJar) buildCookieHostKey(u *url.URL) string {
+	host := u.Host
+
+	hostParts := strings.Split(host, ".")
+
+	// in case of https://www.example.com and https://example.com we are just returning example otherwise the full hostname
+	// the idea is that cookies of different TLD and subdomains are handled the same and can be overwritten by name except of subdomains which should have unique cookies like for zalando or asos.
+	// www.footlocker.de / footlocker.com / www.footlocker.com should all use the same cookies where accounts.zalando.de and www.zalando.de should not share the same cookies.
+	switch len(hostParts) {
+	case 3:
+		if hostParts[0] == "www" || hostParts[0] == "" {
+			return hostParts[1]
+		}
+
+		return fmt.Sprintf("%s.%s", hostParts[0], hostParts[1])
+	case 2:
+		return hostParts[1]
+	default:
+		return host
+	}
 }

@@ -15,6 +15,7 @@ const requestPayload = {
     "insecureSkipVerify": false,
     "sessionId": "footlocker",
     "withoutCookieJar": false,
+    "withDefaultCookieJar": false,
     "isByteRequest": false,
     "withDebug": true,
     "forceHttp1": false,
