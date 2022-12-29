@@ -108,7 +108,7 @@ import (
 )
 
 func main() {
-    jar := tls_client.NewCookieJar(nil)
+    jar := tls_client.NewCookieJar()
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(tls_client.Chrome_105),
