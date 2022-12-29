@@ -5,6 +5,7 @@ const fs = require("fs")
 const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-1.2.0.dylib', {
     'request': ['string', ['string']],
     'getCookiesFromSession': ['string', ['string']],
+    'addCookiesToSession': ['string', ['string']],
     'freeMemory': ["void", ['string']],
     'destroyAll': ['string', []],
     'destroySession': ['string', ['string']]

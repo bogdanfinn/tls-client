@@ -4,6 +4,7 @@ const ffi = require('ffi-napi');
 const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-1.2.0.dylib', {
     'request': ['string', ['string']],
     'getCookiesFromSession': ['string', ['string']],
+    'addCookiesToSession': ['string', ['string']],
     'freeMemory': ["void", ['string']],
     'destroyAll': ['string', []],
     'destroySession': ['string', ['string']]
@@ -58,7 +59,7 @@ const cookiesResponse = tlsClientLibrary.getCookiesFromSession(JSON.stringify(pa
 
 const cookiesInSession = JSON.parse(cookiesResponse)
 
-cookiesInSession.map(cookieInSession => {
+cookiesInSession.cookies.map(cookieInSession => {
     console.log("cookie in session: ", cookieInSession.Name, cookieInSession.Value)
 })
 
@@ -115,6 +116,23 @@ const cookiesResponse2 = tlsClientLibrary.getCookiesFromSession(JSON.stringify(p
 
 const cookiesInSession2 = JSON.parse(cookiesResponse2)
 
-cookiesInSession2.map(cookieInSession => {
+cookiesInSession2.cookies.map(cookieInSession => {
     console.log("cookie in session: ", cookieInSession.Name, cookieInSession.Value)
 })
+
+const payload3 = {
+    sessionId: 'footlocker',
+    url: "https://www.footlocker.de/",
+    cookies: [{
+        "name": "myCookieName",
+        "value": "myCookieValue",
+    }]
+}
+
+const resp = tlsClientLibrary.addCookiesToSession(JSON.stringify(payload3))
+
+
+const parsedResp = JSON.parse(resp)
+
+
+console.log('parsedResp', parsedResp)

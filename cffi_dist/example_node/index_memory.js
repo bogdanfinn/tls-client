@@ -11,6 +11,7 @@ class TLS {
             request: ["string", ["string"]],
             freeMemory: ["void", ['string']],
             getCookiesFromSession: ["string", ["string"]],
+            addCookiesToSession: ['string', ['string']],
             destroyAll: ["string", []],
             destroySession: ["string", ["string"]],
         });

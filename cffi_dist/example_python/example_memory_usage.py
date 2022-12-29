@@ -11,6 +11,14 @@ request = library.request
 request.argtypes = [ctypes.c_char_p]
 request.restype = ctypes.c_char_p
 
+getCookiesFromSession = library.getCookiesFromSession
+getCookiesFromSession.argtypes = [ctypes.c_char_p]
+getCookiesFromSession.restype = ctypes.c_char_p
+
+addCookiesToSession = library.addCookiesToSession
+addCookiesToSession.argtypes = [ctypes.c_char_p]
+addCookiesToSession.restype = ctypes.c_char_p
+
 freeMemory = library.freeMemory
 freeMemory.argtypes = [ctypes.c_char_p]
 
