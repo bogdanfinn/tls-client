@@ -67,6 +67,9 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	jar.Lock()
 	defer jar.Unlock()
 
+	notEmptyCookies := jar.nonEmpty(cookies)
+	uniqueCookies := jar.unique(notEmptyCookies)
+
 	hostKey := jar.buildCookieHostKey(u)
 
 	if !jar.config.skipExisting {
@@ -76,7 +79,7 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 
 		for _, existingCookie := range existingCookies {
 			shouldOverwrite := false
-			for _, cookie := range cookies {
+			for _, cookie := range uniqueCookies {
 				shouldOverwrite = existingCookie.Name == cookie.Name
 
 				if shouldOverwrite {
@@ -85,14 +88,13 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 			}
 
 			if shouldOverwrite {
-				jar.config.logger.Debug("cookie %s should be overwriten by newer value", existingCookie.Name)
 				continue
 			}
 
 			remainingExistingCookies = append(remainingExistingCookies, existingCookie)
 		}
 
-		newCookies := append(remainingExistingCookies, cookies...)
+		newCookies := append(remainingExistingCookies, uniqueCookies...)
 
 		jar.jar.SetCookies(u, newCookies)
 		jar.allCookies[hostKey] = newCookies
@@ -100,11 +102,11 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 		return
 	}
 
-	var filteredCookies []*http.Cookie
+	var newNonExistentCookies []*http.Cookie
 
 	existingCookies := jar.allCookies[hostKey]
 
-	for _, cookie := range cookies {
+	for _, cookie := range uniqueCookies {
 		alreadyInJar := false
 
 		for _, existingCookie := range existingCookies {
@@ -120,10 +122,11 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 			continue
 		}
 
-		filteredCookies = append(filteredCookies, cookie)
+		jar.config.logger.Debug("cookie %s is not in jar yet, adding", cookie.Name)
+		newNonExistentCookies = append(newNonExistentCookies, cookie)
 	}
 
-	newCookies := append(existingCookies, filteredCookies...)
+	newCookies := append(existingCookies, newNonExistentCookies...)
 	jar.jar.SetCookies(u, newCookies)
 	jar.allCookies[hostKey] = newCookies
 }
@@ -169,4 +172,46 @@ func (jar *cookieJar) buildCookieHostKey(u *url.URL) string {
 	default:
 		return host
 	}
+}
+
+func (jar *cookieJar) unique(cookies []*http.Cookie) []*http.Cookie {
+	var filteredCookies []*http.Cookie
+	var uniqueCookies []string
+
+	for i := len(cookies) - 1; i >= 0; i-- {
+		c := cookies[i]
+
+		if inSlice(uniqueCookies, c.Name) {
+			continue
+		}
+
+		filteredCookies = append(filteredCookies, c)
+		uniqueCookies = append(uniqueCookies, c.Name)
+	}
+
+	return filteredCookies
+}
+
+func (jar *cookieJar) nonEmpty(cookies []*http.Cookie) []*http.Cookie {
+	var filteredCookies []*http.Cookie
+
+	for _, c := range cookies {
+		if c.Value == "" {
+			continue
+		}
+
+		filteredCookies = append(filteredCookies, c)
+	}
+
+	return filteredCookies
+}
+
+func inSlice(slice []string, elem string) bool {
+	for _, e := range slice {
+		if e == elem {
+			return true
+		}
+	}
+
+	return false
 }

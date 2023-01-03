@@ -177,6 +177,7 @@ WithServerNameOverwrite
 WithForceHttp1
 WithRandomTLSExtensionOrder
 WithTransportOptions
+WithCharlesProxy
 ```
 
 #### Default Client
