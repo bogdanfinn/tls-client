@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
+	net "net"
 	"net/url"
 	"sync"
 	"time"
@@ -175,9 +175,11 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 		Header: make(http.Header),
 		Host:   address,
 	}).WithContext(ctx)
+
 	for k, v := range c.DefaultHeader {
 		req.Header[k] = v
 	}
+
 	if ctxHeader, ctxHasHeader := ctx.Value(ContextKeyHeader{}).(http.Header); ctxHasHeader {
 		for k, v := range ctxHeader {
 			req.Header[k] = v

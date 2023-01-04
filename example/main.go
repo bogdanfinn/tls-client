@@ -28,6 +28,7 @@ import (
 
 func main() {
 	overwriteCookieInJar()
+	sslPinning()
 	shareHttpClientInGoRoutines()
 	requestToppsAsGoClient()
 	requestToppsAsChrome107Client()
@@ -166,6 +167,80 @@ func overwriteCookieInJar() {
 	for _, c := range client.GetCookies(parsedUrl) {
 		log.Printf("%s : %s | %s %s\n", c.Name, c.Value, c.Domain, c.Path)
 	}
+}
+
+func sslPinning() {
+	jar := tls_client.NewCookieJar()
+
+	//	I generated the pins by running the following command:
+	//	➜ hpkp-pins -server=bstn.com:443
+
+	pins := map[string][]string{
+		"bstn.com": {
+			"NQvy9sFS99nBqk/nZCUF44hFhshrkvxqYtfrZq3i+Ww=",
+			"4a6cPehI7OG6cuDZka5NDZ7FR8a60d3auda+sKfg4Ng=",
+			"x4QzPSC810K5/cMjb05Qm4k3Bw5zBn4lTdO/nEW/Td4=",
+		},
+	}
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeoutSeconds(60),
+		tls_client.WithClientProfile(tls_client.Chrome_108),
+		tls_client.WithRandomTLSExtensionOrder(),
+		tls_client.WithCookieJar(jar),
+		tls_client.WithCertificatePinning(pins, tls_client.DefaultBadPinHandler),
+		tls_client.WithCharlesProxy("127.0.0.1", "8888"),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	u := "https://bstn.com"
+	req, err := http.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req.Header = http.Header{
+		"accept":             {"*/*"},
+		"accept-encoding":    {"gzip, deflate, br"},
+		"accept-language":    {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
+		"sec-ch-ua":          {`"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"`},
+		"sec-ch-ua-mobile":   {"?0"},
+		"sec-ch-ua-platform": {`"macOS"`},
+		"sec-fetch-dest":     {"empty"},
+		"user-agent":         {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"accept-encoding",
+			"accept-language",
+			"sec-ch-ua",
+			"sec-ch-ua-mobile",
+			"sec-ch-ua-platform",
+			"sec-fetch-dest",
+			"user-agent",
+		},
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	resp.Body.Close()
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Printf("GET %s : %d\n", u, resp.StatusCode)
 }
 
 func requestToppsAsGoClient() {

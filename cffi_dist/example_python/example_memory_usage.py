@@ -4,7 +4,7 @@ import asyncio
 import os, psutil
 
 # load the tls-client shared package for your OS you are currently running your python script (i'm running on mac)
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.2.1.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.3.0dylib')
 
 # extract the exposed request function from the shared package
 request = library.request
@@ -46,6 +46,7 @@ async def main():
             "session": i,
             "timeoutSeconds": 30,
             "timeoutMilliseconds": 0,
+            "certificatePinningHosts": {},
             "proxyUrl": "",
             "headers": {
                 "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",

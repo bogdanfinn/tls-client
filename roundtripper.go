@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	http "github.com/bogdanfinn/fhttp"
-
 	"github.com/bogdanfinn/fhttp/http2"
 	"golang.org/x/net/proxy"
 
@@ -39,7 +38,9 @@ type roundTripper struct {
 
 	forceHttp1 bool
 
-	dialer proxy.ContextDialer
+	dialer            proxy.ContextDialer
+	certificatePinner CertificatePinner
+	badPinHandlerFunc BadPinHandlerFunc
 }
 
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -50,6 +51,11 @@ func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if _, ok := rt.cachedTransports[addr]; !ok {
 		if err := rt.getTransport(req, addr); err != nil {
 			rt.cachedTransportsLck.Unlock()
+
+			if errors.Is(err, ErrBadPinDetected) && rt.badPinHandlerFunc != nil {
+				rt.badPinHandlerFunc(req)
+			}
+
 			return nil, err
 		}
 	}
@@ -107,6 +113,12 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	conn := utls.UClient(rawConn, &utls.Config{ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify}, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
 	if err = conn.Handshake(); err != nil {
 		_ = conn.Close()
+		return nil, err
+	}
+
+	err = rt.certificatePinner.Pin(conn, host)
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -223,9 +235,17 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443")
 }
 
-func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, dialer ...proxy.ContextDialer) http.RoundTripper {
+func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+	pinner, err := NewCertificatePinner(certificatePins)
+
+	if err != nil {
+		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
+	}
+
 	rt := &roundTripper{
 		dialer:                      dialer[0],
+		certificatePinner:           pinner,
+		badPinHandlerFunc:           badPinHandlerFunc,
 		transportOptions:            transportOptions,
 		serverNameOverwrite:         serverNameOverwrite,
 		settings:                    clientProfile.settings,
@@ -248,5 +268,5 @@ func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOpt
 		rt.dialer = proxy.Direct
 	}
 
-	return rt
+	return rt, nil
 }

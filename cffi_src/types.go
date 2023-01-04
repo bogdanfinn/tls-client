@@ -49,27 +49,28 @@ type CookiesFromSessionOutput struct {
 
 // RequestInput is the data a Python client can construct a client and request from.
 type RequestInput struct {
-	SessionId                   *string           `json:"sessionId"`
-	TLSClientIdentifier         string            `json:"tlsClientIdentifier"`
-	CustomTlsClient             *CustomTlsClient  `json:"customTlsClient"`
-	FollowRedirects             bool              `json:"followRedirects"`
-	ForceHttp1                  bool              `json:"forceHttp1"`
-	IsByteResponse              bool              `json:"isByteResponse"`
-	WithDebug                   bool              `json:"withDebug"`
-	IsByteRequest               bool              `json:"isByteRequest"`
-	WithoutCookieJar            bool              `json:"withoutCookieJar"`
-	WithDefaultCookieJar        bool              `json:"withDefaultCookieJar"`
-	WithRandomTLSExtensionOrder bool              `json:"withRandomTLSExtensionOrder"`
-	InsecureSkipVerify          bool              `json:"insecureSkipVerify"`
-	TimeoutSeconds              int               `json:"timeoutSeconds"`
-	TimeoutMilliseconds         int               `json:"timeoutMilliseconds"`
-	ProxyUrl                    *string           `json:"proxyUrl"`
-	Headers                     map[string]string `json:"headers"`
-	HeaderOrder                 []string          `json:"headerOrder"`
-	RequestUrl                  string            `json:"requestUrl"`
-	RequestMethod               string            `json:"requestMethod"`
-	RequestBody                 *string           `json:"requestBody"`
-	RequestCookies              []CookieInput     `json:"requestCookies"`
+	SessionId                   *string             `json:"sessionId"`
+	TLSClientIdentifier         string              `json:"tlsClientIdentifier"`
+	CustomTlsClient             *CustomTlsClient    `json:"customTlsClient"`
+	CertificatePinningHosts     map[string][]string `json:"certificatePinningHosts"`
+	FollowRedirects             bool                `json:"followRedirects"`
+	ForceHttp1                  bool                `json:"forceHttp1"`
+	IsByteResponse              bool                `json:"isByteResponse"`
+	WithDebug                   bool                `json:"withDebug"`
+	IsByteRequest               bool                `json:"isByteRequest"`
+	WithoutCookieJar            bool                `json:"withoutCookieJar"`
+	WithDefaultCookieJar        bool                `json:"withDefaultCookieJar"`
+	WithRandomTLSExtensionOrder bool                `json:"withRandomTLSExtensionOrder"`
+	InsecureSkipVerify          bool                `json:"insecureSkipVerify"`
+	TimeoutSeconds              int                 `json:"timeoutSeconds"`
+	TimeoutMilliseconds         int                 `json:"timeoutMilliseconds"`
+	ProxyUrl                    *string             `json:"proxyUrl"`
+	Headers                     map[string]string   `json:"headers"`
+	HeaderOrder                 []string            `json:"headerOrder"`
+	RequestUrl                  string              `json:"requestUrl"`
+	RequestMethod               string              `json:"requestMethod"`
+	RequestBody                 *string             `json:"requestBody"`
+	RequestCookies              []CookieInput       `json:"requestCookies"`
 }
 
 // CustomTlsClient contains custom TLS specifications to construct a client from.

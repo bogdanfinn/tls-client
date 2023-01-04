@@ -59,6 +59,7 @@ func ProvideDefaultClient(logger Logger) (HttpClient, error) {
 func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, error) {
 	config := &httpClientConfig{
 		followRedirects:    true,
+		badPinHandler:      nil,
 		customRedirectFunc: nil,
 		timeout:            time.Duration(DefaultTimeoutSeconds) * time.Second,
 	}
@@ -134,9 +135,15 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 
 	clientProfile := config.clientProfile
 
+	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.certificatePins, config.badPinHandler, dialer)
+
+	if err != nil {
+		return nil, clientProfile, err
+	}
+
 	client := &http.Client{
 		Timeout:       config.timeout,
-		Transport:     newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, dialer),
+		Transport:     transport,
 		CheckRedirect: redirectFunc,
 	}
 
@@ -207,7 +214,13 @@ func (c *httpClient) applyProxy() error {
 		dialer = proxyDialer
 	}
 
-	c.Transport = newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, dialer)
+	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.certificatePins, c.config.badPinHandler, dialer)
+
+	if err != nil {
+		return err
+	}
+
+	c.Transport = transport
 
 	return nil
 }
