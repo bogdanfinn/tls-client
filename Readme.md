@@ -179,6 +179,7 @@ WithForceHttp1
 WithRandomTLSExtensionOrder
 WithTransportOptions
 WithCharlesProxy
+WithCertificatePinning
 WithCustomRedirectFunc
 ```
 
@@ -214,6 +215,13 @@ This library uses the following api: https://tls.peet.ws/api/all to verify the h
 ja3. Be aware that also peets api does not show every extension/cipher a tls client is using. Do not rely just on ja3 strings.
 
 If you are not using go and do not want to implement the shared library but want to use the functionality check out this repository https://github.com/bogdanfinn/tls-client-api
+
+### Certificate Pinning
+The client has built in certificate pinning support. Just use the `WithCertificatePinning` Option and provide the pins by hosts you want to enable pinning for. And if you want a callback to be executed on bad pin.
+Please refer to the examples in `example/main.go` to see how certificate pinning can be used in your application (`sslPinning()`).
+Also take a look at https://github.com/tam7t/hpkp to learn how to generate pins.
+You can install `hpkp-pins` by running `go install github.com/tam7t/hpkp/cmd/hpkp-pins@latest`
+
 
 ### Frequently Asked Questions / Errors
 * **How can I add `GREASE` to Custom Client Profiles when using the shared library?**

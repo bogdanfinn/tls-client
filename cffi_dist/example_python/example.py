@@ -2,7 +2,7 @@ import ctypes
 import json
 
 # load the tls-client shared package for your OS you are currently running your python script (i'm running on mac)
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.2.1.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.3.0dylib')
 
 # extract the exposed request function from the shared package
 request = library.request
@@ -41,6 +41,7 @@ requestPayload = {
     "timeoutMilliseconds": 0,
     "sessionId": "my-session-id",
     "proxyUrl": "",
+    "certificatePinningHosts": {},
     "headers": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",

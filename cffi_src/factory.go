@@ -235,6 +235,10 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithForceHttp1())
 	}
 
+	if len(requestInput.CertificatePinningHosts) > 0 {
+		options = append(options, tls_client.WithCertificatePinning(requestInput.CertificatePinningHosts, nil))
+	}
+
 	if requestInput.WithDebug {
 		options = append(options, tls_client.WithDebug())
 	}

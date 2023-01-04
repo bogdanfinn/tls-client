@@ -20,11 +20,15 @@ type TransportOptions struct {
 	ReadBufferSize         int   // If zero, a default (currently 4KB) is used.
 }
 
+type BadPinHandlerFunc func(req *http.Request)
+
 type httpClientConfig struct {
 	debug                       bool
 	followRedirects             bool
 	customRedirectFunc          func(req *http.Request, via []*http.Request) error
 	insecureSkipVerify          bool
+	certificatePins             map[string][]string
+	badPinHandler               BadPinHandlerFunc
 	proxyUrl                    string
 	serverNameOverwrite         string
 	transportOptions            *TransportOptions
@@ -124,6 +128,17 @@ func WithCustomRedirectFunc(redirectFunc func(req *http.Request, via []*http.Req
 func WithRandomTLSExtensionOrder() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.withRandomTlsExtensionOrder = true
+	}
+}
+
+// WithCertificatePinning enables SSL Pinning for the client and will throw an error if the SSL Pin is not matched.
+// Please refer to https://github.com/tam7t/hpkp/#examples in order to see how to generate pins. The certificatePins are a map with the host as key.
+// You can provide a BadPinHandlerFunc or nil as second argument. This function will be executed once a bad ssl pin is detected.
+// BadPinHandlerFunc has to be defined like this: func(req *http.Request){}
+func WithCertificatePinning(certificatePins map[string][]string, handlerFunc BadPinHandlerFunc) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.certificatePins = certificatePins
+		config.badPinHandler = handlerFunc
 	}
 }
 
