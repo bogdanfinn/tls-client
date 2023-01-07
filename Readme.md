@@ -27,6 +27,7 @@ Most likely you will use the `Do()` function like you did before with net/http C
 type HttpClient interface {
     GetCookies(u *url.URL) []*http.Cookie
     SetCookies(u *url.URL, cookies []*http.Cookie)
+    SetCookieJar(jar http.CookieJar)
     SetProxy(proxyUrl string) error
     GetProxy() string
     SetFollowRedirect(followRedirect bool)

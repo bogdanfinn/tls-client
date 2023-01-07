@@ -21,6 +21,7 @@ var defaultRedirectFunc = func(req *http.Request, via []*http.Request) error {
 type HttpClient interface {
 	GetCookies(u *url.URL) []*http.Cookie
 	SetCookies(u *url.URL, cookies []*http.Cookie)
+	SetCookieJar(jar http.CookieJar)
 	SetProxy(proxyUrl string) error
 	GetProxy() string
 	SetFollowRedirect(followRedirect bool)
@@ -217,6 +218,11 @@ func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	}
 
 	c.Jar.SetCookies(u, cookies)
+}
+
+// SetCookieJar sets a jar as the clients cookie jar. This is the recommended way when you want to "clear" the existing cookiejar
+func (c *httpClient) SetCookieJar(jar http.CookieJar) {
+	c.Jar = jar
 }
 
 // Do issues a given HTTP request and returns the corresponding response.
