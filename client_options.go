@@ -39,6 +39,7 @@ type httpClientConfig struct {
 	badPinHandler               BadPinHandlerFunc
 	proxyUrl                    string
 	serverNameOverwrite         string
+	cfSolvingHandler            CFSolvingHandler
 	transportOptions            *TransportOptions
 	cookieJar                   http.CookieJar
 	clientProfile               ClientProfile
@@ -197,5 +198,13 @@ func WithClientProfile(clientProfile ClientProfile) HttpClientOption {
 func WithServerNameOverwrite(serverName string) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.serverNameOverwrite = serverName
+	}
+}
+
+// WithCFSolvingHandler configures a TLS client to use a CF solving handler.
+// You can instantiate the built-in HawkAIO CF integration.
+func WithCFSolvingHandler(cfSolvingHandler CFSolvingHandler) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.cfSolvingHandler = cfSolvingHandler
 	}
 }

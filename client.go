@@ -40,9 +40,10 @@ var _ HttpClient = (*httpClient)(nil)
 
 type httpClient struct {
 	http.Client
-	headerLck sync.Mutex
-	logger    Logger
-	config    *httpClientConfig
+	headerLck        sync.Mutex
+	logger           Logger
+	config           *httpClientConfig
+	cfSolvingHandler CFSolvingHandler
 }
 
 var DefaultTimeoutSeconds = 30
@@ -98,10 +99,11 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 	}
 
 	return &httpClient{
-		Client:    *client,
-		logger:    logger,
-		config:    config,
-		headerLck: sync.Mutex{},
+		Client:           *client,
+		logger:           logger,
+		config:           config,
+		headerLck:        sync.Mutex{},
+		cfSolvingHandler: config.cfSolvingHandler,
 	}, nil
 }
 
@@ -310,7 +312,7 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		c.logger.Debug("raw request bytes sent over wire: %d (%d kb)", len(requestBytes), len(requestBytes)/1024)
 	}
 
-	resp, err := c.Client.Do(req)
+	resp, err := c.requestWithAntibotSolution(req)
 	if err != nil {
 		c.logger.Debug("failed to do request: %s", err.Error())
 		return nil, err
@@ -343,6 +345,20 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		}
 
 		c.logger.Debug("raw response bytes received over wire: %d (%d kb)", len(responseBytes), len(responseBytes)/1024)
+	}
+
+	return resp, nil
+}
+
+func (c *httpClient) requestWithAntibotSolution(request *http.Request) (*http.Response, error) {
+	resp, err := c.Client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.cfSolvingHandler != nil {
+		// we are passing the whole client to the solver as we have to do various sub requests for solving the anti bot challenge
+		return c.cfSolvingHandler.Solve(c.logger, c, resp)
 	}
 
 	return resp, nil

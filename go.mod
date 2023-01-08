@@ -3,6 +3,8 @@ module github.com/bogdanfinn/tls-client
 go 1.20
 
 require (
+	github.com/Lazarus/lz-string-go v0.0.0-20220923232958-c256c46c2022
+	github.com/anaskhan96/soup v1.2.5
 	github.com/bogdanfinn/fhttp v0.5.22
 	github.com/bogdanfinn/utls v1.5.16
 	github.com/google/uuid v1.3.0
@@ -25,3 +27,4 @@ require (
 // replace github.com/bogdanfinn/utls => ../utls
 
 // replace github.com/bogdanfinn/fhttp => ../fhttp
+replace github.com/juiced-aio/hawk-go => ../hawk-go

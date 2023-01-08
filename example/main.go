@@ -86,7 +86,6 @@ func sslPinning() {
 	}
 
 	resp, err := client.Do(req)
-
 	if err != nil {
 		log.Println(err)
 		return
@@ -109,10 +108,17 @@ func requestToppsAsChrome107Client() {
 		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(tls_client.Chrome_107),
 		tls_client.WithDebug(),
-		//tls_client.WithProxyUrl("http://user:pass@host:port"),
-		//tls_client.WithNotFollowRedirects(),
-		//tls_client.WithInsecureSkipVerify(),
-		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
+		tls_client.WithTransportOptions(&tls_client.TransportOptions{
+			DisableKeepAlives:      false,
+			DisableCompression:     false,
+			MaxIdleConns:           0,
+			MaxIdleConnsPerHost:    0,
+			MaxConnsPerHost:        0,
+			MaxResponseHeaderBytes: 0,
+			WriteBufferSize:        0,
+			ReadBufferSize:         0,
+		}),
+		tls_client.WithCookieJar(jar),
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
@@ -161,7 +167,6 @@ func requestToppsAsChrome107Client() {
 	}
 
 	resp, err := client.Do(req)
-
 	if err != nil {
 		log.Println(err)
 		return
@@ -172,7 +177,6 @@ func requestToppsAsChrome107Client() {
 	log.Printf("requesting topps as chrome107 => status code: %d\n", resp.StatusCode)
 
 	u, err := url.Parse("https://www.topps.com/")
-
 	if err != nil {
 		log.Println(err)
 		return
@@ -219,7 +223,6 @@ func postAsTlsClient() {
 	}
 
 	resp, err := client.Do(req)
-
 	if err != nil {
 		log.Println(err)
 		return
@@ -284,7 +287,6 @@ func requestWithFollowRedirectSwitch() {
 	}
 
 	resp, err := client.Do(req)
-
 	if err != nil {
 		log.Println(err)
 		return
@@ -327,7 +329,6 @@ func downloadImageWithTlsClient() {
 	}
 
 	resp, err := client.Do(req)
-
 	if err != nil {
 		log.Println(err)
 		return
@@ -340,7 +341,6 @@ func downloadImageWithTlsClient() {
 	log.Printf("requesting image => status code: %d\n", resp.StatusCode)
 
 	ex, err := os.Executable()
-
 	if err != nil {
 		log.Println(err)
 		return
@@ -420,7 +420,6 @@ func rotateProxiesOnClient() {
 	}
 
 	resp, err := client.Do(req)
-
 	if err != nil {
 		log.Println(err)
 		return
@@ -627,7 +626,6 @@ func requestWithCustomClient() {
 	}
 
 	resp, err := client.Do(req)
-
 	if err != nil {
 		log.Println(err)
 		return
