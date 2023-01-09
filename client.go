@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
+	"strings"
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -229,6 +230,9 @@ func (c *httpClient) SetCookieJar(jar http.CookieJar) {
 //
 // If the returned error is nil, the response contains a non-nil body, which the user is expected to close.
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
+	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
+	req.Header[http.HeaderOrderKey] = allToLower(req.Header[http.HeaderOrderKey])
+
 	if c.config.debug {
 		debugReq := req.Clone(context.Background())
 
@@ -276,4 +280,14 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	return resp, nil
+}
+
+func allToLower(list []string) []string {
+	var lower []string
+
+	for _, elem := range list {
+		lower = append(lower, strings.ToLower(elem))
+	}
+
+	return lower
 }
