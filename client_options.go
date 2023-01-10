@@ -23,6 +23,7 @@ type TransportOptions struct {
 type httpClientConfig struct {
 	debug                       bool
 	followRedirects             bool
+	customRedirectFunc          func(req *http.Request, via []*http.Request) error
 	insecureSkipVerify          bool
 	proxyUrl                    string
 	serverNameOverwrite         string
@@ -104,6 +105,16 @@ func WithTimeout(timeout int) HttpClientOption {
 func WithNotFollowRedirects() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.followRedirects = false
+	}
+}
+
+// WithCustomRedirectFunc configures an HTTP client to use a custom redirect func.
+// The redirect func have to look like that: func(req *http.Request, via []*http.Request) error
+// Please only provide a custom redirect function if you know what you are doing.
+// Check docs on net/http.Client CheckRedirect
+func WithCustomRedirectFunc(redirectFunc func(req *http.Request, via []*http.Request) error) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.customRedirectFunc = redirectFunc
 	}
 }
 

@@ -179,6 +179,7 @@ WithForceHttp1
 WithRandomTLSExtensionOrder
 WithTransportOptions
 WithCharlesProxy
+WithCustomRedirectFunc
 ```
 
 #### Default Client

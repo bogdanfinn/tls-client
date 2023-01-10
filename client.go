@@ -57,8 +57,9 @@ func ProvideDefaultClient(logger Logger) (HttpClient, error) {
 // NewHttpClient constructs a new HTTP client with the given logger and client options.
 func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, error) {
 	config := &httpClientConfig{
-		followRedirects: true,
-		timeout:         time.Duration(DefaultTimeoutSeconds) * time.Second,
+		followRedirects:    true,
+		customRedirectFunc: nil,
+		timeout:            time.Duration(DefaultTimeoutSeconds) * time.Second,
 	}
 
 	for _, opt := range options {
@@ -122,6 +123,10 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 		redirectFunc = nil
 	}
 
+	if config.customRedirectFunc != nil {
+		redirectFunc = config.customRedirectFunc
+	}
+
 	clientProfile := config.clientProfile
 
 	client := &http.Client{
@@ -157,6 +162,10 @@ func (c *httpClient) applyFollowRedirect() {
 	} else {
 		c.logger.Info("automatic redirect following is disabled")
 		c.CheckRedirect = defaultRedirectFunc
+	}
+
+	if c.config.customRedirectFunc != nil {
+		c.CheckRedirect = c.config.customRedirectFunc
 	}
 }
 
