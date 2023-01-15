@@ -157,18 +157,11 @@ func (jar *cookieJar) buildCookieHostKey(u *url.URL) string {
 
 	hostParts := strings.Split(host, ".")
 
-	// in case of https://www.example.com and https://example.com we are just returning example otherwise the full hostname
-	// the idea is that cookies of different TLD and subdomains are handled the same and can be overwritten by name except of subdomains which should have unique cookies like for zalando or asos.
-	// www.footlocker.de / footlocker.com / www.footlocker.com should all use the same cookies where accounts.zalando.de and www.zalando.de should not share the same cookies.
 	switch len(hostParts) {
 	case 3:
-		if hostParts[0] == "www" || hostParts[0] == "" {
-			return hostParts[1]
-		}
-
-		return fmt.Sprintf("%s.%s", hostParts[0], hostParts[1])
+		return fmt.Sprintf("%s.%s", hostParts[len(hostParts)-2], hostParts[len(hostParts)-1])
 	case 2:
-		return hostParts[1]
+		return fmt.Sprintf("%s.%s", hostParts[len(hostParts)-2], hostParts[len(hostParts)-1])
 	default:
 		return host
 	}
