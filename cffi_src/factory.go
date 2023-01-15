@@ -155,12 +155,13 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	}
 
 	response := Response{
-		Id:      uuid.New().String(),
-		Status:  resp.StatusCode,
-		Body:    finalResponse,
-		Headers: resp.Header,
-		Target:  "",
-		Cookies: cookiesToMap(cookies),
+		Id:           uuid.New().String(),
+		Status:       resp.StatusCode,
+		UsedProtocol: resp.Proto,
+		Body:         finalResponse,
+		Headers:      resp.Header,
+		Target:       "",
+		Cookies:      cookiesToMap(cookies),
 	}
 
 	if resp.Request != nil && resp.Request.URL != nil {

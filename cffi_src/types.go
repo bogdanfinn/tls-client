@@ -125,11 +125,12 @@ func (p *Timestamp) UnmarshalJSON(bytes []byte) error {
 
 // Response is the response that is sent back to the Python client.
 type Response struct {
-	Id        string              `json:"id"`
-	SessionId string              `json:"sessionId,omitempty"`
-	Status    int                 `json:"status"`
-	Target    string              `json:"target"`
-	Body      string              `json:"body"`
-	Headers   map[string][]string `json:"headers"`
-	Cookies   map[string]string   `json:"cookies"`
+	Id           string              `json:"id"`
+	SessionId    string              `json:"sessionId,omitempty"`
+	Status       int                 `json:"status"`
+	UsedProtocol string              `json:"usedProtocol"`
+	Target       string              `json:"target"`
+	Body         string              `json:"body"`
+	Headers      map[string][]string `json:"headers"`
+	Cookies      map[string]string   `json:"cookies"`
 }
