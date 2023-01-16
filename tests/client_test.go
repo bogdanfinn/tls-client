@@ -13,6 +13,9 @@ import (
 )
 
 func TestClients(t *testing.T) {
+	t.Log("testing chrome 109")
+	chrome109(t)
+	time.Sleep(2 * time.Second)
 	t.Log("testing chrome 108")
 	chrome108(t)
 	time.Sleep(2 * time.Second)
@@ -40,6 +43,9 @@ func TestClients(t *testing.T) {
 	t.Log("testing firefox 106")
 	firefox_106(t)
 	time.Sleep(2 * time.Second)
+	t.Log("testing firefox 108")
+	firefox_108(t)
+	time.Sleep(2 * time.Second)
 	t.Log("testing opera 91")
 	opera_91(t)
 }
@@ -55,6 +61,31 @@ var defaultHeader = http.Header{
 		"accept-language",
 		"user-agent",
 	},
+}
+
+func chrome109(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_109),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_109.Str()], resp)
 }
 
 func chrome108(t *testing.T) {
@@ -280,6 +311,31 @@ func firefox_106(t *testing.T) {
 	}
 
 	compareResponse(t, "firefox", browserFingerprints[firefox][tls.HelloFirefox_106.Str()], resp)
+}
+
+func firefox_108(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Firefox_108),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "firefox", browserFingerprints[firefox][tls.HelloFirefox_108.Str()], resp)
 }
 
 func opera_91(t *testing.T) {

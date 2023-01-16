@@ -5,7 +5,7 @@ import (
 	tls "github.com/bogdanfinn/utls"
 )
 
-var DefaultClientProfile = Chrome_108
+var DefaultClientProfile = Chrome_109
 
 var MappedTLSClients = map[string]ClientProfile{
 	"chrome_103":             Chrome_103,
@@ -14,6 +14,7 @@ var MappedTLSClients = map[string]ClientProfile{
 	"chrome_106":             Chrome_106,
 	"chrome_107":             Chrome_107,
 	"chrome_108":             Chrome_108,
+	"chrome_109":             Chrome_109,
 	"safari_15_6_1":          Safari_15_6_1,
 	"safari_16_0":            Safari_16_0,
 	"safari_ipad_15_6":       Safari_Ipad_15_6,
@@ -24,6 +25,7 @@ var MappedTLSClients = map[string]ClientProfile{
 	"firefox_104":            Firefox_104,
 	"firefox_105":            Firefox_105,
 	"firefox_106":            Firefox_106,
+	"firefox_108":            Firefox_108,
 	"opera_89":               Opera_89,
 	"opera_90":               Opera_90,
 	"opera_91":               Opera_91,
@@ -58,6 +60,31 @@ func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.Settin
 
 func (c ClientProfile) GetClientHelloSpec() (tls.ClientHelloSpec, error) {
 	return c.clientHelloId.ToSpec()
+}
+
+var Chrome_109 = ClientProfile{
+	clientHelloId: tls.HelloChrome_109,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      65536,
+		http2.SettingEnablePush:           0,
+		http2.SettingMaxConcurrentStreams: 1000,
+		http2.SettingInitialWindowSize:    6291456,
+		http2.SettingMaxHeaderListSize:    262144,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingEnablePush,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	},
+	connectionFlow: 15663105,
 }
 
 var Chrome_108 = ClientProfile{
@@ -316,6 +343,64 @@ var Safari_IOS_15_6 = ClientProfile{
 		":authority",
 	},
 	connectionFlow: 10485760,
+}
+
+var Firefox_108 = ClientProfile{
+	clientHelloId: tls.HelloFirefox_108,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:   65536,
+		http2.SettingInitialWindowSize: 131072,
+		http2.SettingMaxFrameSize:      16384,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxFrameSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":path",
+		":authority",
+		":scheme",
+	},
+	connectionFlow: 12517377,
+	headerPriority: &http2.PriorityParam{
+		StreamDep: 13,
+		Exclusive: false,
+		Weight:    41,
+	},
+	priorities: []http2.Priority{
+		{StreamID: 3, PriorityParam: http2.PriorityParam{
+			StreamDep: 0,
+			Exclusive: false,
+			Weight:    200,
+		}},
+		{StreamID: 5, PriorityParam: http2.PriorityParam{
+			StreamDep: 0,
+			Exclusive: false,
+			Weight:    100,
+		}},
+		{StreamID: 7, PriorityParam: http2.PriorityParam{
+			StreamDep: 0,
+			Exclusive: false,
+			Weight:    0,
+		}},
+		{StreamID: 9, PriorityParam: http2.PriorityParam{
+			StreamDep: 7,
+			Exclusive: false,
+			Weight:    0,
+		}},
+		{StreamID: 11, PriorityParam: http2.PriorityParam{
+			StreamDep: 3,
+			Exclusive: false,
+			Weight:    0,
+		}},
+		{StreamID: 13, PriorityParam: http2.PriorityParam{
+			StreamDep: 0,
+			Exclusive: false,
+			Weight:    240,
+		}},
+	},
 }
 
 var Firefox_106 = ClientProfile{
