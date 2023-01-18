@@ -9,7 +9,7 @@ import (
 	tls "github.com/bogdanfinn/utls"
 )
 
-func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms, supportedVersions, keyShareCurves []string, certCompressionAlgo string) (func() (tls.ClientHelloSpec, error), error) {
+func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves []string, certCompressionAlgo string) (func() (tls.ClientHelloSpec, error), error) {
 	return func() (tls.ClientHelloSpec, error) {
 		var mappedSignatureAlgorithms []tls.SignatureScheme
 
@@ -25,6 +25,23 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 				}
 
 				mappedSignatureAlgorithms = append(mappedSignatureAlgorithms, tls.SignatureScheme(uint16(supportedSignatureAlgorithmAsUint)))
+			}
+		}
+
+		var mappedDelegatedCredentialsAlgorithms []tls.SignatureScheme
+
+		for _, supportedDelegatedCredentialsAlgorithm := range supportedDelegatedCredentialsAlgorithms {
+			delegatedCredentialsAlgorithm, ok := delegatedCredentialsAlgorithms[supportedDelegatedCredentialsAlgorithm]
+			if ok {
+				mappedDelegatedCredentialsAlgorithms = append(mappedDelegatedCredentialsAlgorithms, delegatedCredentialsAlgorithm)
+			} else {
+				supportedDelegatedCredentialsAlgorithmAsUint, err := strconv.ParseUint(supportedDelegatedCredentialsAlgorithm, 16, 16)
+
+				if err != nil {
+					return tls.ClientHelloSpec{}, fmt.Errorf("%s is not a valid supportedDelegatedCredentialsAlgorithm", supportedDelegatedCredentialsAlgorithm)
+				}
+
+				mappedDelegatedCredentialsAlgorithms = append(mappedDelegatedCredentialsAlgorithms, tls.SignatureScheme(uint16(supportedDelegatedCredentialsAlgorithmAsUint)))
 			}
 		}
 
@@ -58,14 +75,14 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 		compressionAlgo, ok := certCompression[certCompressionAlgo]
 
 		if !ok {
-			return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedTlsVersions, mappedKeyShares, nil)
+			return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedDelegatedCredentialsAlgorithms, mappedTlsVersions, mappedKeyShares, nil)
 		}
 
-		return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedTlsVersions, mappedKeyShares, &compressionAlgo)
+		return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedDelegatedCredentialsAlgorithms, mappedTlsVersions, mappedKeyShares, &compressionAlgo)
 	}, nil
 }
 
-func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, tlsVersions []uint16, keyShares []tls.KeyShare, certCompression *tls.CertCompressionAlgo) (tls.ClientHelloSpec, error) {
+func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegatedCredentialsAlgorithms []tls.SignatureScheme, tlsVersions []uint16, keyShares []tls.KeyShare, certCompression *tls.CertCompressionAlgo) (tls.ClientHelloSpec, error) {
 	extMap := getExtensionBaseMap()
 	ja3StringParts := strings.Split(ja3, ",")
 
@@ -118,6 +135,10 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, tlsVers
 		SupportedSignatureAlgorithms: signatureAlgorithms,
 	}
 
+	extMap[tls.ExtensionDelegatedCredentials] = &tls.DelegatedCredentialsExtension{
+		AlgorithmsSignature: delegatedCredentialsAlgorithms,
+	}
+
 	var exts []tls.TLSExtension
 	for _, e := range extensions {
 		eId, err := strconv.ParseUint(e, 10, 16)
@@ -163,6 +184,7 @@ func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 		// tls.ExtensionCompressCertificate:  &tls.UtlsCompressCertExtension{...},
 		// tls.ExtensionSupportedVersions: &tls.SupportedVersionsExtension{...}
 		// tls.ExtensionKeyShare:     &tls.KeyShareExtension{...},
+		// tls.ExtensionDelegatedCredentials: &tls.DelegatedCredentialsExtension{},
 
 		tls.ExtensionALPN: &tls.ALPNExtension{
 			AlpnProtocols: []string{"h2", "http/1.1"},
@@ -171,7 +193,6 @@ func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 		tls.ExtensionPadding:              &tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
 		tls.ExtensionExtendedMasterSecret: &tls.UtlsExtendedMasterSecretExtension{},
 		tls.ExtensionRecordSizeLimit:      &tls.FakeRecordSizeLimitExtension{},
-		tls.ExtensionDelegatedCredentials: &tls.DelegatedCredentialsExtension{},
 		tls.ExtensionSessionTicket:        &tls.SessionTicketExtension{},
 		tls.ExtensionPreSharedKey:         &tls.PreSharedKeyExtension{},
 		tls.ExtensionEarlyData:            &tls.GenericExtension{Id: tls.ExtensionEarlyData},

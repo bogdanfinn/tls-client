@@ -75,17 +75,18 @@ type RequestInput struct {
 
 // CustomTlsClient contains custom TLS specifications to construct a client from.
 type CustomTlsClient struct {
-	Ja3String                    string            `json:"ja3String"`
-	SupportedSignatureAlgorithms []string          `json:"supportedSignatureAlgorithms"`
-	SupportedVersions            []string          `json:"supportedVersions"`
-	KeyShareCurves               []string          `json:"keyShareCurves"`
-	CertCompressionAlgo          string            `json:"certCompressionAlgo"`
-	H2Settings                   map[string]uint32 `json:"h2Settings"`
-	H2SettingsOrder              []string          `json:"h2SettingsOrder"`
-	PseudoHeaderOrder            []string          `json:"pseudoHeaderOrder"`
-	ConnectionFlow               uint32            `json:"connectionFlow"`
-	PriorityFrames               []PriorityFrames  `json:"priorityFrames"`
-	HeaderPriority               *PriorityParam    `json:"headerPriority"`
+	Ja3String                               string            `json:"ja3String"`
+	SupportedSignatureAlgorithms            []string          `json:"supportedSignatureAlgorithms"`
+	SupportedDelegatedCredentialsAlgorithms []string          `json:"supportedDelegatedCredentialsAlgorithms"`
+	SupportedVersions                       []string          `json:"supportedVersions"`
+	KeyShareCurves                          []string          `json:"keyShareCurves"`
+	CertCompressionAlgo                     string            `json:"certCompressionAlgo"`
+	H2Settings                              map[string]uint32 `json:"h2Settings"`
+	H2SettingsOrder                         []string          `json:"h2SettingsOrder"`
+	PseudoHeaderOrder                       []string          `json:"pseudoHeaderOrder"`
+	ConnectionFlow                          uint32            `json:"connectionFlow"`
+	PriorityFrames                          []PriorityFrames  `json:"priorityFrames"`
+	HeaderPriority                          *PriorityParam    `json:"headerPriority"`
 }
 
 type PriorityFrames struct {

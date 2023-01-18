@@ -34,6 +34,22 @@ var signatureAlgorithms = map[string]tls.SignatureScheme{
 	"ECDSAWithP521AndSHA512": tls.ECDSAWithP521AndSHA512,
 	"PKCS1WithSHA1":          tls.PKCS1WithSHA1,
 	"ECDSAWithSHA1":          tls.ECDSAWithSHA1,
+	"Ed25519":                tls.Ed25519,
+}
+
+var delegatedCredentialsAlgorithms = map[string]tls.SignatureScheme{
+	"PKCS1WithSHA256":        tls.PKCS1WithSHA256,
+	"PKCS1WithSHA384":        tls.PKCS1WithSHA384,
+	"PKCS1WithSHA512":        tls.PKCS1WithSHA512,
+	"PSSWithSHA256":          tls.PSSWithSHA256,
+	"PSSWithSHA384":          tls.PSSWithSHA384,
+	"PSSWithSHA512":          tls.PSSWithSHA512,
+	"ECDSAWithP256AndSHA256": tls.ECDSAWithP256AndSHA256,
+	"ECDSAWithP384AndSHA384": tls.ECDSAWithP384AndSHA384,
+	"ECDSAWithP521AndSHA512": tls.ECDSAWithP521AndSHA512,
+	"PKCS1WithSHA1":          tls.PKCS1WithSHA1,
+	"ECDSAWithSHA1":          tls.ECDSAWithSHA1,
+	"Ed25519":                tls.Ed25519,
 }
 
 var curves = map[string]tls.CurveID{
