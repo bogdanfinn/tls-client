@@ -74,6 +74,7 @@ type HttpClient interface {
     - Nike IOS Mobile (nike_ios_mobile)
     - Nike Android Mobile (nike_android_mobile)
     - Cloudscraper
+    - MMS IOS (mms_ios)
 
 You can also provide your own client. See the example how to do it.
 
