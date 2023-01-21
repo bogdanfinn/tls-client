@@ -1,7 +1,7 @@
 import ctypes
 import json
 
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.3.1.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.3.2.dylib')
 
 # extract the exposed request function from the shared package
 request = library.request
