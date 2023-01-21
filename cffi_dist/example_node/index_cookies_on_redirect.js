@@ -62,7 +62,7 @@ const responseObject = JSON.parse(response)
 
 console.log("status", responseObject.status)
 console.log("target", responseObject.target)
-tlsClientLibrary.freeMemory(responseObject.Id)
+tlsClientLibrary.freeMemory(responseObject.id)
 
 const payload = {
     sessionId: 'asos',

@@ -51,7 +51,7 @@ const response = tlsClientLibrary.request(JSON.stringify(requestPayload));
 const responseObject = JSON.parse(response)
 
 console.log(responseObject)
-tlsClientLibrary.freeMemory(responseObject.Id)
+tlsClientLibrary.freeMemory(responseObject.id)
 
 const payload = {
     sessionId: 'my-session-id',
