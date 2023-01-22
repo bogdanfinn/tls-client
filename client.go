@@ -1,10 +1,7 @@
 package tls_client
 
 import (
-	"bytes"
-	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/url"
@@ -12,7 +9,6 @@ import (
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
-	"github.com/bogdanfinn/fhttp/httputil"
 	"golang.org/x/net/proxy"
 )
 
@@ -28,10 +24,7 @@ type HttpClient interface {
 	GetProxy() string
 	SetFollowRedirect(followRedirect bool)
 	GetFollowRedirect() bool
-	Do(req *http.Request) (*http.Response, error)
-	Get(url string) (resp *http.Response, err error)
-	Head(url string) (resp *http.Response, err error)
-	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
+	Do(req *WebReq) (*WebResp, error)
 }
 
 type httpClient struct {
@@ -253,61 +246,125 @@ func (c *httpClient) SetCookieJar(jar http.CookieJar) {
 	c.Jar = jar
 }
 
-// Do issues a given HTTP request and returns the corresponding response.
-//
-// If the returned error is nil, the response contains a non-nil body, which the user is expected to close.
-func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
+func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
 	req.Header[http.HeaderOrderKey] = allToLower(req.Header[http.HeaderOrderKey])
 
-	if c.config.debug {
-		debugReq := req.Clone(context.Background())
-
-		if req.Body != nil {
-			buf, err := ioutil.ReadAll(req.Body)
-
-			if err != nil {
-				return nil, err
-			}
-
-			debugBody := ioutil.NopCloser(bytes.NewBuffer(buf))
-			requestBody := ioutil.NopCloser(bytes.NewBuffer(buf))
-
-			debugReq.Body = debugBody
-			req.Body = requestBody
-		}
-
-		requestBytes, err := httputil.DumpRequestOut(debugReq, debugReq.ContentLength > 0)
-
-		if err != nil {
-			return nil, err
-		}
-
-		c.logger.Debug("raw request bytes sent over wire: %d (%d kb)", len(requestBytes), len(requestBytes)/1024)
+	reqq := &http.Request{
+		Method:           req.Method,
+		URL:              req.URL,
+		Proto:            req.Proto,
+		ProtoMajor:       req.ProtoMajor,
+		ProtoMinor:       req.ProtoMinor,
+		Header:           req.Header,
+		Body:             req.Body,
+		ContentLength:    req.ContentLength,
+		TransferEncoding: req.TransferEncoding,
+		Close:            req.Close,
+		Host:             req.Host,
+		Form:             req.Form,
+		PostForm:         req.PostForm,
+		MultipartForm:    req.MultipartForm,
+		Trailer:          req.Trailer,
+		RemoteAddr:       req.RemoteAddr,
+		RequestURI:       req.RequestURI,
+		TLS:              req.TLS,
+		Cancel:           req.Cancel,
+		Response:         req.Response,
 	}
 
-	resp, err := c.Client.Do(req)
+	resp, err := c.Client.Do(reqq)
 
 	if err != nil {
 		c.logger.Debug("failed to do request: %s", err.Error())
-		return nil, err
+		return &WebResp{StatusCode: -1}, err
 	}
 
-	c.logger.Debug("cookies on request: %v", resp.Request.Cookies())
 	c.logger.Debug("requested %s : status %d", req.URL.String(), resp.StatusCode)
 
-	if c.config.debug {
-		responseBytes, err := httputil.DumpResponse(resp, resp.ContentLength > 0)
-
-		if err != nil {
-			return nil, err
-		}
-
-		c.logger.Debug("raw response bytes received over wire: %d (%d kb)", len(responseBytes), len(responseBytes)/1024)
+	webResp := &WebResp{
+		Status:        resp.Status,
+		StatusCode:    resp.StatusCode,
+		Proto:         resp.Proto,
+		ProtoMajor:    resp.ProtoMajor,
+		ProtoMinor:    resp.ProtoMinor,
+		Header:        resp.Header,
+		ContentLength: resp.ContentLength,
+		Close:         resp.Close,
+		Uncompressed:  resp.Uncompressed,
+		Trailer:       resp.Trailer,
+		Request:       resp.Request, // ? should this be reqq
+		TLS:           resp.TLS,
 	}
 
-	return resp, nil
+	if !req.NoDecodeBody {
+		defer resp.Body.Close()
+		bodyBytes, err2 := ioutil.ReadAll(resp.Body)
+		if err2 != nil {
+			return &WebResp{StatusCode: -1}, err2
+		}
+		webResp.BodyBytes = bodyBytes
+		webResp.Body = string(webResp.BodyBytes)
+	}
+
+	return webResp, nil
 }
+
+// Do issues a given HTTP request and returns the corresponding response.
+//
+// If the returned error is nil, the response contains a non-nil body, which the user is expected to close.
+// func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
+// 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
+// 	req.Header[http.HeaderOrderKey] = allToLower(req.Header[http.HeaderOrderKey])
+
+// 	if c.config.debug {
+// 		debugReq := req.Clone(context.Background())
+
+// 		if req.Body != nil {
+// 			buf, err := ioutil.ReadAll(req.Body)
+
+// 			if err != nil {
+// 				return nil, err
+// 			}
+
+// 			debugBody := ioutil.NopCloser(bytes.NewBuffer(buf))
+// 			requestBody := ioutil.NopCloser(bytes.NewBuffer(buf))
+
+// 			debugReq.Body = debugBody
+// 			req.Body = requestBody
+// 		}
+
+// 		requestBytes, err := httputil.DumpRequestOut(debugReq, debugReq.ContentLength > 0)
+
+// 		if err != nil {
+// 			return nil, err
+// 		}
+
+// 		c.logger.Debug("raw request bytes sent over wire: %d (%d kb)", len(requestBytes), len(requestBytes)/1024)
+// 	}
+
+// 	resp, err := c.Client.Do(req)
+
+// 	if err != nil {
+// 		c.logger.Debug("failed to do request: %s", err.Error())
+// 		return nil, err
+// 	}
+
+// 	c.logger.Debug("cookies on request: %v", resp.Request.Cookies())
+// 	c.logger.Debug("requested %s : status %d", req.URL.String(), resp.StatusCode)
+
+// 	if c.config.debug {
+// 		responseBytes, err := httputil.DumpResponse(resp, resp.ContentLength > 0)
+
+// 		if err != nil {
+// 			return nil, err
+// 		}
+
+// 		c.logger.Debug("raw response bytes received over wire: %d (%d kb)", len(responseBytes), len(responseBytes)/1024)
+// 	}
+
+// 	return resp, nil
+// }
 
 func allToLower(list []string) []string {
 	var lower []string

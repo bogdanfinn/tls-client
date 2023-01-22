@@ -1,7 +1,6 @@
 package tls_client
 
 import (
-	"fmt"
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -48,26 +47,6 @@ func WithProxyUrl(proxyUrl string) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.proxyUrl = proxyUrl
 	}
-}
-
-// WithCharlesProxy configures the HTTP client to use a local running charles as proxy.
-//
-// host and port can be empty, then default 127.0.0.1 and port 8888 will be used
-func WithCharlesProxy(host string, port string) HttpClientOption {
-	h := "127.0.0.1"
-	p := "8888"
-
-	if host != "" {
-		h = host
-	}
-
-	if port != "" {
-		p = port
-	}
-
-	proxyUrl := fmt.Sprintf("http://%s:%s", h, p)
-
-	return WithProxyUrl(proxyUrl)
 }
 
 // WithCookieJar configures a HTTP client to use the specified cookie jar.
