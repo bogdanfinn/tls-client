@@ -1,7 +1,9 @@
 package tls_client
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/url"
@@ -308,6 +310,37 @@ func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
 	}
 
 	return webResp, nil
+}
+
+// NewRequest wraps NewRequestWithContext using the background context.
+func NewRequest(method, url string, body io.Reader) (*WebReq, error) {
+	req, err := http.NewRequestWithContext(context.Background(), method, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	webReq := &WebReq{
+		Method:        req.Method,
+		URL:           req.URL,
+		Proto:         req.Proto,
+		ProtoMajor:    req.ProtoMajor,
+		ProtoMinor:    req.ProtoMinor,
+		Header:        req.Header,
+		Body:          req.Body,
+		ContentLength: req.ContentLength,
+		Close:         req.Close,
+		Host:          req.Host,
+		Form:          req.Form,
+		PostForm:      req.PostForm,
+		MultipartForm: req.MultipartForm,
+		Trailer:       req.Trailer,
+		RemoteAddr:    req.RemoteAddr,
+		RequestURI:    req.RequestURI,
+		TLS:           req.TLS,
+		Response:      req.Response,
+	}
+
+	return webReq, nil
 }
 
 // Do issues a given HTTP request and returns the corresponding response.
