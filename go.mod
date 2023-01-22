@@ -1,4 +1,4 @@
-module github.com/ENVEN-LLC/enven-http
+module github.com/Enven-LLC/enven-http
 
 go 1.19
 
