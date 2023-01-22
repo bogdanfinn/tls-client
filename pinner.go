@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	http "github.com/bogdanfinn/fhttp"
 	tls "github.com/bogdanfinn/utls"
 	"github.com/tam7t/hpkp"
 )
 
-var DefaultBadPinHandler = func(req *http.Request) {
+var DefaultBadPinHandler = func(req *WebReq) {
 	fmt.Println("this is the default bad pin handler")
 }
 
