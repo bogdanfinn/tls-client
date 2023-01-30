@@ -4,8 +4,8 @@ github.com/andybalholm/brotli v1.0.4 h1:V7DdXeJtZscaqfNuAdSRuRFzuiKlHSC/Zh3zl9qY
 github.com/andybalholm/brotli v1.0.4/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
 github.com/andybalholm/cascadia v1.3.1 h1:nhxRkql1kdYCc8Snf7D5/D3spOX+dBgjA6u8x004T2c=
 github.com/andybalholm/cascadia v1.3.1/go.mod h1:R4bJ1UQfqADjvDa4P6HZHLh/3OxWWEqc0Sk8XGwHqvA=
-github.com/bogdanfinn/fhttp v0.5.15 h1:HEoKYUnrhYZNgQmH6TB+CiFZufuWWrvMsEIWhuiXhBg=
-github.com/bogdanfinn/fhttp v0.5.15/go.mod h1:oyoeYvzOzPSUee4+wjXGYD9xYwAP6oGaDEhrFzRiNgs=
+github.com/bogdanfinn/fhttp v0.5.16 h1:KBMT6lV+i1jnc07pxJhXUs2NxTMz3fili/sQVhEyits=
+github.com/bogdanfinn/fhttp v0.5.16/go.mod h1:oyoeYvzOzPSUee4+wjXGYD9xYwAP6oGaDEhrFzRiNgs=
 github.com/bogdanfinn/utls v1.5.12 h1:pZvB9cgglhbGGGM3zRukrR7WysielMVQMPDEJ28oMkQ=
 github.com/bogdanfinn/utls v1.5.12/go.mod h1:mHeRCi69cUiEyVBkKONB1cAbLjRcZnlJbGzttmiuK4o=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

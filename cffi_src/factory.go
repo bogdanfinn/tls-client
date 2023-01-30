@@ -135,7 +135,7 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	return tlsReq, nil
 }
 
-func readAllBodyWithStreamToFile(resp *http.Response, input RequestInput) ([]byte, *TLSClientError) {
+func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]byte, *TLSClientError) {
 	var respBodyBytes []byte
 	var err error
 
@@ -152,7 +152,7 @@ func readAllBodyWithStreamToFile(resp *http.Response, input RequestInput) ([]byt
 	buf := make([]byte, blockSize)
 	// Read the response body
 	for {
-		n, err := resp.Body.Read(buf)
+		n, err := respBody.Read(buf)
 		if err == io.EOF {
 			if input.StreamOutputEOFSymbol != nil {
 				f.Write([]byte(*input.StreamOutputEOFSymbol))
@@ -179,14 +179,21 @@ func readAllBodyWithStreamToFile(resp *http.Response, input RequestInput) ([]byt
 // BuildResponse constructs a client response from a given HTTP response. The client response can then be sent to the interface consumer.
 func BuildResponse(sessionId string, withSession bool, resp *http.Response, cookies []*http.Cookie, input RequestInput) (Response, *TLSClientError) {
 	defer resp.Body.Close()
+
 	isByteResponse := input.IsByteResponse
+	additionalDecodeAlgo := ""
+
+	if input.AdditionalDecode != nil {
+		additionalDecodeAlgo = *input.AdditionalDecode
+	}
+
 	var respBodyBytes []byte
 	var err error
 
 	if input.StreamOutputPath != nil {
-		respBodyBytes, err = readAllBodyWithStreamToFile(resp, input)
+		respBodyBytes, err = readAllBodyWithStreamToFile(http.DecompressBodyByType(resp.Body, additionalDecodeAlgo), input)
 	} else {
-		respBodyBytes, err = io.ReadAll(resp.Body)
+		respBodyBytes, err = io.ReadAll(http.DecompressBodyByType(resp.Body, additionalDecodeAlgo))
 	}
 
 	if err != nil {

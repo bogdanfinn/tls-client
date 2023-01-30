@@ -65,6 +65,7 @@ type RequestInput struct {
 	TimeoutSeconds              int                 `json:"timeoutSeconds"`
 	TimeoutMilliseconds         int                 `json:"timeoutMilliseconds"`
 	ProxyUrl                    *string             `json:"proxyUrl"`
+	AdditionalDecode            *string             `json:"additionalDecode"`
 	Headers                     map[string]string   `json:"headers"`
 	HeaderOrder                 []string            `json:"headerOrder"`
 	RequestUrl                  string              `json:"requestUrl"`
