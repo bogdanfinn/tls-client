@@ -178,6 +178,7 @@ func WithClientProfile(clientProfile ClientProfile) HttpClientOption {
 }
 
 // WithServerNameOverwrite configures a TLS client to overwrite the server name being used for certificate verification and in the client hello.
+// This option does only work properly if WithInsecureSkipVerify is set to true in addition
 func WithServerNameOverwrite(serverName string) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.serverNameOverwrite = serverName

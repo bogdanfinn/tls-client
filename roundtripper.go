@@ -109,6 +109,10 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	if host, _, err = net.SplitHostPort(addr); err != nil {
 		host = addr
 	}
+	
+	if rt.serverNameOverwrite != "" {
+		host = rt.serverNameOverwrite
+	}
 
 	conn := utls.UClient(rawConn, &utls.Config{ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify}, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
 	if err = conn.Handshake(); err != nil {
