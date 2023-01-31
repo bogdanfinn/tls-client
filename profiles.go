@@ -35,6 +35,7 @@ var MappedTLSClients = map[string]ClientProfile{
 	"nike_android_mobile":    NikeAndroidMobile,
 	"cloudscraper":           CloudflareCustom,
 	"mms_ios":                MMSIos,
+	"mesh_ios":               MeshIos,
 }
 
 type ClientProfile struct {
