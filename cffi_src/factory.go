@@ -135,6 +135,47 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	return tlsReq, nil
 }
 
+func readAllBodyWithStreamToFile(resp *http.Response, input RequestInput) ([]byte, *TLSClientError) {
+	var respBodyBytes []byte
+	var err error
+
+	f, err := os.OpenFile(*input.StreamOutputPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return nil, NewTLSClientError(err)
+	}
+	defer f.Close()
+
+	blockSize := 1024 // 1 KB
+	if input.StreamOutputBlockSize != nil {
+		blockSize = *input.StreamOutputBlockSize
+	}
+	buf := make([]byte, blockSize)
+	// Read the response body
+	for {
+		n, err := resp.Body.Read(buf)
+		if err == io.EOF {
+			if input.StreamOutputEOFSymbol != nil {
+				f.Write([]byte(*input.StreamOutputEOFSymbol))
+			}
+			break
+		}
+
+		respBodyBytes = append(respBodyBytes, buf[:n]...)
+		if _, err = f.Write(buf[:n]); err != nil {
+			if input.WithDebug {
+				fmt.Printf("Append stream output error: %+v\n", err)
+			}
+			return nil, NewTLSClientError(err)
+		}
+
+		if input.WithDebug {
+			fmt.Printf("[stream decode result]==========\n%+v\n==========\n", string(buf[:n]))
+		}
+	}
+
+	return respBodyBytes, nil
+}
+
 // BuildResponse constructs a client response from a given HTTP response. The client response can then be sent to the interface consumer.
 func BuildResponse(sessionId string, withSession bool, resp *http.Response, cookies []*http.Cookie, input RequestInput) (Response, *TLSClientError) {
 	defer resp.Body.Close()
@@ -143,43 +184,7 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	var err error
 
 	if input.StreamOutputPath != nil {
-		f, err := os.OpenFile(*input.StreamOutputPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-		if err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		blockSize := 1024 // 1 KB
-		if input.StreamOutputBlockSize != nil {
-			blockSize = *input.StreamOutputBlockSize
-		}
-		buf := make([]byte, blockSize)
-		// Read the response body
-		for {
-			n, err := resp.Body.Read(buf)
-			if err == io.EOF {
-				if input.StreamOutputEOFSymbol != nil {
-					f.Write([]byte(*input.StreamOutputEOFSymbol))
-				}
-				break
-			}
-
-			respBodyBytes = append(respBodyBytes, buf[:n]...)
-			if _, err = f.Write(buf[:n]); err != nil {
-				if input.WithDebug {
-					fmt.Printf("Append stream output error: %+v\n", err)
-				}
-				return Response{}, NewTLSClientError(err)
-			}
-
-			if input.WithDebug {
-				fmt.Printf("[stream decode result]==========\n%+v\n==========\n", string(buf[:n]))
-			}
-
-			if err != nil {
-				return Response{}, NewTLSClientError(err)
-			}
-		}
+		respBodyBytes, err = readAllBodyWithStreamToFile(resp, input)
 	} else {
 		respBodyBytes, err = io.ReadAll(resp.Body)
 	}
