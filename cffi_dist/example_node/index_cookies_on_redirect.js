@@ -26,6 +26,7 @@ const requestPayload = {
     "certificatePinningHosts": {},
     "sessionId": "asos",
     "proxyUrl": "",
+    "isRotatingProxy": false,
     "headers": {
         "accept-encoding": "gzip, deflate, br",
         "accept-language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7",

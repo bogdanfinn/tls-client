@@ -242,7 +242,7 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 	client, ok := clients[sessionId]
 
 	if ok && withSession {
-		modifiedClient, changed, err := handleModification(client, proxyUrl, requestInput.FollowRedirects)
+		modifiedClient, changed, err := handleModification(client, proxyUrl, requestInput.FollowRedirects, requestInput.IsRotatingProxy)
 		if err != nil {
 			return nil, fmt.Errorf("failed to modify existing client: %w", err)
 		}
@@ -407,7 +407,7 @@ func getTlsClientProfile(tlsClientIdentifier string) tls_client.ClientProfile {
 	return tlsClientProfile
 }
 
-func handleModification(client tls_client.HttpClient, proxyUrl *string, followRedirects bool) (tls_client.HttpClient, bool, error) {
+func handleModification(client tls_client.HttpClient, proxyUrl *string, followRedirects bool, isRotatingProxy bool) (tls_client.HttpClient, bool, error) {
 	changed := false
 
 	if client == nil {
@@ -415,7 +415,7 @@ func handleModification(client tls_client.HttpClient, proxyUrl *string, followRe
 	}
 
 	if proxyUrl != nil {
-		if client.GetProxy() != *proxyUrl {
+		if client.GetProxy() != *proxyUrl || isRotatingProxy {
 			err := client.SetProxy(*proxyUrl)
 			if err != nil {
 				return nil, false, fmt.Errorf("failed to change proxy url of client: %w", err)

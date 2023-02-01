@@ -53,6 +53,7 @@ type RequestInput struct {
 	TLSClientIdentifier         string              `json:"tlsClientIdentifier"`
 	CustomTlsClient             *CustomTlsClient    `json:"customTlsClient"`
 	CertificatePinningHosts     map[string][]string `json:"certificatePinningHosts"`
+	IsRotatingProxy             bool                `json:"isRotatingProxy"`
 	FollowRedirects             bool                `json:"followRedirects"`
 	ForceHttp1                  bool                `json:"forceHttp1"`
 	IsByteResponse              bool                `json:"isByteResponse"`
