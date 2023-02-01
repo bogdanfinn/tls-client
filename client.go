@@ -257,6 +257,20 @@ func (c *httpClient) SetCookieJar(jar http.CookieJar) {
 //
 // If the returned error is nil, the response contains a non-nil body, which the user is expected to close.
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
+	if c.config.catchPanics {
+		defer func() {
+			err := recover()
+
+			if err != nil && c.config.debug {
+				c.logger.Debug(fmt.Sprintf("panic occurred in tls client request handling: %s", err))
+			}
+
+			if err != nil && !c.config.debug {
+				c.logger.Info("critical error during request handling")
+			}
+		}()
+	}
+
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
 	req.Header[http.HeaderOrderKey] = allToLower(req.Header[http.HeaderOrderKey])
 

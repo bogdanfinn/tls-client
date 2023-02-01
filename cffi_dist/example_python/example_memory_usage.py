@@ -43,6 +43,7 @@ async def main():
             "additionalDecode": "",
             "forceHttp1": False,
             "withDebug": False,
+            "catchPanics": False,
             "withRandomTLSExtensionOrder": False,
             "session": i,
             "timeoutSeconds": 30,

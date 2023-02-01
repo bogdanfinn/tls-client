@@ -23,6 +23,7 @@ const requestPayload = {
     "isByteResponse": false,
     "isByteRequest": false,
     "additionalDecode": null,
+    "catchPanics": false,
     "timeoutSeconds": 30,
     "timeoutMilliseconds": 0,
     "proxyUrl": "",

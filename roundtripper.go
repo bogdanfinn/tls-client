@@ -109,7 +109,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	if host, _, err = net.SplitHostPort(addr); err != nil {
 		host = addr
 	}
-	
+
 	if rt.serverNameOverwrite != "" {
 		host = rt.serverNameOverwrite
 	}

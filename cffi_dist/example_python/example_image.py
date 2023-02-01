@@ -39,6 +39,7 @@ requestPayload = {
     "additionalDecode": "",
     "forceHttp1": False,
     "withDebug": False,
+    "catchPanics": False,
     "withRandomTLSExtensionOrder": False,
     "isByteResponse": True,
     "timeoutSeconds": 30,

@@ -40,6 +40,7 @@ requestPayload = {
     "withRandomTLSExtensionOrder": False,
     "isByteResponse": False,
     "isByteRequest": False,
+    "catchPanics": False,
     "additionalDecode": "",
     "timeoutSeconds": 30,
     "timeoutMilliseconds": 0,

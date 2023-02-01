@@ -17,6 +17,7 @@ const requestPayload = {
     "withoutCookieJar": false,
     "withDefaultCookieJar": false,
     "isByteRequest": false,
+    "catchPanics": false,
     "additionalDecode": null,
     "withDebug": false,
     "forceHttp1": false,

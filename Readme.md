@@ -75,6 +75,7 @@ type HttpClient interface {
     - Nike Android Mobile (nike_android_mobile)
     - Cloudscraper
     - MMS IOS (mms_ios)
+    - Mesh IOS (mesh_ios)
 
 You can also provide your own client. See the example how to do it.
 
@@ -184,6 +185,7 @@ WithTransportOptions
 WithCharlesProxy
 WithCertificatePinning
 WithCustomRedirectFunc
+WithCatchPanics
 ```
 
 #### Default Client

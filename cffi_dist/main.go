@@ -233,6 +233,11 @@ func request(requestParams *C.char) *C.char {
 		return handleErrorResponse(sessionId, withSession, clientErr)
 	}
 
+	if resp == nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(fmt.Errorf("response is nil"))
+		return handleErrorResponse(sessionId, withSession, clientErr)
+	}
+
 	targetCookies := tlsClient.GetCookies(resp.Request.URL)
 
 	response, err := tls_client_cffi_src.BuildResponse(sessionId, withSession, resp, targetCookies, requestInput)

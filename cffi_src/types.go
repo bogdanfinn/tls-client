@@ -56,6 +56,7 @@ type RequestInput struct {
 	IsRotatingProxy             bool                `json:"isRotatingProxy"`
 	FollowRedirects             bool                `json:"followRedirects"`
 	ForceHttp1                  bool                `json:"forceHttp1"`
+	CatchPanics                 bool                `json:"catchPanics"`
 	IsByteResponse              bool                `json:"isByteResponse"`
 	WithDebug                   bool                `json:"withDebug"`
 	IsByteRequest               bool                `json:"isByteRequest"`

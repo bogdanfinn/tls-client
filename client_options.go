@@ -23,6 +23,7 @@ type TransportOptions struct {
 type BadPinHandlerFunc func(req *http.Request)
 
 type httpClientConfig struct {
+	catchPanics                 bool
 	debug                       bool
 	followRedirects             bool
 	customRedirectFunc          func(req *http.Request, via []*http.Request) error
@@ -146,6 +147,13 @@ func WithCertificatePinning(certificatePins map[string][]string, handlerFunc Bad
 func WithDebug() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.debug = true
+	}
+}
+
+// WithCatchPanics configures a client to catch all go panics happening during a request and not print the stacktrace.
+func WithCatchPanics() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.catchPanics = true
 	}
 }
 

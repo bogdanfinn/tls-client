@@ -24,6 +24,7 @@ const requestPayload = {
     "withRandomTLSExtensionOrder": false,
     "isByteResponse": false,
     "isByteRequest": true,
+    "catchPanics": false,
     "additionalDecode": null,
     "timeoutSeconds": 30,
     "timeoutMilliseconds": 0,
