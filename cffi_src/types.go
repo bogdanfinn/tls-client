@@ -71,6 +71,9 @@ type RequestInput struct {
 	RequestMethod               string              `json:"requestMethod"`
 	RequestBody                 *string             `json:"requestBody"`
 	RequestCookies              []CookieInput       `json:"requestCookies"`
+	StreamOutputPath            *string             `json:"streamOutputPath"`
+	StreamOutputBlockSize       *int                `json:"streamOutputBlockSize"`
+	StreamOutputEOFSymbol       *string             `json:"streamOutputEOFSymbol"`
 }
 
 // CustomTlsClient contains custom TLS specifications to construct a client from.

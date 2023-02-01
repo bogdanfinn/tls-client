@@ -235,7 +235,7 @@ func request(requestParams *C.char) *C.char {
 
 	targetCookies := tlsClient.GetCookies(resp.Request.URL)
 
-	response, err := tls_client_cffi_src.BuildResponse(sessionId, withSession, resp, targetCookies, requestInput.IsByteResponse)
+	response, err := tls_client_cffi_src.BuildResponse(sessionId, withSession, resp, targetCookies, requestInput)
 	if err != nil {
 		return handleErrorResponse(sessionId, withSession, err)
 	}
