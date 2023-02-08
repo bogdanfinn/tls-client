@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"math/rand"
-	"net/url"
 	"strings"
 	"time"
 
@@ -19,9 +18,9 @@ var defaultRedirectFunc = func(req *http.Request, via []*http.Request) error {
 }
 
 type HttpClient interface {
-	GetCookies(u *url.URL) []*http.Cookie
-	SetCookies(u *url.URL, cookies []*http.Cookie)
-	SetCookieJar(jar http.CookieJar)
+	// GetCookies(u *url.URL) []*http.Cookie
+	// SetCookies(u *url.URL, cookies []*http.Cookie)
+	// SetCookieJar(jar http.CookieJar)
 	SetProxy(proxyUrl string) error
 	GetProxy() string
 	SetFollowRedirect(followRedirect bool)
@@ -30,6 +29,7 @@ type HttpClient interface {
 }
 
 type httpClient struct {
+	Jar CookieJar
 	http.Client
 	logger Logger
 	config *httpClientConfig
@@ -45,9 +45,10 @@ var DefaultOptions = []HttpClientOption{
 }
 
 func ProvideDefaultClient(logger Logger) (HttpClient, error) {
-	jar := NewCookieJar()
+	// jar := NewCookieJar()
 
-	return NewHttpClient(logger, append(DefaultOptions, WithCookieJar(jar))...)
+	// return NewHttpClient(logger, append(DefaultOptions, WithCookieJar(jar))...)
+	return NewHttpClient(logger, DefaultOptions...)
 }
 
 // NewHttpClient constructs a new HTTP client with the given logger and client options.
@@ -221,32 +222,32 @@ func (c *httpClient) applyProxy() error {
 }
 
 // GetCookies returns the cookies in the client's cookie jar for a given URL.
-func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
-	c.logger.Info(fmt.Sprintf("get cookies for url: %s", u.String()))
-	if c.Jar == nil {
-		c.logger.Warn("you did not setup a cookie jar")
-		return nil
-	}
+// func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
+// 	c.logger.Info(fmt.Sprintf("get cookies for url: %s", u.String()))
+// 	if c.Jar == nil {
+// 		c.logger.Warn("you did not setup a cookie jar")
+// 		return nil
+// 	}
 
-	return c.Jar.Cookies(u)
-}
+// 	return c.Jar.Cookies(u)
+// }
 
-// SetCookies sets a list of cookies for a given URL in the client's cookie jar.
-func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
-	c.logger.Info(fmt.Sprintf("set cookies for url: %s", u.String()))
+// // SetCookies sets a list of cookies for a given URL in the client's cookie jar.
+// func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
+// 	c.logger.Info(fmt.Sprintf("set cookies for url: %s", u.String()))
 
-	if c.Jar == nil {
-		c.logger.Warn("you did not setup a cookie jar")
-		return
-	}
+// 	if c.Jar == nil {
+// 		c.logger.Warn("you did not setup a cookie jar")
+// 		return
+// 	}
 
-	c.Jar.SetCookies(u, cookies)
-}
+// 	c.Jar.SetCookies(u, cookies)
+// }
 
-// SetCookieJar sets a jar as the clients cookie jar. This is the recommended way when you want to "clear" the existing cookiejar
-func (c *httpClient) SetCookieJar(jar http.CookieJar) {
-	c.Jar = jar
-}
+// // SetCookieJar sets a jar as the clients cookie jar. This is the recommended way when you want to "clear" the existing cookiejar
+// func (c *httpClient) SetCookieJar(jar http.CookieJar) {
+// 	c.Jar = jar
+// }
 
 func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
@@ -298,6 +299,8 @@ func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
 		Request:       resp.Request, // ? should this be reqq
 		TLS:           resp.TLS,
 	}
+
+	c.processCookies(webResp)
 
 	if !req.NoDecodeBody {
 		defer resp.Body.Close()
