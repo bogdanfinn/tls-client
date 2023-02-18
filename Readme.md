@@ -49,6 +49,7 @@ type HttpClient interface {
     - 107 (chrome_107)
     - 108 (chrome_108)
     - 109 (chrome_109)
+    - 110 (chrome_110)
 - Safari
     - 15.6.1 (safari_15_6_1)
     - 16.0 (safari_16_0)
@@ -64,6 +65,7 @@ type HttpClient interface {
     - 105 (firefox_105)
     - 106 (firefox_106)
     - 108 (firefox_108)
+    - 110 (firefox_110)
 - Opera
     - 89 (opera_89)
     - 90 (opera_90)
@@ -189,7 +191,7 @@ WithCatchPanics
 ```
 
 #### Default Client
-The implemented default client is currently Chrome 109 with a configured request timeout of 30 seconds and no automatic redirect following and with a cookiejar. Also Random Extension Order is activated for the default client.
+The implemented default client is currently Chrome 110 with a configured request timeout of 30 seconds and no automatic redirect following and with a cookiejar. Also Random Extension Order is activated for the default client.
 
 ### Compile this client as a shared library for use in other languages like Python or NodeJS
 Please take a look at the cross compile build script in `cffi_dist/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
