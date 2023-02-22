@@ -135,6 +135,7 @@ type Response struct {
 	Id           string              `json:"id"`
 	SessionId    string              `json:"sessionId,omitempty"`
 	Status       int                 `json:"status"`
+	Version      string              `json:"version"`
 	UsedProtocol string              `json:"usedProtocol"`
 	Target       string              `json:"target"`
 	Body         string              `json:"body"`
