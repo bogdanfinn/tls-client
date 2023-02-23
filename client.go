@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -36,8 +37,9 @@ type HttpClient interface {
 
 type httpClient struct {
 	http.Client
-	logger Logger
-	config *httpClientConfig
+	headerLck sync.Mutex
+	logger    Logger
+	config    *httpClientConfig
 }
 
 var DefaultTimeoutSeconds = 30
@@ -99,9 +101,10 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 	}
 
 	return &httpClient{
-		Client: *client,
-		logger: logger,
-		config: config,
+		Client:    *client,
+		logger:    logger,
+		config:    config,
+		headerLck: sync.Mutex{},
 	}, nil
 }
 
@@ -272,7 +275,9 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
+	c.headerLck.Lock()
 	req.Header[http.HeaderOrderKey] = allToLower(req.Header[http.HeaderOrderKey])
+	c.headerLck.Unlock()
 
 	if c.config.debug {
 		debugReq := req.Clone(context.Background())
