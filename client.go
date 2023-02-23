@@ -292,6 +292,8 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 			debugBody := ioutil.NopCloser(bytes.NewBuffer(buf))
 			requestBody := ioutil.NopCloser(bytes.NewBuffer(buf))
 
+			c.logger.Debug("request body payload: %s", string(buf))
+
 			debugReq.Body = debugBody
 			req.Body = requestBody
 		}
@@ -312,7 +314,10 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	c.logger.Debug("cookies on request: %v", resp.Request.Cookies())
+	c.logger.Debug("headers on request:\n%v", req.Header)
+	c.logger.Debug("cookies on request:\n%v", resp.Request.Cookies())
+	c.logger.Debug("headers on response:\n%v", resp.Header)
+	c.logger.Debug("cookies on response:\n%v", resp.Cookies())
 	c.logger.Debug("requested %s : status %d", req.URL.String(), resp.StatusCode)
 
 	if c.config.debug {
@@ -320,6 +325,21 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 		if err != nil {
 			return nil, err
+		}
+
+		if resp.Body != nil {
+			buf, err := ioutil.ReadAll(resp.Body)
+			resp.Body.Close()
+
+			if err != nil {
+				return nil, err
+			}
+
+			responseBody := ioutil.NopCloser(bytes.NewBuffer(buf))
+
+			c.logger.Debug("response body payload: %s", string(buf))
+
+			resp.Body = responseBody
 		}
 
 		c.logger.Debug("raw response bytes received over wire: %d (%d kb)", len(responseBytes), len(responseBytes)/1024)
