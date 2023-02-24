@@ -84,10 +84,6 @@ You can also provide your own client. See the example how to do it.
 All Clients support Random TLS Extension Order by setting the option on the Http Client itself `WithRandomTLSExtensionOrder()`.
 This is needed for Chrome 107+
 
-#### Need other clients?
-
-Please open an issue on this github repository. In the best case you provide the response of https://tls.peet.ws/api/all requested by the client you want to be implemented.
-
 ### Installation
 
 ```go

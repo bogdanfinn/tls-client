@@ -11,7 +11,6 @@ const (
 	safariIos    = "safari_IOS"
 
 	peetApiEndpoint = "https://tls.peet.ws/api/all"
-	//peetApiEndpoint = "https://tls.cloudscraper.io/api/all"
 
 	ja3String             = "ja3String"
 	ja3Hash               = "ja3Hash"
@@ -102,8 +101,8 @@ var browserFingerprints = map[string]map[string]map[string]string{
 			akamaiFingerprintHash: "fd4f649c50a64e33cc9e2407055bafbe",
 		},
 		tls.HelloFirefox_110.Str(): map[string]string{
-			ja3String:             "771,4865-4867-4866-49195-49199-52393-52392-49196-49200-49162-49161-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-34-51-43-13-45-28-21,29-23-24-25-256-257,0",
-			ja3Hash:               "579ccef312d18482fc42e2b822ca2430",
+			ja3String:             "771,4865-4867-4866-49195-49199-52393-52392-49196-49200-49162-49161-49171-49172-156-157-47-53,0-23-65281-10-11-16-5-34-51-43-13-28-21,29-23-24-25-256-257,0",
+			ja3Hash:               "ad55557b7cbd735c2627f7ebb3b3d493",
 			akamaiFingerprint:     "1:65536,4:131072,5:16384|12517377|3:0:0:201,5:0:0:101,7:0:0:1,9:0:7:1,11:0:3:1,13:0:0:241|m,p,a,s",
 			akamaiFingerprintHash: "fd4f649c50a64e33cc9e2407055bafbe",
 		},
