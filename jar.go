@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/cookiejar"
@@ -137,7 +138,9 @@ func (jar *cookieJar) Cookies(u *url.URL) []*http.Cookie {
 
 	hostKey := jar.buildCookieHostKey(u)
 
-	return jar.allCookies[hostKey]
+	allCookies := jar.allCookies[hostKey]
+
+	return jar.notExpired(allCookies)
 }
 
 func (jar *cookieJar) GetAllCookies() map[string][]*http.Cookie {
@@ -190,6 +193,28 @@ func (jar *cookieJar) nonEmpty(cookies []*http.Cookie) []*http.Cookie {
 
 	for _, c := range cookies {
 		if c.Value == "" {
+			continue
+		}
+
+		filteredCookies = append(filteredCookies, c)
+	}
+
+	return filteredCookies
+}
+
+func (jar *cookieJar) notExpired(cookies []*http.Cookie) []*http.Cookie {
+	var filteredCookies []*http.Cookie
+
+	now := time.Now()
+
+	for _, c := range cookies {
+		if c.MaxAge <= 0 {
+			jar.config.logger.Debug("cookie %s in jar max age set to 0 or below. will be excluded from request", c.Name)
+			continue
+		}
+
+		if c.Expires.Before(now) {
+			jar.config.logger.Debug("cookie %s in jar expired. will be excluded from request", c.Name)
 			continue
 		}
 
