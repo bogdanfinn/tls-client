@@ -78,6 +78,9 @@ type HttpClient interface {
     - Cloudscraper
     - MMS IOS (mms_ios)
     - Mesh IOS (mesh_ios)
+    - Mesh IOS 2 (mesh_ios_2)
+    - Mesh Android (mesh_android)
+    - Mesh Android 2 (mesh_android_2)
 
 You can also provide your own client. See the example how to do it.
 
@@ -308,5 +311,5 @@ req, err := http.NewRequest(http.MethodGet, "https://tls.browserleaks.com/json",
 
 ### Questions?
 
-Join my discord support server: https: // discord.gg / 7Ej9eJvHqk
+Join my discord support server for free: https://discord.gg/7Ej9eJvHqk
 No Support in DMs!
