@@ -4,7 +4,6 @@ import (
 	"io"
 	"net/url"
 	"testing"
-	"time"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
@@ -195,20 +194,16 @@ func TestClient_ExcludeExpiredCookiesFromRequest(t *testing.T) {
 
 	assert.Equal(t, 0, len(client.GetCookies(u)))
 
-	expires := time.Now().AddDate(0, 0, 1)
-
 	cookieAlive := &http.Cookie{
-		Name:    "test1",
-		Value:   "test1",
-		MaxAge:  1,
-		Expires: expires,
+		Name:   "test1",
+		Value:  "test1",
+		MaxAge: 1,
 	}
 
 	cookieExpired := &http.Cookie{
-		Name:    "test2",
-		Value:   "test2",
-		MaxAge:  -1,
-		Expires: expires,
+		Name:   "test2",
+		Value:  "test2",
+		MaxAge: -1,
 	}
 
 	client.SetCookies(u, []*http.Cookie{cookieAlive, cookieExpired})
@@ -216,10 +211,9 @@ func TestClient_ExcludeExpiredCookiesFromRequest(t *testing.T) {
 	assert.Equal(t, 1, len(client.GetCookies(u)))
 
 	cookieExpireExisting := &http.Cookie{
-		Name:    "test1",
-		Value:   "test1",
-		MaxAge:  0,
-		Expires: expires,
+		Name:   "test1",
+		Value:  "test1",
+		MaxAge: -1,
 	}
 	client.SetCookies(u, []*http.Cookie{cookieExpireExisting})
 

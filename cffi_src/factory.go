@@ -306,7 +306,12 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 	}
 
 	if !requestInput.WithoutCookieJar {
-		jar := tls_client.NewCookieJar()
+		var jarOptions []tls_client.CookieJarOption
+		if requestInput.WithDebug {
+			jarOptions = append(jarOptions, tls_client.WithDebugLogger())
+		}
+
+		jar := tls_client.NewCookieJar(jarOptions...)
 
 		if requestInput.WithDefaultCookieJar {
 			jar, _ := cookiejar.New(nil)
