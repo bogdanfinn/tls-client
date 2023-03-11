@@ -70,17 +70,26 @@ type HttpClient interface {
     - 89 (opera_89)
     - 90 (opera_90)
     - 91 (opera_91)
+- OkHttp4
+  - Android7 (okhttp4_android_7)
+  - Android8 (okhttp4_android_8)
+  - Android9 (okhttp4_android_9)
+  - Android10 (okhttp4_android_10)
+  - Android11 (okhttp4_android_11)
+  - Android12 (okhttp4_android_12)
+  - Android13 (okhttp4_android_13)
 - Custom Clients
-    - Zalando Android Mobile (zalando_android_mobile)
-    - Zalando iOS Mobile (zalando_ios_mobile)
-    - Nike IOS Mobile (nike_ios_mobile)
-    - Nike Android Mobile (nike_android_mobile)
-    - Cloudscraper
-    - MMS IOS (mms_ios)
-    - Mesh IOS (mesh_ios)
-    - Mesh IOS 2 (mesh_ios_2)
-    - Mesh Android (mesh_android)
-    - Mesh Android 2 (mesh_android_2)
+  - Zalando Android Mobile (zalando_android_mobile)
+  - Zalando iOS Mobile (zalando_ios_mobile)
+  - Nike IOS Mobile (nike_ios_mobile)
+  - Nike Android Mobile (nike_android_mobile)
+  - Cloudscraper
+  - MMS IOS (mms_ios)
+  - Mesh IOS (mesh_ios)
+  - Mesh IOS 2 (mesh_ios_2)
+  - Mesh Android (mesh_android)
+  - Mesh Android 2 (mesh_android_2)
+  - Confirmed IOS (confirmed_ios)
 
 You can also provide your own client. See the example how to do it.
 

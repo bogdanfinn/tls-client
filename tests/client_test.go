@@ -55,6 +55,29 @@ func TestClients(t *testing.T) {
 	opera_91(t)
 }
 
+func TestCustomClients(t *testing.T) {
+	t.Log("testing okhttp4 android 13")
+	okhttp4Android13(t)
+	time.Sleep(2 * time.Second)
+	t.Log("testing okhttp4 android 12")
+	okhttp4Android12(t)
+	time.Sleep(2 * time.Second)
+	t.Log("testing okhttp4 android 11")
+	okhttp4Android11(t)
+	time.Sleep(2 * time.Second)
+	t.Log("testing okhttp4 android 10")
+	okhttp4Android10(t)
+	time.Sleep(2 * time.Second)
+	t.Log("testing okhttp4 android 9")
+	okhttp4Android9(t)
+	time.Sleep(2 * time.Second)
+	t.Log("testing okhttp4 android 8")
+	okhttp4Android8(t)
+	time.Sleep(2 * time.Second)
+	t.Log("testing okhttp4 android 7")
+	okhttp4Android7(t)
+}
+
 var defaultHeader = http.Header{
 	"accept":          {"*/*"},
 	"accept-encoding": {"gzip"},
@@ -64,6 +87,15 @@ var defaultHeader = http.Header{
 		"accept",
 		"accept-encoding",
 		"accept-language",
+		"user-agent",
+	},
+}
+
+var defaultOkHttp4Header = http.Header{
+	"accept-encoding": {"gzip"},
+	"user-agent":      {"okhttp/4.10.0"},
+	http.HeaderOrderKey: {
+		"accept-encoding",
 		"user-agent",
 	},
 }
@@ -90,7 +122,7 @@ func chrome110(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_110.Str()], resp)
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_110.Str()], resp)
 }
 
 func chrome109(t *testing.T) {
@@ -115,7 +147,7 @@ func chrome109(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_109.Str()], resp)
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_109.Str()], resp)
 }
 
 func chrome108(t *testing.T) {
@@ -140,7 +172,7 @@ func chrome108(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_108.Str()], resp)
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_108.Str()], resp)
 }
 
 func chrome107(t *testing.T) {
@@ -165,7 +197,7 @@ func chrome107(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_107.Str()], resp)
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_107.Str()], resp)
 }
 
 func chrome105(t *testing.T) {
@@ -190,7 +222,7 @@ func chrome105(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_105.Str()], resp)
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_105.Str()], resp)
 }
 
 func chrome104(t *testing.T) {
@@ -215,7 +247,7 @@ func chrome104(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_104.Str()], resp)
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_104.Str()], resp)
 }
 
 func chrome103(t *testing.T) {
@@ -240,7 +272,7 @@ func chrome103(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "chrome", browserFingerprints[chrome][tls.HelloChrome_103.Str()], resp)
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_103.Str()], resp)
 }
 
 func safari_16_0(t *testing.T) {
@@ -265,7 +297,7 @@ func safari_16_0(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "safari", browserFingerprints[safari][tls.HelloSafari_16_0.Str()], resp)
+	compareResponse(t, "safari", clientFingerprints[safari][tls.HelloSafari_16_0.Str()], resp)
 }
 
 func safari_iOS_16_0(t *testing.T) {
@@ -290,7 +322,7 @@ func safari_iOS_16_0(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "safari ios", browserFingerprints[safariIos][tls.HelloIOS_16_0.Str()], resp)
+	compareResponse(t, "safari ios", clientFingerprints[safariIos][tls.HelloIOS_16_0.Str()], resp)
 }
 
 func firefox_105(t *testing.T) {
@@ -315,7 +347,7 @@ func firefox_105(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "firefox", browserFingerprints[firefox][tls.HelloFirefox_105.Str()], resp)
+	compareResponse(t, "firefox", clientFingerprints[firefox][tls.HelloFirefox_105.Str()], resp)
 }
 
 func firefox_106(t *testing.T) {
@@ -340,7 +372,7 @@ func firefox_106(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "firefox", browserFingerprints[firefox][tls.HelloFirefox_106.Str()], resp)
+	compareResponse(t, "firefox", clientFingerprints[firefox][tls.HelloFirefox_106.Str()], resp)
 }
 
 func firefox_108(t *testing.T) {
@@ -365,7 +397,7 @@ func firefox_108(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "firefox", browserFingerprints[firefox][tls.HelloFirefox_108.Str()], resp)
+	compareResponse(t, "firefox", clientFingerprints[firefox][tls.HelloFirefox_108.Str()], resp)
 }
 
 func firefox_110(t *testing.T) {
@@ -390,7 +422,7 @@ func firefox_110(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "firefox", browserFingerprints[firefox][tls.HelloFirefox_110.Str()], resp)
+	compareResponse(t, "firefox", clientFingerprints[firefox][tls.HelloFirefox_110.Str()], resp)
 }
 
 func opera_91(t *testing.T) {
@@ -415,7 +447,7 @@ func opera_91(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareResponse(t, "opera", browserFingerprints[opera][tls.HelloOpera_91.Str()], resp)
+	compareResponse(t, "opera", clientFingerprints[opera][tls.HelloOpera_91.Str()], resp)
 }
 
 func compareResponse(t *testing.T, clientName string, expectedValues map[string]string, resp *http.Response) {
@@ -451,4 +483,179 @@ func compareResponse(t *testing.T, clientName string, expectedValues map[string]
 			}
 		}
 	}
+}
+
+func okhttp4Android13(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Okhttp4Android13),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultOkHttp4Header
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "okhttp4 android 13", clientFingerprints[okhttpAndroid][tls_client.Okhttp4Android13.GetClientHelloStr()], resp)
+}
+
+func okhttp4Android12(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Okhttp4Android12),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultOkHttp4Header
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "okhttp4 android 12", clientFingerprints[okhttpAndroid][tls_client.Okhttp4Android12.GetClientHelloStr()], resp)
+}
+
+func okhttp4Android11(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Okhttp4Android11),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultOkHttp4Header
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "okhttp4 android 11", clientFingerprints[okhttpAndroid][tls_client.Okhttp4Android11.GetClientHelloStr()], resp)
+}
+
+func okhttp4Android10(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Okhttp4Android10),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultOkHttp4Header
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "okhttp4 android 10", clientFingerprints[okhttpAndroid][tls_client.Okhttp4Android10.GetClientHelloStr()], resp)
+}
+
+func okhttp4Android9(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Okhttp4Android9),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultOkHttp4Header
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "okhttp4 android 9", clientFingerprints[okhttpAndroid][tls_client.Okhttp4Android9.GetClientHelloStr()], resp)
+}
+
+func okhttp4Android8(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Okhttp4Android8),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultOkHttp4Header
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "okhttp4 android 8", clientFingerprints[okhttpAndroid][tls_client.Okhttp4Android8.GetClientHelloStr()], resp)
+}
+
+func okhttp4Android7(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Okhttp4Android7),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultOkHttp4Header
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "okhttp4 android 7", clientFingerprints[okhttpAndroid][tls_client.Okhttp4Android7.GetClientHelloStr()], resp)
 }
