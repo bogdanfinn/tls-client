@@ -302,16 +302,18 @@ func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
 
 	// c.processCookies(webResp)
 
-	cookies := c.Jar.Cookies(reqq.URL)
-	cookieStr := ""
-	for _, cook := range cookies {
-		c.logger.Debug("cookie: %s", cook.String())
+	if c.Jar != nil {
+		cookies := c.Jar.Cookies(reqq.URL)
+		cookieStr := ""
+		for _, cook := range cookies {
+			c.logger.Debug("cookie: %s", cook.String())
 
-		if cook.Name != "" && cook.Value != "" && cook.Value != `""` && cook.Value != "undefined" {
-			cookieStr += cook.Name + "=" + cook.Value + "; "
+			if cook.Name != "" && cook.Value != "" && cook.Value != `""` && cook.Value != "undefined" {
+				cookieStr += cook.Name + "=" + cook.Value + "; "
+			}
 		}
+		webResp.Cookies = strings.TrimSuffix(cookieStr, "; ")
 	}
-	webResp.Cookies = strings.TrimSuffix(cookieStr, "; ")
 
 	if !req.NoDecodeBody {
 		defer resp.Body.Close()
