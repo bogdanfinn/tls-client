@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"strings"
 	"time"
@@ -251,15 +250,6 @@ func (c *httpClient) SetCookieJar(jar http.CookieJar) {
 }
 
 func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
-
-	ogCook := c.Jar.Cookies(req.URL)
-	if len(ogCook) == 0 {
-		log.Println("shit is broken")
-	}
-	for _, c := range ogCook {
-		log.Println("cookie lol", c)
-	}
-
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
 	req.Header[http.HeaderOrderKey] = allToLower(req.Header[http.HeaderOrderKey])
 
@@ -323,7 +313,6 @@ func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
 	}
 	webResp.Cookies = strings.TrimSuffix(cookieStr, "; ")
 
-	// c.Jar.Cookies()
 	if !req.NoDecodeBody {
 		defer resp.Body.Close()
 		bodyBytes, err2 := ioutil.ReadAll(resp.Body)
