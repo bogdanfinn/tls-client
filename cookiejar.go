@@ -1,66 +1,301 @@
 package tls_client
 
 import (
+	"fmt"
+	"net/url"
 	"strings"
 	"sync"
+
+	http "github.com/bogdanfinn/fhttp"
+	"github.com/bogdanfinn/fhttp/cookiejar"
 )
 
-// TODO: consider adding an easy way to support multiple domains nicely, unlike the ugly ass default cookiejar
-type CookieJar struct {
-	Cookies map[string]string
-	sync.RWMutex
+type CookieJarOption func(config *cookieJarConfig)
 
-	// GetCookieStr() string
+type cookieJarConfig struct {
+	skipExisting      bool
+	debug             bool
+	allowEmptyCookies bool
+	logger            Logger
+}
+
+func WithSkipExisting() CookieJarOption {
+	return func(config *cookieJarConfig) {
+		config.skipExisting = true
+	}
+}
+
+func WithAllowEmptyCookies() CookieJarOption {
+	return func(config *cookieJarConfig) {
+		config.allowEmptyCookies = true
+	}
+}
+
+func WithDebugLogger() CookieJarOption {
+	return func(config *cookieJarConfig) {
+		config.debug = true
+	}
+}
+
+func WithLogger(logger Logger) CookieJarOption {
+	return func(config *cookieJarConfig) {
+		config.logger = logger
+	}
+}
+
+type CookieJar interface {
+	http.CookieJar
+	GetAllCookies() map[string][]*http.Cookie
 }
 
 type cookieJar struct {
-	jar     *CookieJar
-	cookies map[string]string
+	jar        *cookiejar.Jar
+	config     *cookieJarConfig
+	allCookies map[string][]*http.Cookie
 	sync.RWMutex
 }
 
-func (c *httpClient) processCookies(resp *WebResp) {
-	c.Jar.Lock()
-	defer c.Jar.Unlock()
-	if c.Jar.Cookies == nil {
-		c.Jar.Cookies = make(map[string]string)
+func NewCookieJar(options ...CookieJarOption) CookieJar {
+	realJar, _ := cookiejar.New(nil)
+
+	config := &cookieJarConfig{}
+
+	for _, opt := range options {
+		opt(config)
 	}
-	resp.Header.Get("Set-Cookie")
 
-	setCookies := resp.Header.Values("Set-Cookie")
-	c.logger.Debug("set cookies from response header: %s", setCookies)
+	if config.logger == nil {
+		config.logger = NewNoopLogger()
+	}
 
-	if len(setCookies) == 0 {
-		resp.Cookies = c.Jar.GetCookieStr(false)
+	if config.debug {
+		config.logger = NewDebugLogger(config.logger)
+	}
+
+	c := &cookieJar{
+		jar:        realJar,
+		config:     config,
+		allCookies: make(map[string][]*http.Cookie),
+	}
+
+	return c
+}
+
+func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
+	jar.Lock()
+	defer jar.Unlock()
+
+	notEmptyCookies := jar.nonEmpty(cookies)
+	uniqueCookies := jar.unique(notEmptyCookies)
+
+	hostKey := jar.buildCookieHostKey(u)
+
+	if !jar.config.skipExisting {
+		existingCookies := jar.allCookies[hostKey]
+
+		var remainingExistingCookies []*http.Cookie
+
+		for _, existingCookie := range existingCookies {
+			shouldOverwrite := false
+			for _, cookie := range uniqueCookies {
+				shouldOverwrite = existingCookie.Name == cookie.Name
+
+				if shouldOverwrite {
+					break
+				}
+			}
+
+			if shouldOverwrite {
+				continue
+			}
+
+			remainingExistingCookies = append(remainingExistingCookies, existingCookie)
+		}
+
+		newCookies := append(remainingExistingCookies, uniqueCookies...)
+
+		jar.jar.SetCookies(u, newCookies)
+		jar.allCookies[hostKey] = newCookies
+
 		return
 	}
 
-	for _, cook := range setCookies {
-		parts := strings.Split(cook, ";")
+	var newNonExistentCookies []*http.Cookie
 
-		cookie := parts[0]
-		nameI := strings.Index(cookie, "=")
-		if nameI == -1 {
+	existingCookies := jar.allCookies[hostKey]
+
+	for _, cookie := range uniqueCookies {
+		alreadyInJar := false
+
+		for _, existingCookie := range existingCookies {
+			alreadyInJar = cookie.Name == existingCookie.Name
+
+			if alreadyInJar {
+				break
+			}
+		}
+
+		if alreadyInJar {
+			jar.config.logger.Debug("cookie %s is already in jar, skipping", cookie.Name)
 			continue
 		}
-		name := strings.TrimSpace(cookie[:nameI])
-		value := strings.TrimSpace(cookie[nameI+1:])
 
-		c.logger.Debug("cookie: %s, value: %s", name, value)
-
-		if name != "" && value != "" && value != `""` && value != "undefined" {
-			c.Jar.Cookies[name] = value
-		}
+		jar.config.logger.Debug("cookie %s is not in jar yet, adding", cookie.Name)
+		newNonExistentCookies = append(newNonExistentCookies, cookie)
 	}
-	resp.Cookies = c.Jar.GetCookieStr(false)
+
+	newCookies := append(existingCookies, newNonExistentCookies...)
+	jar.jar.SetCookies(u, newCookies)
+	jar.allCookies[hostKey] = newCookies
 }
 
-// func (jar *cookieJar) ImportCookies(cookies string) {
-// 	if jar.Cookies == nil {
-// 		jar.Cookies = make(map[string]string)
+func (jar *cookieJar) Cookies(u *url.URL) []*http.Cookie {
+	jar.RLock()
+	defer jar.RUnlock()
+
+	hostKey := jar.buildCookieHostKey(u)
+
+	allCookies := jar.allCookies[hostKey]
+
+	return jar.notExpired(allCookies)
+}
+
+func (jar *cookieJar) GetAllCookies() map[string][]*http.Cookie {
+	jar.RLock()
+	defer jar.RUnlock()
+
+	copied := make(map[string][]*http.Cookie)
+	for u, c := range jar.allCookies {
+		copied[u] = c
+	}
+
+	return copied
+}
+
+func (jar *cookieJar) buildCookieHostKey(u *url.URL) string {
+	host := u.Host
+
+	hostParts := strings.Split(host, ".")
+
+	switch len(hostParts) {
+	case 3:
+		return fmt.Sprintf("%s.%s", hostParts[len(hostParts)-2], hostParts[len(hostParts)-1])
+	case 2:
+		return fmt.Sprintf("%s.%s", hostParts[len(hostParts)-2], hostParts[len(hostParts)-1])
+	default:
+		return host
+	}
+}
+
+func (jar *cookieJar) unique(cookies []*http.Cookie) []*http.Cookie {
+	var filteredCookies []*http.Cookie
+	var uniqueCookies []string
+
+	for i := len(cookies) - 1; i >= 0; i-- {
+		c := cookies[i]
+
+		if inSlice(uniqueCookies, c.Name) {
+			continue
+		}
+
+		filteredCookies = append(filteredCookies, c)
+		uniqueCookies = append(uniqueCookies, c.Name)
+	}
+
+	return filteredCookies
+}
+
+func (jar *cookieJar) nonEmpty(cookies []*http.Cookie) []*http.Cookie {
+	if jar.config.allowEmptyCookies {
+		return cookies
+	}
+
+	var filteredCookies []*http.Cookie
+
+	for _, c := range cookies {
+		if c.Value == "" {
+			jar.config.logger.Debug("cookie %s is empty and will be filtered out", c.Name)
+			continue
+		}
+
+		filteredCookies = append(filteredCookies, c)
+	}
+
+	return filteredCookies
+}
+
+func (jar *cookieJar) notExpired(cookies []*http.Cookie) []*http.Cookie {
+	var filteredCookies []*http.Cookie
+
+	for _, c := range cookies {
+		// we misuse the max age here for "deletion" reasons. To be 100% correct a MaxAge equals 0 should also be deleted but we do not do it for now.
+		if c.MaxAge < 0 {
+			jar.config.logger.Debug("cookie %s in jar max age set to 0 or below. will be excluded from request", c.Name)
+			continue
+		}
+
+		// TODO: this is currently commented out as the cookie parser does not parse the expire correctly out of the Set-Cookie header.
+		/*if c.Expires.Before(now) {
+			jar.config.logger.Debug("cookie %s in jar expired. will be excluded from request", c.Name)
+			continue
+		}*/
+
+		filteredCookies = append(filteredCookies, c)
+	}
+
+	return filteredCookies
+}
+
+func inSlice(slice []string, elem string) bool {
+	for _, e := range slice {
+		if e == elem {
+			return true
+		}
+	}
+
+	return false
+}
+
+// package tls_client
+
+// import (
+// 	"strings"
+// 	"sync"
+// )
+
+// // TODO: consider adding an easy way to support multiple domains nicely, unlike the ugly ass default cookiejar
+// type CookieJar struct {
+// 	Cookies map[string]string
+// 	sync.RWMutex
+// 	// GetCookieStr() string
+// }
+
+// type cookieJar struct {
+// 	jar     *CookieJar
+// 	cookies map[string]string
+// 	sync.RWMutex
+// }
+
+// func (c *httpClient) processCookies(resp *WebResp) {
+// 	c.Jar.Lock()
+// 	defer c.Jar.Unlock()
+// 	if c.Jar.Cookies == nil {
+// 		c.Jar.Cookies = make(map[string]string)
 // 	}
-// 	parts := strings.Split(cookies, ";")
-// 	for _, cookie := range parts {
+// 	resp.Header.Get("Set-Cookie")
+
+// 	setCookies := resp.Header.Values("Set-Cookie")
+// 	c.logger.Debug("set cookies from response header: %s", setCookies)
+
+// 	if len(setCookies) == 0 {
+// 		resp.Cookies = c.Jar.GetCookieStr(false)
+// 		return
+// 	}
+
+// 	for _, cook := range setCookies {
+// 		parts := strings.Split(cook, ";")
+
+// 		cookie := parts[0]
 // 		nameI := strings.Index(cookie, "=")
 // 		if nameI == -1 {
 // 			continue
@@ -68,32 +303,54 @@ func (c *httpClient) processCookies(resp *WebResp) {
 // 		name := strings.TrimSpace(cookie[:nameI])
 // 		value := strings.TrimSpace(cookie[nameI+1:])
 
-//			if value != "" && value != `""` {
-//				jar.Cookies[name] = value
-//			}
-//		}
-//	}
-func (jar *CookieJar) GetCookieStr(lock bool) string {
-	if lock {
-		jar.Lock()
-		defer jar.Unlock()
-	}
-	cookies := ""
-	for name, value := range jar.Cookies {
-		if value != "" && value != `""` {
-			cookies += name + "=" + value + "; "
-		}
-	}
-	return strings.TrimSpace(cookies)
-}
+// 		c.logger.Debug("cookie: %s, value: %s", name, value)
 
-// func (jar *cookieJar) GetCookie(find string) string {
-// 	jar.Lock()
-// 	defer jar.Unlock()
-// 	for name, value := range jar.Cookies {
-// 		if name == find {
-// 			return value
+// 		if name != "" && value != "" && value != `""` && value != "undefined" {
+// 			c.Jar.Cookies[name] = value
 // 		}
 // 	}
-// 	return ""
+// 	resp.Cookies = c.Jar.GetCookieStr(false)
 // }
+
+// // func (jar *cookieJar) ImportCookies(cookies string) {
+// // 	if jar.Cookies == nil {
+// // 		jar.Cookies = make(map[string]string)
+// // 	}
+// // 	parts := strings.Split(cookies, ";")
+// // 	for _, cookie := range parts {
+// // 		nameI := strings.Index(cookie, "=")
+// // 		if nameI == -1 {
+// // 			continue
+// // 		}
+// // 		name := strings.TrimSpace(cookie[:nameI])
+// // 		value := strings.TrimSpace(cookie[nameI+1:])
+
+// //			if value != "" && value != `""` {
+// //				jar.Cookies[name] = value
+// //			}
+// //		}
+// //	}
+// func (jar *CookieJar) GetCookieStr(lock bool) string {
+// 	if lock {
+// 		jar.Lock()
+// 		defer jar.Unlock()
+// 	}
+// 	cookies := ""
+// 	for name, value := range jar.Cookies {
+// 		if value != "" && value != `""` {
+// 			cookies += name + "=" + value + "; "
+// 		}
+// 	}
+// 	return strings.TrimSpace(cookies)
+// }
+
+// // func (jar *cookieJar) GetCookie(find string) string {
+// // 	jar.Lock()
+// // 	defer jar.Unlock()
+// // 	for name, value := range jar.Cookies {
+// // 		if name == find {
+// // 			return value
+// // 		}
+// // 	}
+// // 	return ""
+// // }
