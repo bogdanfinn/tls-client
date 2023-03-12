@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"strings"
 	"time"
@@ -244,12 +245,18 @@ func (c *httpClient) applyProxy() error {
 // 	c.Jar.SetCookies(u, cookies)
 // }
 
-// // SetCookieJar sets a jar as the clients cookie jar. This is the recommended way when you want to "clear" the existing cookiejar
+// SetCookieJar sets a jar as the clients cookie jar. This is the recommended way when you want to "clear" the existing cookiejar
 func (c *httpClient) SetCookieJar(jar http.CookieJar) {
 	c.Jar = jar
 }
 
 func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
+
+	ogCook := c.Jar.Cookies(req.URL)
+	for _, c := range ogCook {
+		log.Println("cookie", c)
+	}
+
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
 	req.Header[http.HeaderOrderKey] = allToLower(req.Header[http.HeaderOrderKey])
 
