@@ -253,8 +253,11 @@ func (c *httpClient) SetCookieJar(jar http.CookieJar) {
 func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
 
 	ogCook := c.Jar.Cookies(req.URL)
+	if len(ogCook) == 0 {
+		log.Println("shit is broken")
+	}
 	for _, c := range ogCook {
-		log.Println("cookie", c)
+		log.Println("cookie lol", c)
 	}
 
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
