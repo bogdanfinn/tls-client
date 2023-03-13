@@ -3,10 +3,9 @@ module github.com/Enven-LLC/enven-http
 go 1.19
 
 require (
-	github.com/bogdanfinn/fhttp v0.5.15
+	github.com/bogdanfinn/fhttp v0.5.19
 	github.com/bogdanfinn/tls-client v1.3.2
-	github.com/bogdanfinn/utls v1.5.12
-	github.com/google/uuid v1.3.0
+	github.com/bogdanfinn/utls v1.5.15
 	github.com/stretchr/testify v1.8.1
 	github.com/tam7t/hpkp v0.0.0-20160821193359-2b70b4024ed5
 	golang.org/x/net v0.5.0
