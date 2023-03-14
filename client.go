@@ -94,11 +94,16 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		logger = NewNoopLogger()
 	}
 
-	return &httpClient{
+	c := &httpClient{
 		Client: *client,
 		logger: logger,
 		config: config,
-	}, nil
+	}
+	if config.betterJar != nil {
+		c.BJar = config.betterJar
+	}
+
+	return c, nil
 }
 
 func validateConfig(config *httpClientConfig) error {
@@ -146,7 +151,6 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 	if config.cookieJar != nil {
 		client.Jar = config.cookieJar
 	}
-
 	return client, clientProfile, nil
 }
 
@@ -313,7 +317,7 @@ func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
 			}
 		}
 		webResp.Cookies = strings.TrimSuffix(cookieStr, "; ")
-	} else {
+	} else if c.BJar != nil {
 		// * Use better jar
 		c.processCookies(webResp)
 	}

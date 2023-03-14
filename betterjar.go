@@ -12,6 +12,12 @@ type BetterJar struct {
 	// GetCookieStr() string
 }
 
+func NewBetterJar() *BetterJar {
+	return &BetterJar{
+		Cookies: make(map[string]string),
+	}
+}
+
 // type betterJar struct {
 // 	jar     *BetterJar
 // 	cookies map[string]string
