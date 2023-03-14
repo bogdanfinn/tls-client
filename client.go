@@ -29,7 +29,7 @@ type HttpClient interface {
 }
 
 type httpClient struct {
-	// Jar *CookieJar
+	BJar *BetterJar
 	http.Client
 	logger Logger
 	config *httpClientConfig
@@ -313,6 +313,9 @@ func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
 			}
 		}
 		webResp.Cookies = strings.TrimSuffix(cookieStr, "; ")
+	} else {
+		// * Use better jar
+		c.processCookies(webResp)
 	}
 
 	if !req.NoDecodeBody {
