@@ -1116,6 +1116,7 @@ var ConfirmedAndroid = ClientProfile{
 	settingsOrder: []http2.SettingID{
 		http2.SettingInitialWindowSize,
 	},
+	headerPriority: &http2.PriorityParam{},
 	pseudoHeaderOrder: []string{
 		":method",
 		":path",
@@ -1210,6 +1211,7 @@ var Okhttp4Android13 = ClientProfile{
 	settingsOrder: []http2.SettingID{
 		http2.SettingInitialWindowSize,
 	},
+	headerPriority: &http2.PriorityParam{},
 	pseudoHeaderOrder: []string{
 		":method",
 		":path",
@@ -1233,6 +1235,7 @@ var Okhttp4Android12 = ClientProfile{
 	settingsOrder: []http2.SettingID{
 		http2.SettingInitialWindowSize,
 	},
+	headerPriority: &http2.PriorityParam{},
 	pseudoHeaderOrder: []string{
 		":method",
 		":path",
@@ -1257,6 +1260,7 @@ var Okhttp4Android11 = ClientProfile{
 	settingsOrder: []http2.SettingID{
 		http2.SettingInitialWindowSize,
 	},
+	headerPriority: &http2.PriorityParam{},
 	pseudoHeaderOrder: []string{
 		":method",
 		":path",
@@ -1340,6 +1344,7 @@ var Okhttp4Android10 = ClientProfile{
 	settingsOrder: []http2.SettingID{
 		http2.SettingInitialWindowSize,
 	},
+	headerPriority: &http2.PriorityParam{},
 	pseudoHeaderOrder: []string{
 		":method",
 		":path",
@@ -1410,6 +1415,7 @@ var Okhttp4Android9 = ClientProfile{
 	settingsOrder: []http2.SettingID{
 		http2.SettingInitialWindowSize,
 	},
+	headerPriority: &http2.PriorityParam{},
 	pseudoHeaderOrder: []string{
 		":method",
 		":path",
@@ -1478,6 +1484,7 @@ var Okhttp4Android8 = ClientProfile{
 	settingsOrder: []http2.SettingID{
 		http2.SettingInitialWindowSize,
 	},
+	headerPriority: &http2.PriorityParam{},
 	pseudoHeaderOrder: []string{
 		":method",
 		":path",
@@ -1548,6 +1555,7 @@ var Okhttp4Android7 = ClientProfile{
 	settingsOrder: []http2.SettingID{
 		http2.SettingInitialWindowSize,
 	},
+	headerPriority: &http2.PriorityParam{},
 	pseudoHeaderOrder: []string{
 		":method",
 		":path",

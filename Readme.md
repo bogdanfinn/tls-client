@@ -39,167 +39,15 @@ type HttpClient interface {
 }
 ```
 
-### Supported and tested Clients
+### Detailed Documentation
 
-- Chrome
-    - 103 (chrome_103)
-    - 104 (chrome_104)
-    - 105 (chrome_105)
-    - 106 (chrome_106)
-    - 107 (chrome_107)
-    - 108 (chrome_108)
-    - 109 (chrome_109)
-    - 110 (chrome_110)
-- Safari
-    - 15.6.1 (safari_15_6_1)
-    - 16.0 (safari_16_0)
-- iOS (Safari)
-    - 15.5 (safari_ios_15_5)
-    - 15.6 (safari_ios_15_6)
-    - 16.0 (safari_ios_16_0)
-- iPadOS (Safari)
-    - 15.6 (safari_ios_15_6)
-- Firefox
-    - 102 (firefox_102)
-    - 104 (firefox_104)
-    - 105 (firefox_105)
-    - 106 (firefox_106)
-    - 108 (firefox_108)
-    - 110 (firefox_110)
-- Opera
-    - 89 (opera_89)
-    - 90 (opera_90)
-    - 91 (opera_91)
-- OkHttp4
-  - Android7 (okhttp4_android_7)
-  - Android8 (okhttp4_android_8)
-  - Android9 (okhttp4_android_9)
-  - Android10 (okhttp4_android_10)
-  - Android11 (okhttp4_android_11)
-  - Android12 (okhttp4_android_12)
-  - Android13 (okhttp4_android_13)
-- Custom Clients
-  - Zalando Android Mobile (zalando_android_mobile)
-  - Zalando iOS Mobile (zalando_ios_mobile)
-  - Nike IOS Mobile (nike_ios_mobile)
-  - Nike Android Mobile (nike_android_mobile)
-  - Cloudscraper
-  - MMS IOS (mms_ios)
-  - Mesh IOS (mesh_ios)
-  - Mesh IOS 2 (mesh_ios_2)
-  - Mesh Android (mesh_android)
-  - Mesh Android 2 (mesh_android_2)
-  - Confirmed IOS (confirmed_ios)
+https://bogdanfinn.gitbook.io/open-source-oasis/
 
-You can also provide your own client. See the example how to do it.
+### Questions?
 
-All Clients support Random TLS Extension Order by setting the option on the Http Client itself `WithRandomTLSExtensionOrder()`.
-This is needed for Chrome 107+
+Join my discord support server for free: https://discord.gg/7Ej9eJvHqk
+No Support in DMs!
 
-### Installation
-
-```go
-go get -u github.com/bogdanfinn/tls-client
-
-// or specific version:
-// go get github.com/bogdanfinn/tls-client@v0.5.2
-```
-Some users have trouble when using `go get -u`. If this is the case for you please cleanup your go.mod file and do a `go get` with a specific version.
-
-I would recommend to check the github tags for the latest version and install that one explicit.
-
-### Quick Usage Example
-
-```go
-package main
-
-import (
-	"fmt"
-	"io"
-	"log"
-
-	http "github.com/bogdanfinn/fhttp"
-	tls_client "github.com/bogdanfinn/tls-client"
-)
-
-func main() {
-    jar := tls_client.NewCookieJar()
-	options := []tls_client.HttpClientOption{
-		tls_client.WithTimeoutSeconds(30),
-		tls_client.WithClientProfile(tls_client.Chrome_105),
-		tls_client.WithNotFollowRedirects(),
-		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
-		//tls_client.WithProxyUrl("http://user:pass@host:port"),
-		//tls_client.WithInsecureSkipVerify(),
-	}
-
-	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	req, err := http.NewRequest(http.MethodGet, "https://tls.peet.ws/api/all", nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	req.Header = http.Header{
-		"accept":                    {"*/*"},
-		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
-		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
-		http.HeaderOrderKey: {
-			"accept",
-			"accept-language",
-			"user-agent",
-		},
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	defer resp.Body.Close()
-
-	log.Println(fmt.Sprintf("status code: %d", resp.StatusCode))
-
-	readBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	log.Println(string(readBytes))
-}
-```
-For more configured clients check `./profiles.go`, `./custom_profiles.go` or use your own custom client. See `examples` folder how to use a complete custom tls client.
-
-#### Client Options
-List of current available client options.
-```go
-WithTimeoutSeconds
-WithTimeoutMilliseconds
-WithProxyUrl
-WithCookieJar
-WithDebug
-WithNotFollowRedirects
-WithInsecureSkipVerify
-WithClientProfile
-WithServerNameOverwrite
-WithForceHttp1
-WithRandomTLSExtensionOrder
-WithTransportOptions
-WithCharlesProxy
-WithCertificatePinning
-WithCustomRedirectFunc
-WithCatchPanics
-```
-
-#### Default Client
-The implemented default client is currently Chrome 110 with a configured request timeout of 30 seconds and no automatic redirect following and with a cookiejar. Also Random Extension Order is activated for the default client.
 
 ### Compile this client as a shared library for use in other languages like Python or NodeJS
 Please take a look at the cross compile build script in `cffi_dist/build.sh` to build this tls-client as a shared library for other programming languages (.dll, .so, .dylib).
@@ -223,20 +71,6 @@ const response = tlsClientLibrary.request(JSON.stringify(requestPayload));
 const responseObject = JSON.parse(response)
 tlsClientLibrary.freeMemory(responseObject.Id)
 ```
-
-### Further Information
-
-This library uses the following api: https://tls.peet.ws/api/all to verify the hashes and fingerprints for akamai and
-ja3. Be aware that also peets api does not show every extension/cipher a tls client is using. Do not rely just on ja3 strings.
-
-If you are not using go and do not want to implement the shared library but want to use the functionality check out this repository https://github.com/bogdanfinn/tls-client-api
-
-### Certificate Pinning
-The client has built in certificate pinning support. Just use the `WithCertificatePinning` Option and provide the pins by hosts you want to enable pinning for. And if you want a callback to be executed on bad pin.
-Please refer to the examples in `example/main.go` to see how certificate pinning can be used in your application (`sslPinning()`).
-Also take a look at https://github.com/tam7t/hpkp to learn how to generate pins.
-You can install `hpkp-pins` by running `go install github.com/tam7t/hpkp/cmd/hpkp-pins@latest`
-
 
 ### Frequently Asked Questions / Errors
 * **How can I add `GREASE` to Custom Client Profiles when using the shared library?**
@@ -317,8 +151,3 @@ req, err := http.NewRequest(http.MethodGet, "https://tls.browserleaks.com/json",
     }
     log.Println(string(all))
 ```
-
-### Questions?
-
-Join my discord support server for free: https://discord.gg/7Ej9eJvHqk
-No Support in DMs!
