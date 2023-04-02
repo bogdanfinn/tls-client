@@ -20,7 +20,7 @@ var defaultRedirectFunc = func(req *http.Request, via []*http.Request) error {
 type HttpClient interface {
 	// GetCookies(u *url.URL) []*http.Cookie
 	// SetCookies(u *url.URL, cookies []*http.Cookie)
-	// SetCookieJar(jar http.CookieJar)
+	SetCookieJar(jar http.CookieJar)
 	SetProxy(proxyUrl string) error
 	GetProxy() string
 	SetFollowRedirect(followRedirect bool)
@@ -29,7 +29,7 @@ type HttpClient interface {
 }
 
 type httpClient struct {
-	Jar CookieJar
+	BJar *BetterJar
 	http.Client
 	logger Logger
 	config *httpClientConfig
@@ -94,11 +94,16 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		logger = NewNoopLogger()
 	}
 
-	return &httpClient{
+	c := &httpClient{
 		Client: *client,
 		logger: logger,
 		config: config,
-	}, nil
+	}
+	if config.betterJar != nil {
+		c.BJar = config.betterJar
+	}
+
+	return c, nil
 }
 
 func validateConfig(config *httpClientConfig) error {
@@ -146,7 +151,6 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 	if config.cookieJar != nil {
 		client.Jar = config.cookieJar
 	}
-
 	return client, clientProfile, nil
 }
 
@@ -244,10 +248,10 @@ func (c *httpClient) applyProxy() error {
 // 	c.Jar.SetCookies(u, cookies)
 // }
 
-// // SetCookieJar sets a jar as the clients cookie jar. This is the recommended way when you want to "clear" the existing cookiejar
-// func (c *httpClient) SetCookieJar(jar http.CookieJar) {
-// 	c.Jar = jar
-// }
+// SetCookieJar sets a jar as the clients cookie jar. This is the recommended way when you want to "clear" the existing cookiejar
+func (c *httpClient) SetCookieJar(jar http.CookieJar) {
+	c.Jar = jar
+}
 
 func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
@@ -300,7 +304,23 @@ func (c *httpClient) Do(req *WebReq) (*WebResp, error) {
 		TLS:           resp.TLS,
 	}
 
-	c.processCookies(webResp)
+	// c.processCookies(webResp)
+
+	if c.Jar != nil {
+		cookies := c.Jar.Cookies(reqq.URL)
+		cookieStr := ""
+		for _, cook := range cookies {
+			c.logger.Debug("cookie: %s", cook.String())
+
+			if cook.Name != "" && cook.Value != "" && cook.Value != `""` && cook.Value != "undefined" {
+				cookieStr += cook.Name + "=" + cook.Value + "; "
+			}
+		}
+		webResp.Cookies = strings.TrimSuffix(cookieStr, "; ")
+	} else if c.BJar != nil {
+		// * Use better jar
+		c.processCookies(webResp)
+	}
 
 	if !req.NoDecodeBody {
 		defer resp.Body.Close()

@@ -32,6 +32,7 @@ type httpClientConfig struct {
 	serverNameOverwrite         string
 	transportOptions            *TransportOptions
 	cookieJar                   http.CookieJar
+	betterJar                   *BetterJar
 	clientProfile               ClientProfile
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
@@ -53,6 +54,13 @@ func WithProxyUrl(proxyUrl string) HttpClientOption {
 func WithCookieJar(jar http.CookieJar) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.cookieJar = jar
+	}
+}
+
+// WithBetterJar configures a HTTP client to use the specified cookie jar.
+func WithBetterJar(bjar *BetterJar) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.betterJar = bjar
 	}
 }
 
