@@ -27,3 +27,4 @@ jobs:
           race: false
           buildmode: c-shared
           trimpath: false
+          working_dir: ./cffi_dist
