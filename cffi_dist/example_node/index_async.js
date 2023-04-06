@@ -17,9 +17,7 @@ const requestPayload = {
     "withoutCookieJar": false,
     "withDefaultCookieJar": false,
     "isByteRequest": false,
-    "catchPanics": false,
     "additionalDecode": null,
-    "catchPanics": false,
     "forceHttp1": false,
     "withRandomTLSExtensionOrder": false,
     "timeoutSeconds": 30,
@@ -56,6 +54,7 @@ const requestPromise = new Promise((resolve, reject) => {
         resolve(responseObject)
     })
 })
+
 
 const payload = {
     sessionId: 'my-session-id',

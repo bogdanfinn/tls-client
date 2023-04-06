@@ -1,5 +1,4 @@
 const ffi = require('ffi-napi');
-const fs = require("fs")
 
 // load the tls-client shared package for your OS you are currently running your nodejs script (i'm running on mac)
 const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-1.3.7.dylib', {
