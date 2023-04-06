@@ -19,7 +19,7 @@ jobs:
         with:
           xgo_version: latest
           go_version: 1.18
-          dest: cffi_dist/dist
+          dest: build
           prefix: tls-client
           targets: windows/amd64,windows/386,linux/amd64,linux/arm64,darwin/arm64,darwin/amd64
           v: true
@@ -27,4 +27,8 @@ jobs:
           race: false
           buildmode: c-shared
           trimpath: false
-          working_dir: ./cffi_dist
+          working_dir: $GITHUB_WORKSPACE/cffi_dist
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tls-client
+          path: build
