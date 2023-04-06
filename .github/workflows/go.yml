@@ -11,18 +11,18 @@ on:
 
 jobs:
 
-  build:
+  tests_and_build_example:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: 1.19
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
 
-    - name: Build Example
-      run: go build -v ./example/main.go
+      - name: Build Example
+        run: go build -v ./example/main.go
 
-    - name: Test
-      run: go test -v ./tests/...
+      - name: Run Tests
+        run: go test -v ./tests/...

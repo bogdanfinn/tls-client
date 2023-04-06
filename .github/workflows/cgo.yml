@@ -1,0 +1,29 @@
+# This workflow will build the tls client example app and test the existing unit tests.
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: CGO
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build_shared_libraries:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        uses: crazy-max/ghaction-xgo@v2
+        with:
+          xgo_version: latest
+          go_version: 1.18
+          dest: cffi_dist/dist
+          prefix: tls-client
+          targets: windows/amd64,windows/386,linux/amd64,linux/arm64,darwin/arm64,darwin/amd64
+          v: true
+          x: false
+          race: false
+          buildmode: c-shared
+          trimpath: false
