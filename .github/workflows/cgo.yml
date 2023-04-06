@@ -27,7 +27,7 @@ jobs:
           race: false
           buildmode: c-shared
           trimpath: false
-          working_dir: $GITHUB_WORKSPACE/cffi_dist
+          working_dir: cffi_dist
       - uses: actions/upload-artifact@v3
         with:
           name: tls-client
