@@ -5,7 +5,7 @@ name: CGO
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "introduce-actions" ]
 
 jobs:
   build_shared_libraries:
