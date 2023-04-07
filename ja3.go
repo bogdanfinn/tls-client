@@ -136,7 +136,7 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 	}
 
 	extMap[tls.ExtensionDelegatedCredentials] = &tls.DelegatedCredentialsExtension{
-		AlgorithmsSignature: delegatedCredentialsAlgorithms,
+		SupportedSignatureAlgorithms: delegatedCredentialsAlgorithms,
 	}
 
 	var exts []tls.TLSExtension
