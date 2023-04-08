@@ -13,8 +13,15 @@ import (
 )
 
 func TestClients(t *testing.T) {
+	t.Log("testing chrome 112")
+	chrome112(t)
+	time.Sleep(2 * time.Second)
+	t.Log("testing chrome 111")
+	chrome111(t)
+	time.Sleep(2 * time.Second)
 	t.Log("testing chrome 110")
 	chrome110(t)
+	time.Sleep(2 * time.Second)
 	t.Log("testing chrome 109")
 	chrome109(t)
 	time.Sleep(2 * time.Second)
@@ -98,6 +105,56 @@ var defaultOkHttp4Header = http.Header{
 		"accept-encoding",
 		"user-agent",
 	},
+}
+
+func chrome112(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_112),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_112.Str()], resp)
+}
+
+func chrome111(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_111),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_111.Str()], resp)
 }
 
 func chrome110(t *testing.T) {

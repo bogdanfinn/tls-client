@@ -1,9 +1,9 @@
 github.com/andybalholm/brotli v1.0.4 h1:V7DdXeJtZscaqfNuAdSRuRFzuiKlHSC/Zh3zl9qY3JY=
 github.com/andybalholm/brotli v1.0.4/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
-github.com/bogdanfinn/fhttp v0.5.19 h1:/FKuFAtSw3+iZyNkaWXRDSVqMmOvThDjXanlG6/DXos=
-github.com/bogdanfinn/fhttp v0.5.19/go.mod h1:emv9FntlC5eAyrIUhCi6oC5NLoBC9d4AJLCq2T1bobY=
-github.com/bogdanfinn/utls v1.5.15 h1:XUUMJZh2AptaouuwUrc/RQOYgyV89rstC5Nj3FSP43s=
-github.com/bogdanfinn/utls v1.5.15/go.mod h1:mHeRCi69cUiEyVBkKONB1cAbLjRcZnlJbGzttmiuK4o=
+github.com/bogdanfinn/fhttp v0.5.20 h1:joQrA0tVFBQNQ8BbKRmIM972GfawXA+qbCRQlX6dauQ=
+github.com/bogdanfinn/fhttp v0.5.20/go.mod h1:brqi5woc5eSCVHdKYBV8aZLbO7HGqpwyDLeXW+fT18I=
+github.com/bogdanfinn/utls v1.5.16 h1:NhhWkegEcYETBMj9nvgO4lwvc6NcLH+znrXzO3gnw4M=
+github.com/bogdanfinn/utls v1.5.16/go.mod h1:mHeRCi69cUiEyVBkKONB1cAbLjRcZnlJbGzttmiuK4o=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
