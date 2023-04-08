@@ -63,6 +63,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		followRedirects:    true,
 		badPinHandler:      nil,
 		customRedirectFunc: nil,
+		clientProfile:      DefaultClientProfile,
 		timeout:            time.Duration(DefaultTimeoutSeconds) * time.Second,
 	}
 

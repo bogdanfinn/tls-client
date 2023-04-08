@@ -80,12 +80,6 @@ func CreateClient(requestInput RequestInput) (client tls_client.HttpClient, sess
 		return nil, newSessionId, useSession, clientErr
 	}
 
-	if requestInput.TLSClientIdentifier == "" && requestInput.CustomTlsClient == nil {
-		clientErr := NewTLSClientError(fmt.Errorf("cannot build client without client identifier or custom tls client information. Please provide at least one of them"))
-
-		return nil, newSessionId, useSession, clientErr
-	}
-
 	tlsClient, err := getTlsClient(requestInput, newSessionId, useSession)
 
 	if err != nil {
@@ -261,7 +255,7 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		return modifiedClient, nil
 	}
 
-	var clientProfile tls_client.ClientProfile
+	clientProfile := tls_client.DefaultClientProfile
 
 	if requestInput.CustomTlsClient != nil {
 		clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, err := getCustomTlsClientProfile(requestInput.CustomTlsClient)
