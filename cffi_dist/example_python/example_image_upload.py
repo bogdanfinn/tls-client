@@ -3,7 +3,7 @@ import json
 import base64
 
 # load the tls-client shared package for your OS you are currently running your python script (i'm running on mac)
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.3.8.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.4.0-beta.dylib')
 
 # extract the exposed request function from the shared package
 request = library.request

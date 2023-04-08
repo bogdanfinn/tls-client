@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net"
 	"strings"
 	"sync"
+	"time"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/http2"
@@ -89,6 +91,14 @@ func (rt *roundTripper) getTransport(req *http.Request, addr string) error {
 	return nil
 }
 
+func randomBytes(n int, rand *rand.Rand) []byte {
+	r := make([]byte, n)
+	if _, err := rand.Read(r); err != nil {
+		panic("rand.Read failed: " + err.Error())
+	}
+	return r
+}
+
 func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.Conn, error) {
 	rt.Lock()
 	defer rt.Unlock()
@@ -114,7 +124,32 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		host = rt.serverNameOverwrite
 	}
 
-	conn := utls.UClient(rawConn, &utls.Config{ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify}, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
+	var conn *utls.UConn
+
+	if rt.clientHelloId.Str() != "ChromeWithPSK-1" {
+		conn = utls.UClient(rawConn, &utls.Config{ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify}, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
+	} else {
+		rand := rand.New(rand.NewSource(time.Now().UnixNano()))
+		conn = utls.UClient(rawConn, &utls.Config{ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify}, utls.HelloCustom, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
+		preset, err := rt.clientHelloId.ToSpec() // correct
+		if err != nil {
+			return nil, err
+		}
+		if pskExt, ok := preset.Extensions[len(preset.Extensions)-1].(*utls.FakePreSharedKeyExtension); ok {
+			pskExt.PskIdentities = []utls.PskIdentity{ // must set identity
+				{
+					Label:               randomBytes(rand.Intn(500)+1, rand), // change this
+					ObfuscatedTicketAge: uint32(rand.Intn(500000)),           // change this
+				},
+			}
+			// each fake binder is 32 bytes of zeros
+			pskExt.PskBinders = [][]byte{ // must set psk binders
+				randomBytes(rand.Intn(50)+32, rand),
+			} // byte slices
+		}
+		conn.ApplyPreset(&preset)
+	}
+
 	if err = conn.Handshake(); err != nil {
 		_ = conn.Close()
 		return nil, err

@@ -15,6 +15,10 @@ import (
 func TestClients(t *testing.T) {
 	t.Log("testing chrome 110")
 	chrome110(t)
+	time.Sleep(2 * time.Second)
+	t.Log("testing chrome 110 psk")
+	chrome110psk(t)
+	return
 	t.Log("testing chrome 109")
 	chrome109(t)
 	time.Sleep(2 * time.Second)
@@ -98,6 +102,31 @@ var defaultOkHttp4Header = http.Header{
 		"accept-encoding",
 		"user-agent",
 	},
+}
+
+func chrome110psk(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_110_Psk),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls_client.Chrome_110_Psk.GetClientHelloStr()], resp)
 }
 
 func chrome110(t *testing.T) {
