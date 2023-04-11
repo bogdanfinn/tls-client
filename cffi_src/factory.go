@@ -12,7 +12,7 @@ import (
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/cookiejar"
 	"github.com/bogdanfinn/fhttp/http2"
-	tls_client "github.com/bogdanfinn/tls-client"
+	"github.com/bogdanfinn/tls-client"
 	tls "github.com/bogdanfinn/utls"
 	"github.com/google/uuid"
 )
@@ -70,16 +70,13 @@ func CreateClient(requestInput RequestInput) (client tls_client.HttpClient, sess
 
 	if requestInput.TLSClientIdentifier != "" && requestInput.CustomTlsClient != nil {
 		clientErr := NewTLSClientError(fmt.Errorf("cannot build client out of client identifier and custom tls client information. Please provide only one of them"))
+
 		return nil, newSessionId, useSession, clientErr
 	}
 
 	if requestInput.TimeoutSeconds != 0 && requestInput.TimeoutMilliseconds != 0 {
 		clientErr := NewTLSClientError(fmt.Errorf("cannot build client with both defined timeout in seconds and timeout in milliseconds. Please provide only one of them"))
-		return nil, newSessionId, useSession, clientErr
-	}
 
-	if requestInput.TLSClientIdentifier == "" && requestInput.CustomTlsClient == nil {
-		clientErr := NewTLSClientError(fmt.Errorf("cannot build client without client identifier or custom tls client information. Please provide at least one of them"))
 		return nil, newSessionId, useSession, clientErr
 	}
 
@@ -87,6 +84,7 @@ func CreateClient(requestInput RequestInput) (client tls_client.HttpClient, sess
 
 	if err != nil {
 		clientErr := NewTLSClientError(fmt.Errorf("failed to build client out of request input: %w", err))
+
 		return nil, newSessionId, useSession, clientErr
 	}
 
@@ -157,6 +155,7 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 			if input.StreamOutputEOFSymbol != nil {
 				f.Write([]byte(*input.StreamOutputEOFSymbol))
 			}
+
 			break
 		}
 
@@ -165,6 +164,7 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 			if input.WithDebug {
 				fmt.Printf("Append stream output error: %+v\n", err)
 			}
+
 			return nil, NewTLSClientError(err)
 		}
 
@@ -198,6 +198,7 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 
 	if err != nil {
 		clientErr := NewTLSClientError(err)
+
 		return Response{}, clientErr
 	}
 
@@ -255,7 +256,7 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		return modifiedClient, nil
 	}
 
-	var clientProfile tls_client.ClientProfile
+	clientProfile := tls_client.DefaultClientProfile
 
 	if requestInput.CustomTlsClient != nil {
 		clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, err := getCustomTlsClientProfile(requestInput.CustomTlsClient)
@@ -307,7 +308,12 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 	}
 
 	if !requestInput.WithoutCookieJar {
-		jar := tls_client.NewCookieJar()
+		var jarOptions []tls_client.CookieJarOption
+		if requestInput.WithDebug {
+			jarOptions = append(jarOptions, tls_client.WithDebugLogger())
+		}
+
+		jar := tls_client.NewCookieJar(jarOptions...)
 
 		if requestInput.WithDefaultCookieJar {
 			jar, _ := cookiejar.New(nil)

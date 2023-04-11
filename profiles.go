@@ -5,7 +5,7 @@ import (
 	tls "github.com/bogdanfinn/utls"
 )
 
-var DefaultClientProfile = Chrome_110
+var DefaultClientProfile = Chrome_112
 
 var MappedTLSClients = map[string]ClientProfile{
 	"chrome_103":             Chrome_103,
@@ -16,6 +16,8 @@ var MappedTLSClients = map[string]ClientProfile{
 	"chrome_108":             Chrome_108,
 	"chrome_109":             Chrome_109,
 	"chrome_110":             Chrome_110,
+	"chrome_111":             Chrome_111,
+	"chrome_112":             Chrome_112,
 	"safari_15_6_1":          Safari_15_6_1,
 	"safari_16_0":            Safari_16_0,
 	"safari_ipad_15_6":       Safari_Ipad_15_6,
@@ -39,16 +41,30 @@ var MappedTLSClients = map[string]ClientProfile{
 	"cloudscraper":           CloudflareCustom,
 	"mms_ios":                MMSIos,
 	"mesh_ios":               MeshIos,
+	"mesh_ios_1":             MeshIos,
+	"mesh_ios_2":             MeshIos2,
+	"mesh_android":           MeshAndroid,
+	"mesh_android_1":         MeshAndroid,
+	"mesh_android_2":         MeshAndroid2,
+	"confirmed_ios":          ConfirmedIos,
+	"confirmed_android":      ConfirmedAndroid,
+	"okhttp4_android_7":      Okhttp4Android7,
+	"okhttp4_android_8":      Okhttp4Android8,
+	"okhttp4_android_9":      Okhttp4Android9,
+	"okhttp4_android_10":     Okhttp4Android10,
+	"okhttp4_android_11":     Okhttp4Android11,
+	"okhttp4_android_12":     Okhttp4Android12,
+	"okhttp4_android_13":     Okhttp4Android13,
 }
 
 type ClientProfile struct {
 	clientHelloId     tls.ClientHelloID
+	connectionFlow    uint32
+	headerPriority    *http2.PriorityParam
+	priorities        []http2.Priority
+	pseudoHeaderOrder []string
 	settings          map[http2.SettingID]uint32
 	settingsOrder     []http2.SettingID
-	pseudoHeaderOrder []string
-	connectionFlow    uint32
-	priorities        []http2.Priority
-	headerPriority    *http2.PriorityParam
 }
 
 func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, pseudoHeaderOrder []string, connectionFlow uint32, priorities []http2.Priority, headerPriority *http2.PriorityParam) ClientProfile {
@@ -65,6 +81,60 @@ func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.Settin
 
 func (c ClientProfile) GetClientHelloSpec() (tls.ClientHelloSpec, error) {
 	return c.clientHelloId.ToSpec()
+}
+
+func (c ClientProfile) GetClientHelloStr() string {
+	return c.clientHelloId.Str()
+}
+
+var Chrome_112 = ClientProfile{
+	clientHelloId: tls.HelloChrome_112,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      65536,
+		http2.SettingEnablePush:           0,
+		http2.SettingMaxConcurrentStreams: 1000,
+		http2.SettingInitialWindowSize:    6291456,
+		http2.SettingMaxHeaderListSize:    262144,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingEnablePush,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	},
+	connectionFlow: 15663105,
+}
+
+var Chrome_111 = ClientProfile{
+	clientHelloId: tls.HelloChrome_111,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      65536,
+		http2.SettingEnablePush:           0,
+		http2.SettingMaxConcurrentStreams: 1000,
+		http2.SettingInitialWindowSize:    6291456,
+		http2.SettingMaxHeaderListSize:    262144,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingEnablePush,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	},
+	connectionFlow: 15663105,
 }
 
 var Chrome_110 = ClientProfile{
