@@ -19,7 +19,6 @@ var certificatePinStorage = hpkp.NewMemStorage()
 
 type certificatePinner struct {
 	certificatePins map[string][]string
-	initialized     bool
 }
 
 type CertificatePinner interface {
@@ -64,6 +63,10 @@ func (cp *certificatePinner) init() error {
 
 func (cp *certificatePinner) Pin(conn *tls.UConn, host string) error {
 	validPin := false
+
+	if len(cp.certificatePins) == 0 {
+		return nil
+	}
 
 	pinnedHost := certificatePinStorage.Lookup(host)
 

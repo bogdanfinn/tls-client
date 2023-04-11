@@ -39,8 +39,9 @@ func TestClient_SkipExistingCookiesOnClientSetCookies(t *testing.T) {
 	assert.Equal(t, 0, len(client.GetCookies(u)))
 
 	cookie := &http.Cookie{
-		Name:  "test1",
-		Value: "test1",
+		Name:   "test1",
+		Value:  "test1",
+		MaxAge: 1,
 	}
 
 	client.SetCookies(u, []*http.Cookie{cookie})
@@ -48,16 +49,18 @@ func TestClient_SkipExistingCookiesOnClientSetCookies(t *testing.T) {
 	assert.Equal(t, 1, len(client.GetCookies(u)))
 
 	cookie2 := &http.Cookie{
-		Name:  "test2",
-		Value: "test2",
+		Name:   "test2",
+		Value:  "test2",
+		MaxAge: 1,
 	}
 	client.SetCookies(u, []*http.Cookie{cookie2})
 
 	assert.Equal(t, 2, len(client.GetCookies(u)))
 
 	cookie3 := &http.Cookie{
-		Name:  "test1",
-		Value: "test1",
+		Name:   "test1",
+		Value:  "test1",
+		MaxAge: 1,
 	}
 	client.SetCookies(u, []*http.Cookie{cookie3})
 
@@ -126,6 +129,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 		Name:   cookiesAfterFirstRequest[0].Name,
 		Value:  cookiesAfterFirstRequest[0].Value,
 		Domain: cookiesAfterFirstRequest[0].Domain,
+		MaxAge: cookiesAfterFirstRequest[0].MaxAge,
 	}
 	client.SetCookies(u, []*http.Cookie{cookie2})
 
@@ -164,4 +168,54 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 	cookiesAfterSecondRequest := client.GetCookies(u)
 
 	assert.Equal(t, 1, len(cookiesAfterSecondRequest))
+}
+
+func TestClient_ExcludeExpiredCookiesFromRequest(t *testing.T) {
+	jar := tls_client.NewCookieJar()
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithCookieJar(jar),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	u := &url.URL{
+		Scheme: "http",
+		Host:   "testhost.de",
+		Path:   "/test",
+	}
+
+	assert.Equal(t, 0, len(client.GetCookies(u)))
+
+	cookieAlive := &http.Cookie{
+		Name:   "test1",
+		Value:  "test1",
+		MaxAge: 1,
+	}
+
+	cookieExpired := &http.Cookie{
+		Name:   "test2",
+		Value:  "test2",
+		MaxAge: -1,
+	}
+
+	client.SetCookies(u, []*http.Cookie{cookieAlive, cookieExpired})
+
+	assert.Equal(t, 1, len(client.GetCookies(u)))
+
+	cookieExpireExisting := &http.Cookie{
+		Name:   "test1",
+		Value:  "test1",
+		MaxAge: -1,
+	}
+	client.SetCookies(u, []*http.Cookie{cookieExpireExisting})
+
+	assert.Equal(t, 0, len(client.GetCookies(u)))
 }

@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	net "net"
+	"net"
 	"net/url"
 	"sync"
 	"time"
@@ -212,19 +212,6 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 		req.ProtoMinor = 1
 
 		err := req.Write(rawConn)
-		if err != nil {
-			_ = rawConn.Close()
-			return nil, err
-		}
-
-		deadline := time.Now().Add(c.Timeout)
-
-		err = rawConn.SetReadDeadline(deadline)
-		if err != nil {
-			_ = rawConn.Close()
-			return nil, err
-		}
-		err = rawConn.SetWriteDeadline(deadline)
 		if err != nil {
 			_ = rawConn.Close()
 			return nil, err
