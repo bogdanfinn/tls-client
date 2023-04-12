@@ -1,7 +1,7 @@
 const ffi = require('ffi-napi');
 
 // load the tls-client shared package for your OS you are currently running your nodejs script (i'm running on mac)
-const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-1.3.4.dylib', {
+const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-1.3.9.dylib', {
     'request': ['string', ['string']],
     'getCookiesFromSession': ['string', ['string']],
     'addCookiesToSession': ['string', ['string']],
@@ -17,9 +17,7 @@ const requestPayload = {
     "withoutCookieJar": false,
     "withDefaultCookieJar": false,
     "isByteRequest": false,
-    "catchPanics": false,
     "additionalDecode": null,
-    "catchPanics": false,
     "forceHttp1": false,
     "withRandomTLSExtensionOrder": false,
     "timeoutSeconds": 30,
@@ -56,6 +54,7 @@ const requestPromise = new Promise((resolve, reject) => {
         resolve(responseObject)
     })
 })
+
 
 const payload = {
     sessionId: 'my-session-id',

@@ -21,7 +21,7 @@ func TestJA3(t *testing.T) {
 }
 
 func ja3_chrome_105(t *testing.T) {
-	input := browserFingerprints[chrome][utls.HelloChrome_105.Str()][ja3String]
+	input := clientFingerprints[chrome][utls.HelloChrome_105.Str()][ja3String]
 
 	ssa := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
 	dca := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
@@ -44,7 +44,7 @@ func ja3_chrome_105(t *testing.T) {
 }
 
 func ja3_chrome_107(t *testing.T) {
-	input := browserFingerprints[chrome][utls.HelloChrome_107.Str()][ja3String]
+	input := clientFingerprints[chrome][utls.HelloChrome_107.Str()][ja3String]
 
 	ssa := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
 	dca := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
@@ -67,7 +67,7 @@ func ja3_chrome_107(t *testing.T) {
 }
 
 func ja3_firefox_105(t *testing.T) {
-	input := browserFingerprints[firefox][utls.HelloFirefox_105.Str()][ja3String]
+	input := clientFingerprints[firefox][utls.HelloFirefox_105.Str()][ja3String]
 
 	ssa := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
 	dca := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
@@ -90,7 +90,7 @@ func ja3_firefox_105(t *testing.T) {
 }
 
 func ja3_opera_91(t *testing.T) {
-	input := browserFingerprints[opera][utls.HelloOpera_91.Str()][ja3String]
+	input := clientFingerprints[opera][utls.HelloOpera_91.Str()][ja3String]
 
 	ssa := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}
 	dca := []string{"PKCS1WithSHA256", "PKCS1WithSHA384", "PKCS1WithSHA512"}

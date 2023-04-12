@@ -32,9 +32,9 @@ type DestroyOutput struct {
 }
 
 type AddCookiesToSessionInput struct {
+	Cookies   []*http.Cookie `json:"cookies"`
 	SessionId string         `json:"sessionId"`
 	Url       string         `json:"url"`
-	Cookies   []*http.Cookie `json:"cookies"`
 }
 
 type GetCookiesFromSessionInput struct {
@@ -49,69 +49,69 @@ type CookiesFromSessionOutput struct {
 
 // RequestInput is the data a Python client can construct a client and request from.
 type RequestInput struct {
-	SessionId                   *string             `json:"sessionId"`
-	TLSClientIdentifier         string              `json:"tlsClientIdentifier"`
-	CustomTlsClient             *CustomTlsClient    `json:"customTlsClient"`
+	AdditionalDecode            *string             `json:"additionalDecode"`
+	CatchPanics                 bool                `json:"catchPanics"`
 	CertificatePinningHosts     map[string][]string `json:"certificatePinningHosts"`
-	IsRotatingProxy             bool                `json:"isRotatingProxy"`
+	CustomTlsClient             *CustomTlsClient    `json:"customTlsClient"`
 	FollowRedirects             bool                `json:"followRedirects"`
 	ForceHttp1                  bool                `json:"forceHttp1"`
-	CatchPanics                 bool                `json:"catchPanics"`
-	IsByteResponse              bool                `json:"isByteResponse"`
-	WithDebug                   bool                `json:"withDebug"`
-	IsByteRequest               bool                `json:"isByteRequest"`
-	WithoutCookieJar            bool                `json:"withoutCookieJar"`
-	WithDefaultCookieJar        bool                `json:"withDefaultCookieJar"`
-	WithRandomTLSExtensionOrder bool                `json:"withRandomTLSExtensionOrder"`
-	InsecureSkipVerify          bool                `json:"insecureSkipVerify"`
-	TimeoutSeconds              int                 `json:"timeoutSeconds"`
-	TimeoutMilliseconds         int                 `json:"timeoutMilliseconds"`
-	ProxyUrl                    *string             `json:"proxyUrl"`
-	AdditionalDecode            *string             `json:"additionalDecode"`
-	Headers                     map[string]string   `json:"headers"`
 	HeaderOrder                 []string            `json:"headerOrder"`
-	RequestUrl                  string              `json:"requestUrl"`
-	RequestMethod               string              `json:"requestMethod"`
+	Headers                     map[string]string   `json:"headers"`
+	InsecureSkipVerify          bool                `json:"insecureSkipVerify"`
+	IsByteRequest               bool                `json:"isByteRequest"`
+	IsByteResponse              bool                `json:"isByteResponse"`
+	IsRotatingProxy             bool                `json:"isRotatingProxy"`
+	ProxyUrl                    *string             `json:"proxyUrl"`
 	RequestBody                 *string             `json:"requestBody"`
 	RequestCookies              []CookieInput       `json:"requestCookies"`
-	StreamOutputPath            *string             `json:"streamOutputPath"`
+	RequestMethod               string              `json:"requestMethod"`
+	RequestUrl                  string              `json:"requestUrl"`
+	SessionId                   *string             `json:"sessionId"`
 	StreamOutputBlockSize       *int                `json:"streamOutputBlockSize"`
 	StreamOutputEOFSymbol       *string             `json:"streamOutputEOFSymbol"`
+	StreamOutputPath            *string             `json:"streamOutputPath"`
+	TimeoutMilliseconds         int                 `json:"timeoutMilliseconds"`
+	TimeoutSeconds              int                 `json:"timeoutSeconds"`
+	TLSClientIdentifier         string              `json:"tlsClientIdentifier"`
+	WithDebug                   bool                `json:"withDebug"`
+	WithDefaultCookieJar        bool                `json:"withDefaultCookieJar"`
+	WithoutCookieJar            bool                `json:"withoutCookieJar"`
+	WithRandomTLSExtensionOrder bool                `json:"withRandomTLSExtensionOrder"`
 }
 
 // CustomTlsClient contains custom TLS specifications to construct a client from.
 type CustomTlsClient struct {
-	Ja3String                               string            `json:"ja3String"`
-	SupportedSignatureAlgorithms            []string          `json:"supportedSignatureAlgorithms"`
-	SupportedDelegatedCredentialsAlgorithms []string          `json:"supportedDelegatedCredentialsAlgorithms"`
-	SupportedVersions                       []string          `json:"supportedVersions"`
-	KeyShareCurves                          []string          `json:"keyShareCurves"`
 	CertCompressionAlgo                     string            `json:"certCompressionAlgo"`
+	ConnectionFlow                          uint32            `json:"connectionFlow"`
 	H2Settings                              map[string]uint32 `json:"h2Settings"`
 	H2SettingsOrder                         []string          `json:"h2SettingsOrder"`
-	PseudoHeaderOrder                       []string          `json:"pseudoHeaderOrder"`
-	ConnectionFlow                          uint32            `json:"connectionFlow"`
-	PriorityFrames                          []PriorityFrames  `json:"priorityFrames"`
 	HeaderPriority                          *PriorityParam    `json:"headerPriority"`
+	Ja3String                               string            `json:"ja3String"`
+	KeyShareCurves                          []string          `json:"keyShareCurves"`
+	PriorityFrames                          []PriorityFrames  `json:"priorityFrames"`
+	PseudoHeaderOrder                       []string          `json:"pseudoHeaderOrder"`
+	SupportedDelegatedCredentialsAlgorithms []string          `json:"supportedDelegatedCredentialsAlgorithms"`
+	SupportedSignatureAlgorithms            []string          `json:"supportedSignatureAlgorithms"`
+	SupportedVersions                       []string          `json:"supportedVersions"`
 }
 
 type PriorityFrames struct {
-	StreamID      uint32        `json:"streamID"`
 	PriorityParam PriorityParam `json:"priorityParam"`
+	StreamID      uint32        `json:"streamID"`
 }
 
 type PriorityParam struct {
-	StreamDep uint32 `json:"streamDep"`
 	Exclusive bool   `json:"exclusive"`
+	StreamDep uint32 `json:"streamDep"`
 	Weight    uint8  `json:"weight"`
 }
 
 type CookieInput struct {
-	Name    string    `json:"name"`
-	Value   string    `json:"value"`
-	Path    string    `json:"path"`
 	Domain  string    `json:"domain"`
 	Expires Timestamp `json:"expires"`
+	Name    string    `json:"name"`
+	Path    string    `json:"path"`
+	Value   string    `json:"value"`
 }
 
 type Timestamp struct {
@@ -127,18 +127,19 @@ func (p *Timestamp) UnmarshalJSON(bytes []byte) error {
 	}
 
 	p.Time = time.Unix(raw, 0)
+
 	return nil
 }
 
 // Response is the response that is sent back to the Python client.
 type Response struct {
 	Id           string              `json:"id"`
+	Body         string              `json:"body"`
+	Cookies      map[string]string   `json:"cookies"`
+	Headers      map[string][]string `json:"headers"`
 	SessionId    string              `json:"sessionId,omitempty"`
 	Status       int                 `json:"status"`
 	Version      string              `json:"version"`
-	UsedProtocol string              `json:"usedProtocol"`
 	Target       string              `json:"target"`
-	Body         string              `json:"body"`
-	Headers      map[string][]string `json:"headers"`
-	Cookies      map[string]string   `json:"cookies"`
+	UsedProtocol string              `json:"usedProtocol"`
 }

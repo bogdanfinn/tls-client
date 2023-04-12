@@ -50,6 +50,7 @@ func destroyAll() *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
 		return handleErrorResponse("", false, clientErr)
 	}
 
@@ -71,6 +72,7 @@ func destroySession(destroySessionParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
 		return handleErrorResponse("", false, clientErr)
 	}
 
@@ -85,6 +87,7 @@ func destroySession(destroySessionParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
 		return handleErrorResponse(destroySessionInput.SessionId, true, clientErr)
 	}
 
@@ -106,6 +109,7 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
 		return handleErrorResponse("", false, clientErr)
 	}
 
@@ -113,12 +117,14 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
+
 		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
 	}
 
 	u, parsErr := url.Parse(cookiesInput.Url)
 	if parsErr != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(parsErr)
+
 		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
 	}
 
@@ -133,6 +139,7 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
 		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
 	}
 
@@ -154,6 +161,7 @@ func addCookiesToSession(addCookiesParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
 		return handleErrorResponse("", false, clientErr)
 	}
 
@@ -161,12 +169,14 @@ func addCookiesToSession(addCookiesParams *C.char) *C.char {
 
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
+
 		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
 	}
 
 	u, parsErr := url.Parse(cookiesInput.Url)
 	if parsErr != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(parsErr)
+
 		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
 	}
 
@@ -183,6 +193,7 @@ func addCookiesToSession(addCookiesParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
 		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
 	}
 
@@ -204,6 +215,7 @@ func request(requestParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
 		return handleErrorResponse("", false, clientErr)
 	}
 
@@ -217,6 +229,7 @@ func request(requestParams *C.char) *C.char {
 
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
+
 		return handleErrorResponse(sessionId, withSession, clientErr)
 	}
 
@@ -230,11 +243,13 @@ func request(requestParams *C.char) *C.char {
 
 	if reqErr != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(fmt.Errorf("failed to do request: %w", reqErr))
+
 		return handleErrorResponse(sessionId, withSession, clientErr)
 	}
 
 	if resp == nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(fmt.Errorf("response is nil"))
+
 		return handleErrorResponse(sessionId, withSession, clientErr)
 	}
 
@@ -249,6 +264,7 @@ func request(requestParams *C.char) *C.char {
 
 	if marshallError != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
 		return handleErrorResponse(sessionId, withSession, clientErr)
 	}
 
