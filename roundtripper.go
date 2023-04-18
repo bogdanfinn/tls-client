@@ -7,6 +7,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/http2"
@@ -14,6 +15,8 @@ import (
 
 	utls "github.com/bogdanfinn/utls"
 )
+
+const defaultIdleConnectionTimeout = 90 * time.Second
 
 var errProtocolNegotiated = errors.New("protocol negotiated")
 
@@ -141,7 +144,19 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 			utlsConfig.ServerName = rt.serverNameOverwrite
 		}
 
-		t2 := http2.Transport{DialTLS: rt.dialTLSHTTP2, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow, HeaderPriority: rt.headerPriority}
+		idleConnectionTimeout := defaultIdleConnectionTimeout
+
+		if rt.transportOptions != nil && rt.transportOptions.IdleConnTimeout != nil {
+			idleConnectionTimeout = *rt.transportOptions.IdleConnTimeout
+		}
+
+		t2 := http2.Transport{
+			DialTLS:         rt.dialTLSHTTP2,
+			TLSClientConfig: utlsConfig,
+			ConnectionFlow:  rt.connectionFlow,
+			HeaderPriority:  rt.headerPriority,
+			IdleConnTimeout: idleConnectionTimeout,
+		}
 
 		if rt.transportOptions != nil {
 			t1 := t2.GetT1()
@@ -154,6 +169,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 				t1.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
 				t1.WriteBufferSize = rt.transportOptions.WriteBufferSize
 				t1.ReadBufferSize = rt.transportOptions.ReadBufferSize
+				t1.IdleConnTimeout = idleConnectionTimeout
 			}
 		}
 
@@ -210,7 +226,13 @@ func (rt *roundTripper) buildHttp1Transport() *http.Transport {
 		utlsConfig.ServerName = rt.serverNameOverwrite
 	}
 
-	t := &http.Transport{DialTLSContext: rt.dialTLS, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow}
+	idleConnectionTimeout := defaultIdleConnectionTimeout
+
+	if rt.transportOptions != nil && rt.transportOptions.IdleConnTimeout != nil {
+		idleConnectionTimeout = *rt.transportOptions.IdleConnTimeout
+	}
+
+	t := &http.Transport{DialTLSContext: rt.dialTLS, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow, IdleConnTimeout: idleConnectionTimeout}
 
 	if rt.transportOptions != nil {
 		t.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
