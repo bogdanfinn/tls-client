@@ -18,6 +18,9 @@ type TransportOptions struct {
 	MaxResponseHeaderBytes int64 // Zero means to use a default limit.
 	WriteBufferSize        int   // If zero, a default (currently 4KB) is used.
 	ReadBufferSize         int   // If zero, a default (currently 4KB) is used.
+	// IdleConnTimeout is the maximum amount of time an idle (keep-alive)
+	// connection will remain idle before closing itself. Zero means no limit.
+	IdleConnTimeout time.Duration
 }
 
 type BadPinHandlerFunc func(req *http.Request)
