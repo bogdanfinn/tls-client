@@ -159,6 +159,8 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		}
 
 		if rt.transportOptions != nil {
+			t2.DisableCompression = rt.transportOptions.DisableCompression
+
 			t1 := t2.GetT1()
 			if t1 != nil {
 				t1.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
