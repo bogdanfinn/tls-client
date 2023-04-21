@@ -29,6 +29,7 @@ type HttpClient interface {
 	GetProxy() string
 	SetFollowRedirect(followRedirect bool)
 	GetFollowRedirect() bool
+	CloseIdleConnections()
 	Do(req *http.Request) (*http.Response, error)
 	Get(url string) (resp *http.Response, err error)
 	Head(url string) (resp *http.Response, err error)
@@ -156,6 +157,11 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 	}
 
 	return client, clientProfile, nil
+}
+
+// CloseIdleConnections closes all idle connections of the underlying http client.
+func (c *httpClient) CloseIdleConnections() {
+	c.Client.CloseIdleConnections()
 }
 
 // SetFollowRedirect configures the client's HTTP redirect following policy.
