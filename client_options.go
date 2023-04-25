@@ -1,6 +1,7 @@
 package tls_client
 
 import (
+	"crypto/x509"
 	"fmt"
 	"time"
 
@@ -21,6 +22,9 @@ type TransportOptions struct {
 	// IdleConnTimeout is the maximum amount of time an idle (keep-alive)
 	// connection will remain idle before closing itself. Zero means no limit.
 	IdleConnTimeout *time.Duration
+	// RootCAs is the set of root certificate authorities used to verify
+	// the remote server's certificate.
+	RootCAs *x509.CertPool
 }
 
 type BadPinHandlerFunc func(req *http.Request)
