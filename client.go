@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/url"
 	"strings"
@@ -290,14 +289,14 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		debugReq := req.Clone(context.Background())
 
 		if req.Body != nil {
-			buf, err := ioutil.ReadAll(req.Body)
+			buf, err := io.ReadAll(req.Body)
 
 			if err != nil {
 				return nil, err
 			}
 
-			debugBody := ioutil.NopCloser(bytes.NewBuffer(buf))
-			requestBody := ioutil.NopCloser(bytes.NewBuffer(buf))
+			debugBody := io.NopCloser(bytes.NewBuffer(buf))
+			requestBody := io.NopCloser(bytes.NewBuffer(buf))
 
 			c.logger.Debug("request body payload: %s", string(buf))
 
@@ -335,14 +334,14 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		}
 
 		if resp.Body != nil {
-			buf, err := ioutil.ReadAll(resp.Body)
+			buf, err := io.ReadAll(resp.Body)
 			resp.Body.Close()
 
 			if err != nil {
 				return nil, err
 			}
 
-			responseBody := ioutil.NopCloser(bytes.NewBuffer(buf))
+			responseBody := io.NopCloser(bytes.NewBuffer(buf))
 
 			c.logger.Debug("response body payload: %s", string(buf))
 
