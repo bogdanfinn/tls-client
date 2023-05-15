@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/url"
 	"strings"
 	"sync"
@@ -75,10 +74,6 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 
 	if err != nil {
 		return nil, err
-	}
-
-	if config.withRandomTlsExtensionOrder {
-		rand.Seed(time.Now().UnixNano())
 	}
 
 	client, clientProfile, err := buildFromConfig(config)
