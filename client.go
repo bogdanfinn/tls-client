@@ -23,6 +23,7 @@ type HttpClient interface {
 	GetCookies(u *url.URL) []*http.Cookie
 	SetCookies(u *url.URL, cookies []*http.Cookie)
 	SetCookieJar(jar http.CookieJar)
+	GetCookieJar() http.CookieJar
 	SetProxy(proxyUrl string) error
 	GetProxy() string
 	SetFollowRedirect(followRedirect bool)
@@ -255,6 +256,11 @@ func (c *httpClient) SetCookieJar(jar http.CookieJar) {
 	c.Jar = jar
 }
 
+// GetCookieJar returns the jar the client is currently using
+func (c *httpClient) GetCookieJar() http.CookieJar {
+	return c.Jar
+}
+
 // Do issues a given HTTP request and returns the corresponding response.
 //
 // If the returned error is nil, the response contains a non-nil body, which the user is expected to close.
@@ -350,6 +356,7 @@ func (c *httpClient) Get(url string) (resp *http.Response, err error) {
 
 	return c.Do(req)
 }
+
 func (c *httpClient) Head(url string) (resp *http.Response, err error) {
 	req, err := http.NewRequest(http.MethodHead, url, nil)
 	if err != nil {
@@ -358,6 +365,7 @@ func (c *httpClient) Head(url string) (resp *http.Response, err error) {
 
 	return c.Do(req)
 }
+
 func (c *httpClient) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
 	req, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
