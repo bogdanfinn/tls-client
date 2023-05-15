@@ -34,6 +34,9 @@ type HttpClient interface {
 	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
 }
 
+// Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
+var _ HttpClient = (*httpClient)(nil)
+
 type httpClient struct {
 	http.Client
 	headerLck sync.Mutex
@@ -70,14 +73,11 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		opt(config)
 	}
 
-	err := validateConfig(config)
-
-	if err != nil {
+	if err := validateConfig(config); err != nil {
 		return nil, err
 	}
 
 	client, clientProfile, err := buildFromConfig(config)
-
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 	}, nil
 }
 
-func validateConfig(config *httpClientConfig) error {
+func validateConfig(_ *httpClientConfig) error {
 	return nil
 }
 
@@ -135,7 +135,6 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 	clientProfile := config.clientProfile
 
 	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.certificatePins, config.badPinHandler, dialer)
-
 	if err != nil {
 		return nil, clientProfile, err
 	}
@@ -166,7 +165,7 @@ func (c *httpClient) SetFollowRedirect(followRedirect bool) {
 	c.applyFollowRedirect()
 }
 
-// GetFollowredirect returns the client's HTTP redirect following policy.
+// GetFollowRedirect returns the client's HTTP redirect following policy.
 func (c *httpClient) GetFollowRedirect() bool {
 	return c.config.followRedirects
 }
@@ -219,7 +218,6 @@ func (c *httpClient) applyProxy() error {
 	}
 
 	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.certificatePins, c.config.badPinHandler, dialer)
-
 	if err != nil {
 		return err
 	}
@@ -285,7 +283,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 		if req.Body != nil {
 			buf, err := io.ReadAll(req.Body)
-
 			if err != nil {
 				return nil, err
 			}
@@ -300,7 +297,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		}
 
 		requestBytes, err := httputil.DumpRequestOut(debugReq, debugReq.ContentLength > 0)
-
 		if err != nil {
 			return nil, err
 		}
@@ -309,7 +305,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	resp, err := c.Client.Do(req)
-
 	if err != nil {
 		c.logger.Debug("failed to do request: %s", err.Error())
 		return nil, err
@@ -323,18 +318,16 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 	if c.config.debug {
 		responseBytes, err := httputil.DumpResponse(resp, resp.ContentLength > 0)
-
 		if err != nil {
 			return nil, err
 		}
 
 		if resp.Body != nil {
 			buf, err := io.ReadAll(resp.Body)
-			resp.Body.Close()
-
 			if err != nil {
 				return nil, err
 			}
+			defer resp.Body.Close()
 
 			responseBody := io.NopCloser(bytes.NewBuffer(buf))
 
@@ -377,10 +370,10 @@ func (c *httpClient) Post(url, contentType string, body io.Reader) (resp *http.R
 }
 
 func allToLower(list []string) []string {
-	var lower []string
+	lower := make([]string, len(list))
 
-	for _, elem := range list {
-		lower = append(lower, strings.ToLower(elem))
+	for i, elem := range list {
+		lower[i] = strings.ToLower(elem)
 	}
 
 	return lower
