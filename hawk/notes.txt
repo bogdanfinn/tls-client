@@ -1,0 +1,1 @@
+- challenge detection needed a regex adjustment for handling " and '
