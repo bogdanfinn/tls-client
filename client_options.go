@@ -3,6 +3,7 @@ package tls_client
 import (
 	"crypto/x509"
 	"fmt"
+	"net"
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -45,6 +46,7 @@ type httpClientConfig struct {
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
 	timeout                     time.Duration
+	localAddr                   *net.TCPAddr
 }
 
 // WithProxyUrl configures a HTTP client to use the specified proxy URL.
@@ -117,6 +119,13 @@ func WithTimeout(timeout int) HttpClientOption {
 func WithNotFollowRedirects() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.followRedirects = false
+	}
+}
+
+// WithLocalAddr configures an HTTP client to use the specified local address.
+func WithLocalAddr(localAddr net.TCPAddr) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.localAddr = &localAddr
 	}
 }
 
