@@ -23,11 +23,16 @@ type directDialer struct {
 	dialer net.Dialer
 }
 
-func newDirectDialer(timeout time.Duration) proxy.ContextDialer {
+func newDirectDialer(timeout time.Duration, localAddr *net.TCPAddr) proxy.ContextDialer {
+	_dialer := net.Dialer{
+		Timeout: timeout,
+	}
+	if nil != localAddr {
+		_dialer.LocalAddr = localAddr
+	}
+
 	return &directDialer{
-		dialer: net.Dialer{
-			Timeout: timeout,
-		},
+		dialer: _dialer,
 	}
 }
 
@@ -110,7 +115,7 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 			proxyUrl.Host = net.JoinHostPort(proxyUrl.Host, "443")
 		}
 	case "socks5":
-		return handleSocks5ProxyDialer(proxyUrl)
+		return handleSocks5ProxyDialer(proxyUrl, localAddr)
 	case "":
 		return nil, errors.New("specify scheme explicitly (https://)")
 	default:
@@ -141,7 +146,7 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 	return dialer, nil
 }
 
-func handleSocks5ProxyDialer(proxyUrl *url.URL) (proxy.ContextDialer, error) {
+func handleSocks5ProxyDialer(proxyUrl *url.URL, localAddr *net.TCPAddr) (proxy.ContextDialer, error) {
 	var proxyAuth *proxy.Auth
 	if proxyUrl.User != nil {
 		password, _ := proxyUrl.User.Password()
@@ -152,8 +157,13 @@ func handleSocks5ProxyDialer(proxyUrl *url.URL) (proxy.ContextDialer, error) {
 	} else {
 		proxyAuth = nil
 	}
-
-	socksDialer, err := proxy.SOCKS5("tcp", proxyUrl.Host, proxyAuth, proxy.Direct)
+	_dialer := proxy.Dialer(proxy.Direct)
+	if nil != localAddr {
+		_dialer = &net.Dialer{
+			LocalAddr: localAddr,
+		}
+	}
+	socksDialer, err := proxy.SOCKS5("tcp", proxyUrl.Host, proxyAuth, _dialer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create socks5 proxy: %w", err)
 	}

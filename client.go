@@ -111,7 +111,7 @@ func validateConfig(_ *httpClientConfig) error {
 
 func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, error) {
 	var dialer proxy.ContextDialer
-	dialer = newDirectDialer(config.timeout)
+	dialer = newDirectDialer(config.timeout, config.localAddr)
 
 	if config.proxyUrl != "" {
 		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr)
