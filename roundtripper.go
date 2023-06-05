@@ -44,6 +44,7 @@ type roundTripper struct {
 	settingsOrder               []http2.SettingID
 	transportOptions            *TransportOptions
 	withRandomTlsExtensionOrder bool
+	disableIPV6                 bool
 }
 
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -102,6 +103,10 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		delete(rt.cachedConnections, addr)
 
 		return conn, nil
+	}
+
+	if network == "tcp" && rt.disableIPV6 {
+		network = "tcp4"
 	}
 
 	rawConn, err := rt.dialer.DialContext(ctx, network, addr)
@@ -231,6 +236,13 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	return nil, errProtocolNegotiated
 }
 
+func (rt *roundTripper) dial(ctx context.Context, network, addr string) (net.Conn, error) {
+	if network == "tcp" && rt.disableIPV6 {
+		network = "tcp4"
+	}
+	return rt.dialer.DialContext(ctx, network, addr)
+}
+
 func (rt *roundTripper) buildHttp1Transport() *http.Transport {
 	utlsConfig := &tls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
 	if rt.transportOptions != nil {
@@ -247,7 +259,7 @@ func (rt *roundTripper) buildHttp1Transport() *http.Transport {
 		idleConnectionTimeout = *rt.transportOptions.IdleConnTimeout
 	}
 
-	t := &http.Transport{DialTLSContext: rt.dialTLS, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow, IdleConnTimeout: idleConnectionTimeout}
+	t := &http.Transport{DialContext: rt.dial, DialTLSContext: rt.dialTLS, TLSClientConfig: utlsConfig, ConnectionFlow: rt.connectionFlow, IdleConnTimeout: idleConnectionTimeout}
 
 	if rt.transportOptions != nil {
 		t.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
@@ -276,7 +288,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443")
 }
 
-func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 
 	if err != nil {
@@ -301,6 +313,7 @@ func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOpt
 		clientHelloId:               clientProfile.clientHelloId,
 		cachedTransports:            make(map[string]http.RoundTripper),
 		cachedConnections:           make(map[string]net.Conn),
+		disableIPV6:                 disableIPV6,
 	}
 
 	if len(dialer) > 0 {
