@@ -61,6 +61,8 @@ type RequestInput struct {
 	IsByteRequest               bool                `json:"isByteRequest"`
 	IsByteResponse              bool                `json:"isByteResponse"`
 	IsRotatingProxy             bool                `json:"isRotatingProxy"`
+	DisableIPV6                 bool                `json:"disableIPV6"`
+	LocalAddress                *string             `json:"localAddress"`
 	ProxyUrl                    *string             `json:"proxyUrl"`
 	RequestBody                 *string             `json:"requestBody"`
 	RequestCookies              []CookieInput       `json:"requestCookies"`
@@ -121,7 +123,6 @@ type Timestamp struct {
 func (p *Timestamp) UnmarshalJSON(bytes []byte) error {
 	var raw int64
 	err := json.Unmarshal(bytes, &raw)
-
 	if err != nil {
 		return fmt.Errorf("error decoding timestamp: %w", err)
 	}
