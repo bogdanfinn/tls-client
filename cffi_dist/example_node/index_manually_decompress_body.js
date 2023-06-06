@@ -12,13 +12,15 @@ const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-1.3.13.d
 });
 
 const requestPayload = {
-    "tlsClientIdentifier": "chrome_103",
+    "tlsClientIdentifier": "cloudscraper",
     "followRedirects": false,
     "insecureSkipVerify": false,
     "withoutCookieJar": false,
     "withDefaultCookieJar": false,
     "isByteRequest": false,
+    "catchPanics": false,
     "additionalDecode": null,
+    "withDebug": false,
     "forceHttp1": false,
     "withRandomTLSExtensionOrder": false,
     "timeoutSeconds": 30,
@@ -29,44 +31,41 @@ const requestPayload = {
     "certificatePinningHosts": {},
     "headers": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
         "accept-encoding": "gzip, deflate, br",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
         "accept-language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"
     },
     "headerOrder": [
         "accept",
-        "user-agent",
         "accept-encoding",
+        "user-agent",
         "accept-language"
     ],
-    "requestUrl": "https://microsoft.com",
+    "requestUrl": "https://www.google.com/",
     "requestMethod": "GET",
     "requestBody": "",
     "requestCookies": []
 }
 
 // call the library with the requestPayload as string
-const requestPromise = new Promise((resolve, reject) => {
-    tlsClientLibrary.request.async(JSON.stringify(requestPayload), (err, response) => {
-        // convert response string to json
-        const responseObject = JSON.parse(response)
+const response = tlsClientLibrary.request(JSON.stringify(requestPayload));
 
-        console.log(responseObject)
-        resolve(responseObject)
-    })
-})
+// convert response string to json
+const responseObject = JSON.parse(response)
 
+tlsClientLibrary.freeMemory(responseObject.id)
 
-const payload = {
-    sessionId: 'my-session-id',
-    url: "https://example.com",
+console.log(responseObject)
+
+const decompressPayload = {
+    type: "br",
+    body: responseObject.body
 }
 
-const cookiePromise = new Promise((resolve, reject) => {
-    tlsClientLibrary.getCookiesFromSession.async(JSON.stringify(payload), (err, cookiesResponse) => {
-        const cookiesInSession = JSON.parse(cookiesResponse)
+const decompressResponse = tlsClientLibrary.decompressBody(JSON.stringify(decompressPayload))
 
-        console.log(cookiesInSession)
-        resolve(cookiesInSession)
-    })
-})
+const decompressResponseObject = JSON.parse(decompressResponse)
+
+console.log(decompressResponseObject.body)
+
+tlsClientLibrary.freeMemory(decompressResponseObject.id)

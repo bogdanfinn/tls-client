@@ -22,6 +22,17 @@ func (e *TLSClientError) Error() string {
 	return e.err.Error()
 }
 
+type DecompressBodyInput struct {
+	Type string `json:"type"`
+	Body string `json:"body"`
+}
+
+type DecompressBodyOutput struct {
+	Id   string `json:"id"`
+	Type string `json:"type"`
+	Body string `json:"body"`
+}
+
 type DestroySessionInput struct {
 	SessionId string `json:"sessionId"`
 }
@@ -121,7 +132,6 @@ type Timestamp struct {
 func (p *Timestamp) UnmarshalJSON(bytes []byte) error {
 	var raw int64
 	err := json.Unmarshal(bytes, &raw)
-
 	if err != nil {
 		return fmt.Errorf("error decoding timestamp: %w", err)
 	}

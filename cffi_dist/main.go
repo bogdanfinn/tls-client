@@ -4,10 +4,13 @@ package main
 #include <stdlib.h>
 */
 import "C"
+
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
+	"strings"
 	"sync"
 	"unsafe"
 
@@ -16,8 +19,57 @@ import (
 	"github.com/google/uuid"
 )
 
-var unsafePointers = make(map[string]*C.char)
-var unsafePointersLck = sync.Mutex{}
+var (
+	unsafePointers    = make(map[string]*C.char)
+	unsafePointersLck = sync.Mutex{}
+)
+
+//export decompressBody
+func decompressBody(decompressBodyParams *C.char) *C.char {
+	decompressBodyParamsJson := C.GoString(decompressBodyParams)
+
+	decompressBodyInput := tls_client_cffi_src.DecompressBodyInput{}
+	marshallError := json.Unmarshal([]byte(decompressBodyParamsJson), &decompressBodyInput)
+
+	if marshallError != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
+		return handleErrorResponse("", false, clientErr)
+	}
+
+	input := io.NopCloser(strings.NewReader(decompressBodyInput.Body))
+
+	decompressedBodyReader := http.DecompressBodyByType(input, decompressBodyInput.Type)
+
+	decompressedBody, err := io.ReadAll(decompressedBodyReader)
+	if err != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(err)
+
+		return handleErrorResponse("", false, clientErr)
+	}
+
+	out := tls_client_cffi_src.DecompressBodyOutput{
+		Id:   uuid.New().String(),
+		Type: decompressBodyInput.Type,
+		Body: string(decompressedBody),
+	}
+
+	jsonResponse, marshallError := json.Marshal(out)
+
+	if marshallError != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
+		return handleErrorResponse("", false, clientErr)
+	}
+
+	responseString := C.CString(string(jsonResponse))
+
+	unsafePointersLck.Lock()
+	unsafePointers[out.Id] = responseString
+	unsafePointersLck.Unlock()
+
+	return responseString
+}
 
 //export freeMemory
 func freeMemory(responseId *C.char) {
@@ -114,7 +166,6 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 	}
 
 	tlsClient, err := tls_client_cffi_src.GetClient(cookiesInput.SessionId)
-
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
 
@@ -166,7 +217,6 @@ func addCookiesToSession(addCookiesParams *C.char) *C.char {
 	}
 
 	tlsClient, err := tls_client_cffi_src.GetClient(cookiesInput.SessionId)
-
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
 
@@ -220,13 +270,11 @@ func request(requestParams *C.char) *C.char {
 	}
 
 	tlsClient, sessionId, withSession, err := tls_client_cffi_src.CreateClient(requestInput)
-
 	if err != nil {
 		return handleErrorResponse(sessionId, withSession, err)
 	}
 
 	req, err := tls_client_cffi_src.BuildRequest(requestInput)
-
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
 
@@ -324,5 +372,4 @@ func buildCookies(cookies []tls_client_cffi_src.CookieInput) []*http.Cookie {
 }
 
 func main() {
-
 }
