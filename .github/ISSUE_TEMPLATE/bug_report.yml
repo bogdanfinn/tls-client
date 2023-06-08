@@ -1,0 +1,49 @@
+name: Bug report
+description: File a bug report for the TLS client
+title: "[Bug]: "
+labels: ["bug"]
+body:
+
+- type: markdown
+  attributes:
+    value: |
+      - Write an issue title above.
+      - Search [open](https://github.com/bogdanfinn/tls-client/issues?q=is%3Aopen) and [closed](https://github.com/bogdanfinn/tls-client/issues?q=is%3Aclosed) issues to ensure it has not already been reported.
+
+- type: input
+  attributes:
+    label: TLS client version
+    description: >
+      Specify the TLS client version
+    placeholder: v1.3.12
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: System information
+    description: |
+      - Specify the OS version, and when relevant hardware information.
+      - For issues that are likely OS-specific, please specify the CPU model and architecture.
+    placeholder: | 
+      Windows 11 
+      AMD Ryzen 9 7950X3D 16C/32T CPU @ 4.20GHz (32 Threads)
+      ...
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Issue description
+    description: |
+      Describe your issue briefly. What doesn't work, and how do you expect it to work instead?
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Steps to reproduce / Code Sample
+    description: |
+      List of steps or sample code that reproduces the issue.
+  validations:
+    required: true
