@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
-	http "github.com/bogdanfinn/fhttp"
 )
 
 type TLSClientError struct {
@@ -32,9 +30,9 @@ type DestroyOutput struct {
 }
 
 type AddCookiesToSessionInput struct {
-	Cookies   []*http.Cookie `json:"cookies"`
-	SessionId string         `json:"sessionId"`
-	Url       string         `json:"url"`
+	Cookies   []Cookie `json:"cookies"`
+	SessionId string   `json:"sessionId"`
+	Url       string   `json:"url"`
 }
 
 type GetCookiesFromSessionInput struct {
@@ -43,8 +41,8 @@ type GetCookiesFromSessionInput struct {
 }
 
 type CookiesFromSessionOutput struct {
-	Id      string         `json:"id"`
-	Cookies []*http.Cookie `json:"cookies"`
+	Id      string   `json:"id"`
+	Cookies []Cookie `json:"cookies"`
 }
 
 // RequestInput is the data a Python client can construct a client and request from.
@@ -65,7 +63,7 @@ type RequestInput struct {
 	LocalAddress                *string             `json:"localAddress"`
 	ProxyUrl                    *string             `json:"proxyUrl"`
 	RequestBody                 *string             `json:"requestBody"`
-	RequestCookies              []CookieInput       `json:"requestCookies"`
+	RequestCookies              []Cookie            `json:"requestCookies"`
 	RequestMethod               string              `json:"requestMethod"`
 	RequestUrl                  string              `json:"requestUrl"`
 	SessionId                   *string             `json:"sessionId"`
@@ -108,7 +106,7 @@ type PriorityParam struct {
 	Weight    uint8  `json:"weight"`
 }
 
-type CookieInput struct {
+type Cookie struct {
 	Domain  string    `json:"domain"`
 	Expires Timestamp `json:"expires"`
 	Name    string    `json:"name"`
