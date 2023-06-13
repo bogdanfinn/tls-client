@@ -181,19 +181,20 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	defer resp.Body.Close()
 
 	isByteResponse := input.IsByteResponse
-	additionalDecodeAlgo := ""
 
-	if input.AdditionalDecode != nil {
-		additionalDecodeAlgo = *input.AdditionalDecode
-	}
+	ce := resp.Header.Get("Content-Encoding")
 
 	var respBodyBytes []byte
 	var err error
 
+	if !resp.Uncompressed {
+		resp.Body = http.DecompressBodyByType(resp.Body, ce)
+	}
+
 	if input.StreamOutputPath != nil {
-		respBodyBytes, err = readAllBodyWithStreamToFile(http.DecompressBodyByType(resp.Body, additionalDecodeAlgo), input)
+		respBodyBytes, err = readAllBodyWithStreamToFile(resp.Body, input)
 	} else {
-		respBodyBytes, err = io.ReadAll(http.DecompressBodyByType(resp.Body, additionalDecodeAlgo))
+		respBodyBytes, err = io.ReadAll(resp.Body)
 	}
 
 	if err != nil {

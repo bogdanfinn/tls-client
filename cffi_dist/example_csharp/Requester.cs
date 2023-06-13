@@ -26,7 +26,6 @@ class RequestPayload
     public bool WithoutCookieJar { get; set; } = false;
     public bool WithDefaultCookieJar { get; set; } = false;
     public bool IsByteRequest { get; set; } = false;
-    public string AdditionalDecode { get; set; } = "";
     public bool ForceHttp1 { get; set; } = false;
     public bool WithDebug { get; set; } = false;
     public bool CatchPanics { get; set; } = false;
@@ -46,11 +45,11 @@ class RequestPayload
 
 class TLSSession
 {
-    [DllImport("../dist/tls-client-windows-64-1.3.13.dll", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("../dist/tls-client-windows-64-1.4.0.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern IntPtr request(byte[] requestPayload, string sessionID);
 
 
-    [DllImport("../dist/tls-client-windows-64-1.3.13.dll", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("../dist/tls-client-windows-64-1.4.0.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern void freeMemory(string sessionID);
 
     private string sessionID;
@@ -68,7 +67,6 @@ class TLSSession
             FollowRedirects = FollowRedirects,
             InsecureSkipVerify = false,
             IsByteRequest = false,
-            AdditionalDecode = "",
             ForceHttp1 = false,
             WithDebug = false,
             CatchPanics = false,

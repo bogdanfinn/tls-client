@@ -47,7 +47,6 @@ type CookiesFromSessionOutput struct {
 
 // RequestInput is the data a Python client can construct a client and request from.
 type RequestInput struct {
-	AdditionalDecode            *string             `json:"additionalDecode"`
 	CatchPanics                 bool                `json:"catchPanics"`
 	CertificatePinningHosts     map[string][]string `json:"certificatePinningHosts"`
 	CustomTlsClient             *CustomTlsClient    `json:"customTlsClient"`
