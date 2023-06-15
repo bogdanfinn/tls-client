@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
-	http "github.com/bogdanfinn/fhttp"
 )
 
 type TLSClientError struct {
@@ -32,9 +30,9 @@ type DestroyOutput struct {
 }
 
 type AddCookiesToSessionInput struct {
-	Cookies   []*http.Cookie `json:"cookies"`
-	SessionId string         `json:"sessionId"`
-	Url       string         `json:"url"`
+	Cookies   []Cookie `json:"cookies"`
+	SessionId string   `json:"sessionId"`
+	Url       string   `json:"url"`
 }
 
 type GetCookiesFromSessionInput struct {
@@ -43,13 +41,12 @@ type GetCookiesFromSessionInput struct {
 }
 
 type CookiesFromSessionOutput struct {
-	Id      string         `json:"id"`
-	Cookies []*http.Cookie `json:"cookies"`
+	Id      string   `json:"id"`
+	Cookies []Cookie `json:"cookies"`
 }
 
 // RequestInput is the data a Python client can construct a client and request from.
 type RequestInput struct {
-	AdditionalDecode            *string             `json:"additionalDecode"`
 	CatchPanics                 bool                `json:"catchPanics"`
 	CertificatePinningHosts     map[string][]string `json:"certificatePinningHosts"`
 	CustomTlsClient             *CustomTlsClient    `json:"customTlsClient"`
@@ -61,9 +58,11 @@ type RequestInput struct {
 	IsByteRequest               bool                `json:"isByteRequest"`
 	IsByteResponse              bool                `json:"isByteResponse"`
 	IsRotatingProxy             bool                `json:"isRotatingProxy"`
+	DisableIPV6                 bool                `json:"disableIPV6"`
+	LocalAddress                *string             `json:"localAddress"`
 	ProxyUrl                    *string             `json:"proxyUrl"`
 	RequestBody                 *string             `json:"requestBody"`
-	RequestCookies              []CookieInput       `json:"requestCookies"`
+	RequestCookies              []Cookie            `json:"requestCookies"`
 	RequestMethod               string              `json:"requestMethod"`
 	RequestUrl                  string              `json:"requestUrl"`
 	SessionId                   *string             `json:"sessionId"`
@@ -106,7 +105,7 @@ type PriorityParam struct {
 	Weight    uint8  `json:"weight"`
 }
 
-type CookieInput struct {
+type Cookie struct {
 	Domain  string    `json:"domain"`
 	Expires Timestamp `json:"expires"`
 	Name    string    `json:"name"`
@@ -121,7 +120,6 @@ type Timestamp struct {
 func (p *Timestamp) UnmarshalJSON(bytes []byte) error {
 	var raw int64
 	err := json.Unmarshal(bytes, &raw)
-
 	if err != nil {
 		return fmt.Errorf("error decoding timestamp: %w", err)
 	}

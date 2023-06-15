@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"sync"
 
@@ -81,7 +82,6 @@ func CreateClient(requestInput RequestInput) (client tls_client.HttpClient, sess
 	}
 
 	tlsClient, err := getTlsClient(requestInput, newSessionId, useSession)
-
 	if err != nil {
 		clientErr := NewTLSClientError(fmt.Errorf("failed to build client out of request input: %w", err))
 
@@ -137,7 +137,7 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 	var respBodyBytes []byte
 	var err error
 
-	f, err := os.OpenFile(*input.StreamOutputPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(*input.StreamOutputPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		return nil, NewTLSClientError(err)
 	}
@@ -181,19 +181,20 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	defer resp.Body.Close()
 
 	isByteResponse := input.IsByteResponse
-	additionalDecodeAlgo := ""
 
-	if input.AdditionalDecode != nil {
-		additionalDecodeAlgo = *input.AdditionalDecode
-	}
+	ce := resp.Header.Get("Content-Encoding")
 
 	var respBodyBytes []byte
 	var err error
 
+	if !resp.Uncompressed {
+		resp.Body = http.DecompressBodyByType(resp.Body, ce)
+	}
+
 	if input.StreamOutputPath != nil {
-		respBodyBytes, err = readAllBodyWithStreamToFile(http.DecompressBodyByType(resp.Body, additionalDecodeAlgo), input)
+		respBodyBytes, err = readAllBodyWithStreamToFile(resp.Body, input)
 	} else {
-		respBodyBytes, err = io.ReadAll(http.DecompressBodyByType(resp.Body, additionalDecodeAlgo))
+		respBodyBytes, err = io.ReadAll(resp.Body)
 	}
 
 	if err != nil {
@@ -260,7 +261,6 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 	if requestInput.CustomTlsClient != nil {
 		clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, err := getCustomTlsClientProfile(requestInput.CustomTlsClient)
-
 		if err != nil {
 			return nil, fmt.Errorf("can not build http client out of custom tls client information: %w", err)
 		}
@@ -293,6 +293,19 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 	if requestInput.ForceHttp1 {
 		options = append(options, tls_client.WithForceHttp1())
+	}
+
+	if requestInput.DisableIPV6 {
+		options = append(options, tls_client.WithDisableIPV6())
+	}
+
+	if requestInput.LocalAddress != nil {
+		localAddr, err := net.ResolveTCPAddr("", *requestInput.LocalAddress)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve tcp address from local %s address: %w", *requestInput.LocalAddress, err)
+		}
+
+		options = append(options, tls_client.WithLocalAddr(*localAddr))
 	}
 
 	if requestInput.CatchPanics {
@@ -348,7 +361,6 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.ClientHelloID, map[http2.SettingID]uint32, []http2.SettingID, []string, uint32, []http2.Priority, *http2.PriorityParam, error) {
 	specFactory, err := tls_client.GetSpecFactoryFromJa3String(customClientDefinition.Ja3String, customClientDefinition.SupportedSignatureAlgorithms, customClientDefinition.SupportedDelegatedCredentialsAlgorithms, customClientDefinition.SupportedVersions, customClientDefinition.KeyShareCurves, customClientDefinition.CertCompressionAlgo)
-
 	if err != nil {
 		return tls.ClientHelloID{}, nil, nil, nil, 0, nil, nil, err
 	}

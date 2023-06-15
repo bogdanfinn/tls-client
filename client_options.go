@@ -1,7 +1,9 @@
 package tls_client
 
 import (
+	"crypto/x509"
 	"fmt"
+	"net"
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -18,6 +20,12 @@ type TransportOptions struct {
 	MaxResponseHeaderBytes int64 // Zero means to use a default limit.
 	WriteBufferSize        int   // If zero, a default (currently 4KB) is used.
 	ReadBufferSize         int   // If zero, a default (currently 4KB) is used.
+	// IdleConnTimeout is the maximum amount of time an idle (keep-alive)
+	// connection will remain idle before closing itself. Zero means no limit.
+	IdleConnTimeout *time.Duration
+	// RootCAs is the set of root certificate authorities used to verify
+	// the remote server's certificate.
+	RootCAs *x509.CertPool
 }
 
 type BadPinHandlerFunc func(req *http.Request)
@@ -38,6 +46,9 @@ type httpClientConfig struct {
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
 	timeout                     time.Duration
+	localAddr                   *net.TCPAddr
+	// Establish a connection to origin server via ipv4 only
+	disableIPV6 bool
 }
 
 // WithProxyUrl configures a HTTP client to use the specified proxy URL.
@@ -110,6 +121,13 @@ func WithTimeout(timeout int) HttpClientOption {
 func WithNotFollowRedirects() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.followRedirects = false
+	}
+}
+
+// WithLocalAddr configures an HTTP client to use the specified local address.
+func WithLocalAddr(localAddr net.TCPAddr) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.localAddr = &localAddr
 	}
 }
 
@@ -190,5 +208,12 @@ func WithClientProfile(clientProfile ClientProfile) HttpClientOption {
 func WithServerNameOverwrite(serverName string) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.serverNameOverwrite = serverName
+	}
+}
+
+// WithDisableIPV6 configures a dialer to use tcp4 network argument
+func WithDisableIPV6() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.disableIPV6 = true
 	}
 }

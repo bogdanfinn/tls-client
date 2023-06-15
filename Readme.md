@@ -28,10 +28,12 @@ type HttpClient interface {
     GetCookies(u *url.URL) []*http.Cookie
     SetCookies(u *url.URL, cookies []*http.Cookie)
     SetCookieJar(jar http.CookieJar)
+    GetCookieJar() http.CookieJar
     SetProxy(proxyUrl string) error
     GetProxy() string
     SetFollowRedirect(followRedirect bool)
     GetFollowRedirect() bool
+    CloseIdleConnections()
     Do(req *http.Request) (*http.Response, error)
     Get(url string) (resp *http.Response, err error)
     Head(url string) (resp *http.Response, err error)

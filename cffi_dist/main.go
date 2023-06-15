@@ -4,6 +4,7 @@ package main
 #include <stdlib.h>
 */
 import "C"
+
 import (
 	"encoding/json"
 	"fmt"
@@ -16,8 +17,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var unsafePointers = make(map[string]*C.char)
-var unsafePointersLck = sync.Mutex{}
+var (
+	unsafePointers    = make(map[string]*C.char)
+	unsafePointersLck = sync.Mutex{}
+)
 
 //export freeMemory
 func freeMemory(responseId *C.char) {
@@ -114,7 +117,6 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 	}
 
 	tlsClient, err := tls_client_cffi_src.GetClient(cookiesInput.SessionId)
-
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
 
@@ -132,7 +134,7 @@ func getCookiesFromSession(getCookiesParams *C.char) *C.char {
 
 	out := tls_client_cffi_src.CookiesFromSessionOutput{
 		Id:      uuid.New().String(),
-		Cookies: cookies,
+		Cookies: transformCookies(cookies),
 	}
 
 	jsonResponse, marshallError := json.Marshal(out)
@@ -166,7 +168,6 @@ func addCookiesToSession(addCookiesParams *C.char) *C.char {
 	}
 
 	tlsClient, err := tls_client_cffi_src.GetClient(cookiesInput.SessionId)
-
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
 
@@ -180,13 +181,13 @@ func addCookiesToSession(addCookiesParams *C.char) *C.char {
 		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
 	}
 
-	tlsClient.SetCookies(u, cookiesInput.Cookies)
+	tlsClient.SetCookies(u, buildCookies(cookiesInput.Cookies))
 
 	allCookies := tlsClient.GetCookies(u)
 
 	out := tls_client_cffi_src.CookiesFromSessionOutput{
 		Id:      uuid.New().String(),
-		Cookies: allCookies,
+		Cookies: transformCookies(allCookies),
 	}
 
 	jsonResponse, marshallError := json.Marshal(out)
@@ -220,13 +221,11 @@ func request(requestParams *C.char) *C.char {
 	}
 
 	tlsClient, sessionId, withSession, err := tls_client_cffi_src.CreateClient(requestInput)
-
 	if err != nil {
 		return handleErrorResponse(sessionId, withSession, err)
 	}
 
 	req, err := tls_client_cffi_src.BuildRequest(requestInput)
-
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
 
@@ -307,7 +306,7 @@ func handleErrorResponse(sessionId string, withSession bool, err *tls_client_cff
 	return responseString
 }
 
-func buildCookies(cookies []tls_client_cffi_src.CookieInput) []*http.Cookie {
+func buildCookies(cookies []tls_client_cffi_src.Cookie) []*http.Cookie {
 	var ret []*http.Cookie
 
 	for _, cookie := range cookies {
@@ -323,6 +322,23 @@ func buildCookies(cookies []tls_client_cffi_src.CookieInput) []*http.Cookie {
 	return ret
 }
 
-func main() {
+func transformCookies(cookies []*http.Cookie) []tls_client_cffi_src.Cookie {
+	var ret []tls_client_cffi_src.Cookie
 
+	for _, cookie := range cookies {
+		ret = append(ret, tls_client_cffi_src.Cookie{
+			Name:   cookie.Name,
+			Value:  cookie.Value,
+			Path:   cookie.Path,
+			Domain: cookie.Domain,
+			Expires: tls_client_cffi_src.Timestamp{
+				Time: cookie.Expires,
+			},
+		})
+	}
+
+	return ret
+}
+
+func main() {
 }

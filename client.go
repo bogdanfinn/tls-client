@@ -5,8 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"math/rand"
 	"net/url"
 	"strings"
 	"sync"
@@ -25,15 +23,20 @@ type HttpClient interface {
 	GetCookies(u *url.URL) []*http.Cookie
 	SetCookies(u *url.URL, cookies []*http.Cookie)
 	SetCookieJar(jar http.CookieJar)
+	GetCookieJar() http.CookieJar
 	SetProxy(proxyUrl string) error
 	GetProxy() string
 	SetFollowRedirect(followRedirect bool)
 	GetFollowRedirect() bool
+	CloseIdleConnections()
 	Do(req *http.Request) (*http.Response, error)
 	Get(url string) (resp *http.Response, err error)
 	Head(url string) (resp *http.Response, err error)
 	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
 }
+
+// Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
+var _ HttpClient = (*httpClient)(nil)
 
 type httpClient struct {
 	http.Client
@@ -71,18 +74,11 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		opt(config)
 	}
 
-	err := validateConfig(config)
-
-	if err != nil {
+	if err := validateConfig(config); err != nil {
 		return nil, err
 	}
 
-	if config.withRandomTlsExtensionOrder {
-		rand.Seed(time.Now().UnixNano())
-	}
-
 	client, clientProfile, err := buildFromConfig(config)
-
 	if err != nil {
 		return nil, err
 	}
@@ -109,16 +105,16 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 	}, nil
 }
 
-func validateConfig(config *httpClientConfig) error {
+func validateConfig(_ *httpClientConfig) error {
 	return nil
 }
 
 func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, error) {
 	var dialer proxy.ContextDialer
-	dialer = newDirectDialer(config.timeout)
+	dialer = newDirectDialer(config.timeout, config.localAddr)
 
 	if config.proxyUrl != "" {
-		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout)
+		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr)
 		if err != nil {
 			return nil, ClientProfile{}, err
 		}
@@ -139,8 +135,7 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 
 	clientProfile := config.clientProfile
 
-	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.certificatePins, config.badPinHandler, dialer)
-
+	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.certificatePins, config.badPinHandler, config.disableIPV6, dialer)
 	if err != nil {
 		return nil, clientProfile, err
 	}
@@ -158,6 +153,11 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, err
 	return client, clientProfile, nil
 }
 
+// CloseIdleConnections closes all idle connections of the underlying http client.
+func (c *httpClient) CloseIdleConnections() {
+	c.Client.CloseIdleConnections()
+}
+
 // SetFollowRedirect configures the client's HTTP redirect following policy.
 func (c *httpClient) SetFollowRedirect(followRedirect bool) {
 	c.logger.Debug("set follow redirect from %v to %v", c.config.followRedirects, followRedirect)
@@ -166,7 +166,7 @@ func (c *httpClient) SetFollowRedirect(followRedirect bool) {
 	c.applyFollowRedirect()
 }
 
-// GetFollowredirect returns the client's HTTP redirect following policy.
+// GetFollowRedirect returns the client's HTTP redirect following policy.
 func (c *httpClient) GetFollowRedirect() bool {
 	return c.config.followRedirects
 }
@@ -209,7 +209,7 @@ func (c *httpClient) applyProxy() error {
 
 	if c.config.proxyUrl != "" {
 		c.logger.Debug("proxy url %s supplied - using proxy connect dialer", c.config.proxyUrl)
-		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout)
+		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout, c.config.localAddr)
 		if err != nil {
 			c.logger.Error("failed to create proxy connect dialer: %s", err.Error())
 			return err
@@ -218,8 +218,7 @@ func (c *httpClient) applyProxy() error {
 		dialer = proxyDialer
 	}
 
-	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.certificatePins, c.config.badPinHandler, dialer)
-
+	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.certificatePins, c.config.badPinHandler, c.config.disableIPV6, dialer)
 	if err != nil {
 		return err
 	}
@@ -257,6 +256,11 @@ func (c *httpClient) SetCookieJar(jar http.CookieJar) {
 	c.Jar = jar
 }
 
+// GetCookieJar returns the jar the client is currently using
+func (c *httpClient) GetCookieJar() http.CookieJar {
+	return c.Jar
+}
+
 // Do issues a given HTTP request and returns the corresponding response.
 //
 // If the returned error is nil, the response contains a non-nil body, which the user is expected to close.
@@ -284,14 +288,13 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		debugReq := req.Clone(context.Background())
 
 		if req.Body != nil {
-			buf, err := ioutil.ReadAll(req.Body)
-
+			buf, err := io.ReadAll(req.Body)
 			if err != nil {
 				return nil, err
 			}
 
-			debugBody := ioutil.NopCloser(bytes.NewBuffer(buf))
-			requestBody := ioutil.NopCloser(bytes.NewBuffer(buf))
+			debugBody := io.NopCloser(bytes.NewBuffer(buf))
+			requestBody := io.NopCloser(bytes.NewBuffer(buf))
 
 			c.logger.Debug("request body payload: %s", string(buf))
 
@@ -300,7 +303,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		}
 
 		requestBytes, err := httputil.DumpRequestOut(debugReq, debugReq.ContentLength > 0)
-
 		if err != nil {
 			return nil, err
 		}
@@ -309,7 +311,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	resp, err := c.Client.Do(req)
-
 	if err != nil {
 		c.logger.Debug("failed to do request: %s", err.Error())
 		return nil, err
@@ -323,20 +324,18 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 	if c.config.debug {
 		responseBytes, err := httputil.DumpResponse(resp, resp.ContentLength > 0)
-
 		if err != nil {
 			return nil, err
 		}
 
 		if resp.Body != nil {
-			buf, err := ioutil.ReadAll(resp.Body)
-			resp.Body.Close()
-
+			buf, err := io.ReadAll(resp.Body)
 			if err != nil {
 				return nil, err
 			}
+			defer resp.Body.Close()
 
-			responseBody := ioutil.NopCloser(bytes.NewBuffer(buf))
+			responseBody := io.NopCloser(bytes.NewBuffer(buf))
 
 			c.logger.Debug("response body payload: %s", string(buf))
 
@@ -357,6 +356,7 @@ func (c *httpClient) Get(url string) (resp *http.Response, err error) {
 
 	return c.Do(req)
 }
+
 func (c *httpClient) Head(url string) (resp *http.Response, err error) {
 	req, err := http.NewRequest(http.MethodHead, url, nil)
 	if err != nil {
@@ -365,6 +365,7 @@ func (c *httpClient) Head(url string) (resp *http.Response, err error) {
 
 	return c.Do(req)
 }
+
 func (c *httpClient) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
 	req, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
@@ -377,10 +378,10 @@ func (c *httpClient) Post(url, contentType string, body io.Reader) (resp *http.R
 }
 
 func allToLower(list []string) []string {
-	var lower []string
+	lower := make([]string, len(list))
 
-	for _, elem := range list {
-		lower = append(lower, strings.ToLower(elem))
+	for i, elem := range list {
+		lower[i] = strings.ToLower(elem)
 	}
 
 	return lower
