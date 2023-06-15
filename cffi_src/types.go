@@ -137,7 +137,6 @@ type Response struct {
 	Headers      map[string][]string `json:"headers"`
 	SessionId    string              `json:"sessionId,omitempty"`
 	Status       int                 `json:"status"`
-	Version      string              `json:"version"`
 	Target       string              `json:"target"`
 	UsedProtocol string              `json:"usedProtocol"`
 }

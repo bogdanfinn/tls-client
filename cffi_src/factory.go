@@ -216,7 +216,6 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	response := Response{
 		Id:           uuid.New().String(),
 		Status:       resp.StatusCode,
-		Version:      resp.Proto,
 		UsedProtocol: resp.Proto,
 		Body:         finalResponse,
 		Headers:      resp.Header,
