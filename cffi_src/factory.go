@@ -133,13 +133,13 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	return tlsReq, nil
 }
 
-func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]byte, *TLSClientError) {
+func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]byte, error) {
 	var respBodyBytes []byte
 	var err error
 
 	f, err := os.OpenFile(*input.StreamOutputPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
-		return nil, NewTLSClientError(err)
+		return nil, err
 	}
 	defer f.Close()
 
@@ -165,7 +165,7 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 				fmt.Printf("Append stream output error: %+v\n", err)
 			}
 
-			return nil, NewTLSClientError(err)
+			return nil, err
 		}
 
 		if input.WithDebug {
