@@ -47,6 +47,21 @@ type roundTripper struct {
 	disableIPV6                 bool
 }
 
+func (rt *roundTripper) CloseIdleConnections() {
+	rt.cachedTransportsLck.Lock()
+	defer rt.cachedTransportsLck.Unlock()
+
+	type closeIdler interface {
+		CloseIdleConnections()
+	}
+
+	for _, transport := range rt.cachedTransports {
+		if tr, ok := transport.(closeIdler); ok {
+			tr.CloseIdleConnections()
+		}
+	}
+}
+
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	addr := rt.getDialTLSAddr(req)
 
@@ -290,7 +305,6 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 
 func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
-
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
 	}

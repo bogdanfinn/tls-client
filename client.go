@@ -191,11 +191,21 @@ func (c *httpClient) applyFollowRedirect() {
 //
 //	"http://user:pass@host:port"
 func (c *httpClient) SetProxy(proxyUrl string) error {
+	currentProxy := c.config.proxyUrl
+
 	c.logger.Debug("set proxy from %s to %s", c.config.proxyUrl, proxyUrl)
 	c.config.proxyUrl = proxyUrl
 	c.logger.Info(fmt.Sprintf("set proxy to: %s", proxyUrl))
 
-	return c.applyProxy()
+	err := c.applyProxy()
+	if err != nil {
+		c.logger.Error("failed to apply new proxy. rolling back to previous used proxy: %w", err)
+		c.config.proxyUrl = currentProxy
+
+		return c.applyProxy()
+	}
+
+	return nil
 }
 
 // GetProxy returns the proxy URL used by the client.
