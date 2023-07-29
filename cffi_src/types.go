@@ -50,6 +50,7 @@ type RequestInput struct {
 	CatchPanics                 bool                `json:"catchPanics"`
 	CertificatePinningHosts     map[string][]string `json:"certificatePinningHosts"`
 	CustomTlsClient             *CustomTlsClient    `json:"customTlsClient"`
+	TransportOptions            *TransportOptions   `json:"transportOptions"`
 	FollowRedirects             bool                `json:"followRedirects"`
 	ForceHttp1                  bool                `json:"forceHttp1"`
 	HeaderOrder                 []string            `json:"headerOrder"`
@@ -92,6 +93,21 @@ type CustomTlsClient struct {
 	SupportedDelegatedCredentialsAlgorithms []string          `json:"supportedDelegatedCredentialsAlgorithms"`
 	SupportedSignatureAlgorithms            []string          `json:"supportedSignatureAlgorithms"`
 	SupportedVersions                       []string          `json:"supportedVersions"`
+}
+
+// TransportOptions contains settings for the underlying http transport of the tls client
+type TransportOptions struct {
+	DisableKeepAlives      bool  `json:"disableKeepAlives"`
+	DisableCompression     bool  `json:"disableCompression"`
+	MaxIdleConns           int   `json:"maxIdleConns"`
+	MaxIdleConnsPerHost    int   `json:"maxIdleConnsPerHost"`
+	MaxConnsPerHost        int   `json:"maxConnsPerHost"`
+	MaxResponseHeaderBytes int64 `json:"maxResponseHeaderBytes"` // Zero means to use a default limit.
+	WriteBufferSize        int   `json:"writeBufferSize"`        // If zero, a default (currently 4KB) is used.
+	ReadBufferSize         int   `json:"readBufferSize"`         // If zero, a default (currently 4KB) is used.
+	// IdleConnTimeout is the maximum amount of time an idle (keep-alive)
+	// connection will remain idle before closing itself. Zero means no limit.
+	IdleConnTimeout *time.Duration `json:"idleConnTimeout"`
 }
 
 type PriorityFrames struct {

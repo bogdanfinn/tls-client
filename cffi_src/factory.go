@@ -298,6 +298,23 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithDisableIPV6())
 	}
 
+	if requestInput.TransportOptions != nil {
+		transportOptions := &tls_client.TransportOptions{
+			DisableKeepAlives:      requestInput.TransportOptions.DisableKeepAlives,
+			DisableCompression:     requestInput.TransportOptions.DisableCompression,
+			MaxIdleConns:           requestInput.TransportOptions.MaxIdleConns,
+			MaxIdleConnsPerHost:    requestInput.TransportOptions.MaxIdleConnsPerHost,
+			MaxConnsPerHost:        requestInput.TransportOptions.MaxConnsPerHost,
+			MaxResponseHeaderBytes: requestInput.TransportOptions.MaxResponseHeaderBytes,
+			WriteBufferSize:        requestInput.TransportOptions.WriteBufferSize,
+			ReadBufferSize:         requestInput.TransportOptions.ReadBufferSize,
+			IdleConnTimeout:        requestInput.TransportOptions.IdleConnTimeout,
+			// RootCAs:                requestInput.TransportOptions.RootCAs,
+		}
+
+		options = append(options, tls_client.WithTransportOptions(transportOptions))
+	}
+
 	if requestInput.LocalAddress != nil {
 		localAddr, err := net.ResolveTCPAddr("", *requestInput.LocalAddress)
 		if err != nil {
