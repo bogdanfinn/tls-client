@@ -129,6 +129,11 @@ func (p *Timestamp) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
+func (p *Timestamp) MarshalJSON() ([]byte, error) {
+	stamp := fmt.Sprintf("%d", p.Unix())
+	return []byte(stamp), nil
+}
+
 // Response is the response that is sent back to the Python client.
 type Response struct {
 	Id           string              `json:"id"`

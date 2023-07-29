@@ -12,7 +12,7 @@ const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-1.4.0.dy
 
 const requestPayload = {
     "tlsClientIdentifier": "chrome_103",
-    "followRedirects": false,
+    "followRedirects": true,
     "insecureSkipVerify": false,
     "withoutCookieJar": false,
     "withDefaultCookieJar": false,
@@ -57,7 +57,7 @@ tlsClientLibrary.freeMemory(responseObject.id)
 
 const payload = {
     sessionId: 'my-session-id',
-    url: "https://example.com",
+    url: "https://microsoft.com",
 }
 
 const cookiesResponse = tlsClientLibrary.getCookiesFromSession(JSON.stringify(payload))
