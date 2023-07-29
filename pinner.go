@@ -3,6 +3,7 @@ package tls_client
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls "github.com/bogdanfinn/utls"
@@ -31,7 +32,6 @@ func NewCertificatePinner(certificatePins map[string][]string) (CertificatePinne
 	}
 
 	err := pinner.init()
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate certificate pinner: %w", err)
 	}
@@ -45,6 +45,12 @@ func (cp *certificatePinner) init() error {
 	}
 
 	for host, pinsByHost := range cp.certificatePins {
+		includeSubdomains := false
+		if strings.Contains(host, "*.") {
+			includeSubdomains = true
+			host = strings.ReplaceAll(host, "*.", "")
+		}
+
 		pinnedHost := certificatePinStorage.Lookup(host)
 
 		if pinnedHost != nil {
@@ -53,8 +59,9 @@ func (cp *certificatePinner) init() error {
 		}
 
 		certificatePinStorage.Add(host, &hpkp.Header{
-			Permanent:  true,
-			Sha256Pins: pinsByHost,
+			Permanent:         true,
+			Sha256Pins:        pinsByHost,
+			IncludeSubDomains: includeSubdomains,
 		})
 	}
 
