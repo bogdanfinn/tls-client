@@ -180,7 +180,7 @@ func (c *httpClient) applyFollowRedirect() {
 		c.CheckRedirect = defaultRedirectFunc
 	}
 
-	if c.config.customRedirectFunc != nil {
+	if c.config.customRedirectFunc != nil && c.config.followRedirects {
 		c.CheckRedirect = c.config.customRedirectFunc
 	}
 }
