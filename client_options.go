@@ -37,6 +37,7 @@ type httpClientConfig struct {
 	customRedirectFunc          func(req *http.Request, via []*http.Request) error
 	insecureSkipVerify          bool
 	certificatePins             map[string][]string
+	defaultHeaders              http.Header
 	badPinHandler               BadPinHandlerFunc
 	proxyUrl                    string
 	serverNameOverwrite         string
@@ -200,6 +201,13 @@ func WithForceHttp1() HttpClientOption {
 func WithClientProfile(clientProfile ClientProfile) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.clientProfile = clientProfile
+	}
+}
+
+// WithDefaultHeaders configures a TLS client to use a set of default headers if none are specified on the request.
+func WithDefaultHeaders(defaultHeaders http.Header) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.defaultHeaders = defaultHeaders
 	}
 }
 

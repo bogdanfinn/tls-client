@@ -291,6 +291,11 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
 	c.headerLck.Lock()
+
+	if len(req.Header) == 0 {
+		req.Header = c.config.defaultHeaders
+	}
+
 	req.Header[http.HeaderOrderKey] = allToLower(req.Header[http.HeaderOrderKey])
 	c.headerLck.Unlock()
 
