@@ -360,6 +360,10 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithInsecureSkipVerify())
 	}
 
+	if requestInput.DefaultHeaders != nil && len(requestInput.DefaultHeaders) != 0 {
+		options = append(options, tls_client.WithDefaultHeaders(requestInput.DefaultHeaders))
+	}
+
 	if requestInput.ServerNameOverwrite != nil && *requestInput.ServerNameOverwrite != "" {
 		options = append(options, tls_client.WithServerNameOverwrite(*requestInput.ServerNameOverwrite))
 	}

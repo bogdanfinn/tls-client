@@ -55,6 +55,7 @@ type RequestInput struct {
 	ForceHttp1                  bool                `json:"forceHttp1"`
 	HeaderOrder                 []string            `json:"headerOrder"`
 	Headers                     map[string]string   `json:"headers"`
+	DefaultHeaders              map[string][]string `json:"defaultHeaders"`
 	InsecureSkipVerify          bool                `json:"insecureSkipVerify"`
 	IsByteRequest               bool                `json:"isByteRequest"`
 	IsByteResponse              bool                `json:"isByteResponse"`
