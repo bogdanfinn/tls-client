@@ -61,6 +61,7 @@ type RequestInput struct {
 	IsRotatingProxy             bool                `json:"isRotatingProxy"`
 	DisableIPV6                 bool                `json:"disableIPV6"`
 	LocalAddress                *string             `json:"localAddress"`
+	ServerNameOverwrite         *string             `json:"serverNameOverwrite"`
 	ProxyUrl                    *string             `json:"proxyUrl"`
 	RequestBody                 *string             `json:"requestBody"`
 	RequestCookies              []Cookie            `json:"requestCookies"`
