@@ -1,10 +1,11 @@
 package tests
 
 import (
-	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"net/url"
 	"testing"
+
+	"github.com/bogdanfinn/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
@@ -124,17 +125,17 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 
 	cookiesAfterFirstRequest := client.GetCookies(u)
 
-	assert.Equal(t, 1, len(cookiesAfterFirstRequest))
+	assert.Equal(t, 2, len(cookiesAfterFirstRequest))
 
-	cookie2 := &http.Cookie{
+	cookie3 := &http.Cookie{
 		Name:   cookiesAfterFirstRequest[0].Name,
 		Value:  cookiesAfterFirstRequest[0].Value,
 		Domain: cookiesAfterFirstRequest[0].Domain,
 		MaxAge: cookiesAfterFirstRequest[0].MaxAge,
 	}
-	client.SetCookies(u, []*http.Cookie{cookie2})
+	client.SetCookies(u, []*http.Cookie{cookie3})
 
-	assert.Equal(t, 1, len(client.GetCookies(u)))
+	assert.Equal(t, 2, len(client.GetCookies(u)))
 
 	req, err = http.NewRequest(http.MethodGet, "https://de.topps.com/", nil)
 	if err != nil {
@@ -168,7 +169,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 
 	cookiesAfterSecondRequest := client.GetCookies(u)
 
-	assert.Equal(t, 1, len(cookiesAfterSecondRequest))
+	assert.Equal(t, 2, len(cookiesAfterSecondRequest))
 }
 
 func TestClient_ExcludeExpiredCookiesFromRequest(t *testing.T) {
