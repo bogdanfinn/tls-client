@@ -49,6 +49,7 @@ type httpClientConfig struct {
 	forceHttp1                  bool
 	timeout                     time.Duration
 	localAddr                   *net.TCPAddr
+
 	// Establish a connection to origin server via ipv4 only
 	disableIPV6 bool
 	dialer      net.Dialer
