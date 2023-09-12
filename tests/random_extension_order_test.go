@@ -9,7 +9,6 @@ import (
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
-	"github.com/bogdanfinn/tls-client/shared"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,7 +40,7 @@ func TestClient_RandomExtensionOrderChrome(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tlsApiResponse := shared.TlsApiResponse{}
+	tlsApiResponse := TlsApiResponse{}
 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +90,7 @@ func TestClient_RandomExtensionOrderCustom(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tlsApiResponse := shared.TlsApiResponse{}
+	tlsApiResponse := TlsApiResponse{}
 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
 		t.Fatal(err)
 	}

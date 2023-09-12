@@ -9,10 +9,10 @@ GOOS=darwin CGO_ENABLED=1 GOARCH=amd64 go build -buildmode=c-shared -o ./dist/tl
 echo 'Build Linux ARM64'
 # CC is needed when you cross compile from OSX to Linux
 # On Macos:
-# GOOS=linux CGO_ENABLED=1 GOARCH=arm64 CC="aarch64-unknown-linux-gnu-gcc" go build -buildmode=c-shared -o ./dist/tls-client-linux-arm64-$1.so
+GOOS=linux CGO_ENABLED=1 GOARCH=arm64 CC="aarch64-unknown-linux-gnu-gcc" go build -buildmode=c-shared -o ./dist/tls-client-linux-arm64-$1.so
 
 # On Linux:
-GOOS=linux CGO_ENABLED=1 GOARCH=arm64 CC="aarch64-linux-gnu-gcc" go build -buildmode=c-shared -o ./dist/tls-client-linux-arm64-$1.so
+#GOOS=linux CGO_ENABLED=1 GOARCH=arm64 CC="aarch64-linux-gnu-gcc" go build -buildmode=c-shared -o ./dist/tls-client-linux-arm64-$1.so
 
 echo 'Build Linux ARMv7'
 # CC is needed when you cross compile from OSX to Linux

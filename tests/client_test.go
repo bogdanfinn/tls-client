@@ -8,11 +8,12 @@ import (
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
-	"github.com/bogdanfinn/tls-client/shared"
 	tls "github.com/bogdanfinn/utls"
 )
 
 func TestClients(t *testing.T) {
+	t.Log("testing chrome 116 with psk")
+	chrome116WithPsk(t)
 	t.Log("testing chrome 112")
 	chrome112(t)
 	time.Sleep(2 * time.Second)
@@ -105,6 +106,46 @@ var defaultOkHttp4Header = http.Header{
 		"accept-encoding",
 		"user-agent",
 	},
+}
+
+func chrome116WithPsk(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(tls_client.Chrome_116_PSK),
+		tls_client.WithTimeoutSeconds(120),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_112.Str()], resp)
+
+	req, err = http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_112_PSK.Str()], resp)
 }
 
 func chrome112(t *testing.T) {
@@ -515,7 +556,7 @@ func compareResponse(t *testing.T, clientName string, expectedValues map[string]
 		t.Fatal(err)
 	}
 
-	tlsApiResponse := shared.TlsApiResponse{}
+	tlsApiResponse := TlsApiResponse{}
 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
 		t.Fatal(err)
 	}

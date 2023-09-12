@@ -18,6 +18,8 @@ var MappedTLSClients = map[string]ClientProfile{
 	"chrome_110":             Chrome_110,
 	"chrome_111":             Chrome_111,
 	"chrome_112":             Chrome_112,
+	"chrome_116_PSK":         Chrome_116_PSK,
+	"chrome_116_PSK_PQ":      Chrome_116_PSK_PQ,
 	"safari_15_6_1":          Safari_15_6_1,
 	"safari_16_0":            Safari_16_0,
 	"safari_ipad_15_6":       Safari_Ipad_15_6,
@@ -88,6 +90,56 @@ func (c ClientProfile) GetClientHelloStr() string {
 
 var Chrome_112 = ClientProfile{
 	clientHelloId: tls.HelloChrome_112,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      65536,
+		http2.SettingEnablePush:           0,
+		http2.SettingMaxConcurrentStreams: 1000,
+		http2.SettingInitialWindowSize:    6291456,
+		http2.SettingMaxHeaderListSize:    262144,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingEnablePush,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	},
+	connectionFlow: 15663105,
+}
+
+var Chrome_116_PSK = ClientProfile{
+	clientHelloId: tls.HelloChrome_112_PSK,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      65536,
+		http2.SettingEnablePush:           0,
+		http2.SettingMaxConcurrentStreams: 1000,
+		http2.SettingInitialWindowSize:    6291456,
+		http2.SettingMaxHeaderListSize:    262144,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingEnablePush,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	},
+	connectionFlow: 15663105,
+}
+
+var Chrome_116_PSK_PQ = ClientProfile{
+	clientHelloId: tls.HelloChrome_115_PQ_PSK,
 	settings: map[http2.SettingID]uint32{
 		http2.SettingHeaderTableSize:      65536,
 		http2.SettingEnablePush:           0,

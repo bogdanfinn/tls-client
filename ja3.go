@@ -136,7 +136,7 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 	}
 
 	extMap[tls.ExtensionDelegatedCredentials] = &tls.DelegatedCredentialsExtension{
-		AlgorithmsSignature: delegatedCredentialsAlgorithms,
+		SupportedSignatureAlgorithms: delegatedCredentialsAlgorithms,
 	}
 
 	var exts []tls.TLSExtension
@@ -191,10 +191,10 @@ func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 		},
 		tls.ExtensionSCT:                  &tls.SCTExtension{},
 		tls.ExtensionPadding:              &tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
-		tls.ExtensionExtendedMasterSecret: &tls.UtlsExtendedMasterSecretExtension{},
+		tls.ExtensionExtendedMasterSecret: &tls.ExtendedMasterSecretExtension{},
 		tls.ExtensionRecordSizeLimit:      &tls.FakeRecordSizeLimitExtension{},
 		tls.ExtensionSessionTicket:        &tls.SessionTicketExtension{},
-		tls.ExtensionPreSharedKey:         &tls.PreSharedKeyExtension{},
+		tls.ExtensionPreSharedKey:         &tls.UtlsPreSharedKeyExtension{},
 		tls.ExtensionEarlyData:            &tls.GenericExtension{Id: tls.ExtensionEarlyData},
 		tls.ExtensionCookie:               &tls.CookieExtension{},
 		tls.ExtensionPSKModes: &tls.PSKKeyExchangeModesExtension{

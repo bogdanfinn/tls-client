@@ -34,7 +34,8 @@ type roundTripper struct {
 
 	forceHttp1 bool
 
-	headerPriority *http2.PriorityParam
+	headerPriority     *http2.PriorityParam
+	clientSessionCache tls.ClientSessionCache
 
 	insecureSkipVerify          bool
 	priorities                  []http2.Priority
@@ -138,7 +139,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		host = rt.serverNameOverwrite
 	}
 
-	tlsConfig := &tls.Config{ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify}
+	tlsConfig := &tls.Config{ClientSessionCache: rt.clientSessionCache, ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify, OmitEmptyPsk: true}
 	if rt.transportOptions != nil {
 		tlsConfig.RootCAs = rt.transportOptions.RootCAs
 	}
@@ -165,7 +166,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 
 	switch conn.ConnectionState().NegotiatedProtocol {
 	case http2.NextProtoTLS:
-		utlsConfig := &tls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
+		utlsConfig := &tls.Config{ClientSessionCache: rt.clientSessionCache, InsecureSkipVerify: rt.insecureSkipVerify, OmitEmptyPsk: true}
 		if rt.transportOptions != nil {
 			utlsConfig.RootCAs = rt.transportOptions.RootCAs
 		}
@@ -259,7 +260,7 @@ func (rt *roundTripper) dial(ctx context.Context, network, addr string) (net.Con
 }
 
 func (rt *roundTripper) buildHttp1Transport() *http.Transport {
-	utlsConfig := &tls.Config{InsecureSkipVerify: rt.insecureSkipVerify}
+	utlsConfig := &tls.Config{ClientSessionCache: rt.clientSessionCache, InsecureSkipVerify: rt.insecureSkipVerify, OmitEmptyPsk: true}
 	if rt.transportOptions != nil {
 		utlsConfig.RootCAs = rt.transportOptions.RootCAs
 	}
@@ -309,11 +310,20 @@ func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOpt
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
 	}
 
+	var clientSessionCache tls.ClientSessionCache
+
+	withSessionResumption := supportsSessionResumption(clientProfile.clientHelloId)
+
+	if withSessionResumption {
+		clientSessionCache = tls.NewLRUClientSessionCache(32)
+	}
+
 	rt := &roundTripper{
 		dialer:                      dialer[0],
 		certificatePinner:           pinner,
 		badPinHandlerFunc:           badPinHandlerFunc,
 		transportOptions:            transportOptions,
+		clientSessionCache:          clientSessionCache,
 		serverNameOverwrite:         serverNameOverwrite,
 		settings:                    clientProfile.settings,
 		settingsOrder:               clientProfile.settingsOrder,
@@ -337,4 +347,21 @@ func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOpt
 	}
 
 	return rt, nil
+}
+
+func supportsSessionResumption(id tls.ClientHelloID) bool {
+
+	spec, err := tls.UTLSIdToSpec(id)
+
+	if err != nil {
+		return false
+	}
+
+	for _, ext := range spec.Extensions {
+		if _, ok := ext.(*tls.UtlsPreSharedKeyExtension); ok {
+			return true
+		}
+	}
+
+	return false
 }
