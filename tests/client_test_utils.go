@@ -1,7 +1,7 @@
 package tests
 
 import (
-	tls_client "github.com/bogdanfinn/tls-client"
+	"github.com/bogdanfinn/tls-client/profiles"
 	tls "github.com/bogdanfinn/utls"
 )
 
@@ -122,6 +122,12 @@ var clientFingerprints = map[string]map[string]map[string]string{
 			akamaiFingerprint:     "1:65536,4:131072,5:16384|12517377|3:0:0:201,5:0:0:101,7:0:0:1,9:0:7:1,11:0:3:1,13:0:0:241|m,p,a,s",
 			akamaiFingerprintHash: "fd4f649c50a64e33cc9e2407055bafbe",
 		},
+		profiles.Firefox_117.GetClientHelloStr(): map[string]string{
+			ja3String:             "771,4865-4867-4866-49195-49199-52393-52392-49196-49200-49162-49161-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-34-51-43-13-45-28-21,29-23-24-25-256-257,0",
+			ja3Hash:               "579ccef312d18482fc42e2b822ca2430",
+			akamaiFingerprint:     "1:65536,4:131072,5:16384|12517377|3:0:0:201,5:0:0:101,7:0:0:1,9:0:7:1,11:0:3:1,13:0:0:241|m,p,a,s",
+			akamaiFingerprintHash: "fd4f649c50a64e33cc9e2407055bafbe",
+		},
 	},
 	opera: {
 		tls.HelloOpera_89.Str(): map[string]string{
@@ -186,43 +192,43 @@ var clientFingerprints = map[string]map[string]map[string]string{
 		},
 	},
 	okhttpAndroid: {
-		tls_client.Okhttp4Android13.GetClientHelloStr(): map[string]string{
+		profiles.Okhttp4Android13.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49196-52393-49199-49200-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-51-45-43-21,29-23-24,0",
 			ja3Hash:               "f79b6bad2ad0641e1921aef10262856b",
 			akamaiFingerprint:     "4:16777216|16711681|0|m,p,a,s",
 			akamaiFingerprintHash: "605a1154008045d7e3cb3c6fb062c0ce",
 		},
-		tls_client.Okhttp4Android12.GetClientHelloStr(): map[string]string{
+		profiles.Okhttp4Android12.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49196-52393-49199-49200-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-51-45-43-21,29-23-24,0",
 			ja3Hash:               "f79b6bad2ad0641e1921aef10262856b",
 			akamaiFingerprint:     "4:16777216|16711681|0|m,p,a,s",
 			akamaiFingerprintHash: "605a1154008045d7e3cb3c6fb062c0ce",
 		},
-		tls_client.Okhttp4Android11.GetClientHelloStr(): map[string]string{
+		profiles.Okhttp4Android11.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49196-52393-49199-49200-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-51-45-43-21,29-23-24,0",
 			ja3Hash:               "f79b6bad2ad0641e1921aef10262856b",
 			akamaiFingerprint:     "4:16777216|16711681|0|m,p,a,s",
 			akamaiFingerprintHash: "605a1154008045d7e3cb3c6fb062c0ce",
 		},
-		tls_client.Okhttp4Android10.GetClientHelloStr(): map[string]string{
+		profiles.Okhttp4Android10.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49196-52393-49199-49200-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-51-45-43-21,29-23-24,0",
 			ja3Hash:               "f79b6bad2ad0641e1921aef10262856b",
 			akamaiFingerprint:     "4:16777216|16711681|0|m,p,a,s",
 			akamaiFingerprintHash: "605a1154008045d7e3cb3c6fb062c0ce",
 		},
-		tls_client.Okhttp4Android9.GetClientHelloStr(): map[string]string{
+		profiles.Okhttp4Android9.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,49195-49196-52393-49199-49200-52392-49171-49172-156-157-47-53,65281-0-23-35-13-5-16-11-10,29-23-24,0",
 			ja3Hash:               "6f5e62edfa5933b1332ddf8b9fb3ef9d",
 			akamaiFingerprint:     "4:16777216|16711681|0|m,p,a,s",
 			akamaiFingerprintHash: "605a1154008045d7e3cb3c6fb062c0ce",
 		},
-		tls_client.Okhttp4Android8.GetClientHelloStr(): map[string]string{
+		profiles.Okhttp4Android8.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,49195-49196-52393-49199-49200-52392-49171-49172-156-157-47-53,65281-0-23-35-13-5-16-11-10,29-23-24,0",
 			ja3Hash:               "6f5e62edfa5933b1332ddf8b9fb3ef9d",
 			akamaiFingerprint:     "4:16777216|16711681|0|m,p,a,s",
 			akamaiFingerprintHash: "605a1154008045d7e3cb3c6fb062c0ce",
 		},
-		tls_client.Okhttp4Android7.GetClientHelloStr(): map[string]string{
+		profiles.Okhttp4Android7.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,49195-49196-52393-49199-49200-52392-49171-49172-156-157-47-53,65281-0-23-35-13-16-11-10,23-24-25,0",
 			ja3Hash:               "f6a0bfafe2bf7d9c79ffb3f269b64b46",
 			akamaiFingerprint:     "4:16777216|16711681|0|m,p,a,s",

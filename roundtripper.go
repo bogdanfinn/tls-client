@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/bogdanfinn/tls-client/profiles"
 	"net"
 	"strings"
 	"sync"
@@ -303,7 +304,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443")
 }
 
-func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -315,16 +316,16 @@ func newRoundTripper(clientProfile ClientProfile, transportOptions *TransportOpt
 		badPinHandlerFunc:           badPinHandlerFunc,
 		transportOptions:            transportOptions,
 		serverNameOverwrite:         serverNameOverwrite,
-		settings:                    clientProfile.settings,
-		settingsOrder:               clientProfile.settingsOrder,
-		priorities:                  clientProfile.priorities,
-		headerPriority:              clientProfile.headerPriority,
-		pseudoHeaderOrder:           clientProfile.pseudoHeaderOrder,
+		settings:                    clientProfile.GetSettings(),
+		settingsOrder:               clientProfile.GetSettingsOrder(),
+		priorities:                  clientProfile.GetPriorities(),
+		headerPriority:              clientProfile.GetHeaderPriority(),
+		pseudoHeaderOrder:           clientProfile.GetPseudoHeaderOrder(),
 		insecureSkipVerify:          insecureSkipVerify,
 		forceHttp1:                  forceHttp1,
 		withRandomTlsExtensionOrder: withRandomTlsExtensionOrder,
-		connectionFlow:              clientProfile.connectionFlow,
-		clientHelloId:               clientProfile.clientHelloId,
+		connectionFlow:              clientProfile.GetConnectionFlow(),
+		clientHelloId:               clientProfile.GetClientHelloId(),
 		cachedTransports:            make(map[string]http.RoundTripper),
 		cachedConnections:           make(map[string]net.Conn),
 		disableIPV6:                 disableIPV6,

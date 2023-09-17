@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"net/url"
 	"testing"
@@ -18,7 +19,7 @@ func TestClient_SkipExistingCookiesOnClientSetCookies(t *testing.T) {
 	jar := tls_client.NewCookieJar(jarOptions...)
 
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithClientProfile(profiles.Chrome_105),
 		tls_client.WithCookieJar(jar),
 	}
 
@@ -75,7 +76,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 	jar := tls_client.NewCookieJar(jarOptions...)
 
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithClientProfile(profiles.Chrome_105),
 		tls_client.WithCookieJar(jar),
 	}
 
@@ -174,7 +175,7 @@ func TestClient_ExcludeExpiredCookiesFromRequest(t *testing.T) {
 	jar := tls_client.NewCookieJar()
 
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithClientProfile(profiles.Chrome_105),
 		tls_client.WithCookieJar(jar),
 	}
 

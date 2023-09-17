@@ -2,6 +2,7 @@ package tests
 
 import (
 	"encoding/json"
+	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"testing"
 
@@ -13,7 +14,7 @@ import (
 
 func TestClient_HeaderOrder(t *testing.T) {
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithClientProfile(profiles.Chrome_105),
 	}
 
 	client, err := tls_client.NewHttpClient(nil, options...)
@@ -100,7 +101,7 @@ func TestClient_HeaderOrder(t *testing.T) {
 
 func TestClient_HeaderOrderHttp1(t *testing.T) {
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(tls_client.Chrome_105),
+		tls_client.WithClientProfile(profiles.Chrome_105),
 		tls_client.WithForceHttp1(),
 	}
 
