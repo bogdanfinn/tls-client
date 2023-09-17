@@ -32,12 +32,27 @@ type DestroyOutput struct {
 type AddCookiesToSessionInput struct {
 	Cookies   []Cookie `json:"cookies"`
 	SessionId string   `json:"sessionId"`
+}
+
+type AddCookiesToSessionForUrlInput struct {
+	Cookies   []Cookie `json:"cookies"`
+	SessionId string   `json:"sessionId"`
 	Url       string   `json:"url"`
+}
+
+type GetCookiesFromSessionForUrlInput struct {
+	SessionId string `json:"sessionId"`
+	Url       string `json:"url"`
 }
 
 type GetCookiesFromSessionInput struct {
 	SessionId string `json:"sessionId"`
-	Url       string `json:"url"`
+}
+
+type CookiesFromSessionForUrlOutput struct {
+	Id      string   `json:"id"`
+	Url     string   `json:"url"`
+	Cookies []Cookie `json:"cookies"`
 }
 
 type CookiesFromSessionOutput struct {

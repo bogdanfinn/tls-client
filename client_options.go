@@ -43,7 +43,7 @@ type httpClientConfig struct {
 	proxyUrl                    string
 	serverNameOverwrite         string
 	transportOptions            *TransportOptions
-	cookieJar                   http.CookieJar
+	cookieJar                   CookieJar
 	clientProfile               profiles.ClientProfile
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
@@ -85,7 +85,7 @@ func WithCharlesProxy(host string, port string) HttpClientOption {
 }
 
 // WithCookieJar configures a HTTP client to use the specified cookie jar.
-func WithCookieJar(jar http.CookieJar) HttpClientOption {
+func WithCookieJar(jar CookieJar) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.cookieJar = jar
 	}

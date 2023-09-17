@@ -46,6 +46,7 @@ func WithLogger(logger Logger) CookieJarOption {
 type CookieJar interface {
 	http.CookieJar
 	GetAllCookies() map[string][]*http.Cookie
+	SetAllCookies(cookies map[string][]*http.Cookie)
 }
 
 type cookieJar struct {
@@ -172,6 +173,21 @@ func (jar *cookieJar) GetAllCookies() map[string][]*http.Cookie {
 	return copied
 }
 
+func (jar *cookieJar) SetAllCookies(cookies map[string][]*http.Cookie) {
+	jar.Lock()
+	defer jar.Unlock()
+
+	for urlString, urlCookies := range cookies {
+		u, err := url.Parse(urlString)
+		if err != nil {
+			jar.config.logger.Error("could not parse url %s", urlString)
+			continue
+		}
+
+		jar.SetCookies(u, urlCookies)
+	}
+}
+
 func (jar *cookieJar) buildCookieHostKey(u *url.URL) string {
 	host := u.Host
 
@@ -254,4 +270,60 @@ func inSlice(slice []string, elem string) bool {
 	}
 
 	return false
+}
+
+func NewHttpCookiejar() CookieJar {
+	realJar, _ := cookiejar.New(nil)
+
+	e := &httpCookieJar{
+		jar:        realJar,
+		allCookies: make(map[string][]*http.Cookie),
+	}
+
+	return e
+
+}
+
+type httpCookieJar struct {
+	jar        *cookiejar.Jar
+	allCookies map[string][]*http.Cookie
+	sync.RWMutex
+}
+
+func (jar *httpCookieJar) GetAllCookies() map[string][]*http.Cookie {
+	jar.RLock()
+	defer jar.RUnlock()
+
+	copied := make(map[string][]*http.Cookie)
+	for u, c := range jar.allCookies {
+		copied[u] = c
+	}
+
+	return copied
+}
+
+func (jar *httpCookieJar) SetAllCookies(cookies map[string][]*http.Cookie) {
+	jar.Lock()
+	defer jar.Unlock()
+
+	for urlString, urlCookies := range cookies {
+		u, err := url.Parse(urlString)
+		if err != nil {
+			continue
+		}
+
+		jar.SetCookies(u, urlCookies)
+	}
+}
+
+func (jar *httpCookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
+	jar.Lock()
+	defer jar.Unlock()
+
+	jar.allCookies[u.String()] = cookies
+	jar.jar.SetCookies(u, cookies)
+}
+
+func (jar *httpCookieJar) Cookies(u *url.URL) []*http.Cookie {
+	return jar.jar.Cookies(u)
 }
