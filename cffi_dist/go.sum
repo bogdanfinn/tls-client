@@ -2,8 +2,8 @@ github.com/andybalholm/brotli v1.0.4 h1:V7DdXeJtZscaqfNuAdSRuRFzuiKlHSC/Zh3zl9qY
 github.com/andybalholm/brotli v1.0.4/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
 github.com/bogdanfinn/fhttp v0.5.24 h1:OlyBKjvJp6a3TotN3wuj4mQHHRbfK7QUMrzCPOZGhRc=
 github.com/bogdanfinn/fhttp v0.5.24/go.mod h1:brqi5woc5eSCVHdKYBV8aZLbO7HGqpwyDLeXW+fT18I=
-github.com/bogdanfinn/tls-client v1.6.0 h1:trCefn62Fq7IGFX7QS4TFuXGAslsJDT9YSrmmTDXt5M=
-github.com/bogdanfinn/tls-client v1.6.0/go.mod h1:FtwQ3DndVZ0xAOO704v4iNAgbHOcEc5kPk9tjICTNQ0=
+github.com/bogdanfinn/tls-client v1.7.0-cookiejar h1:H01E9hImH1sv6tQsGio3GK+5yWg80g+RntbFg3rO2yM=
+github.com/bogdanfinn/tls-client v1.7.0-cookiejar/go.mod h1:FtwQ3DndVZ0xAOO704v4iNAgbHOcEc5kPk9tjICTNQ0=
 github.com/bogdanfinn/utls v1.5.16 h1:NhhWkegEcYETBMj9nvgO4lwvc6NcLH+znrXzO3gnw4M=
 github.com/bogdanfinn/utls v1.5.16/go.mod h1:mHeRCi69cUiEyVBkKONB1cAbLjRcZnlJbGzttmiuK4o=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
