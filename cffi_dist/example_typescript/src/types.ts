@@ -67,19 +67,19 @@ export interface TLSClientFetchCookiesForSessionRequestPayload {
     url: string;
 }
 
-export type TLSClientFetchCookiesForSessionResponse = Cookie[];
+export type TLSClientFetchCookiesForSessionResponse = { id: string, cookies: Cookie[] };
 
 export interface Cookie {
-    Name: string;
-    Value: string;
-    Path: string;
-    Domain: string;
-    Expires: string;
-    RawExpires: string;
-    MaxAge: number;
-    Secure: boolean;
-    HttpOnly: boolean;
-    SameSite: number;
-    Raw: string;
-    Unparsed: string;
+    name: string;
+    value: string;
+    path: string;
+    domain: string;
+    expires: string;
+    rawExpires: string;
+    maxAge: number;
+    secure: boolean;
+    httpOnly: boolean;
+    sameSite: number;
+    raw: string;
+    unparsed: string;
 }
