@@ -407,6 +407,25 @@ var Safari_Ipad_15_6 = ClientProfile{
 	connectionFlow: 10485760,
 }
 
+var Safari_IOS_13_0 = ClientProfile{
+ 	clientHelloId: tls.HelloIOS_13,
+ 	settings: map[http2.SettingID]uint32{
+ 		http2.SettingInitialWindowSize:    2097152,
+ 		http2.SettingMaxConcurrentStreams: 100,
+ 	},
+ 	settingsOrder: []http2.SettingID{
+ 		http2.SettingInitialWindowSize,
+ 		http2.SettingMaxConcurrentStreams,
+ 	},
+ 	pseudoHeaderOrder: []string{
+ 		":method",
+ 		":scheme",
+ 		":path",
+ 		":authority",
+ 	},
+ 	connectionFlow: 10485760,
+}
+
 var Safari_IOS_16_0 = ClientProfile{
 	clientHelloId: tls.HelloIOS_16_0,
 	settings: map[http2.SettingID]uint32{
