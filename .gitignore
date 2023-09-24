@@ -6,4 +6,4 @@ cffi_dist/example_typescript/build
 cffi_dist/example_typescript/package-lock.json
 cffi_dist/example_node/package-lock.json
 cffi_dist/example_node/node_modules
-/cffi_dist/dist/
+.DS_Store
