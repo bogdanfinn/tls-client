@@ -1,9 +1,9 @@
 .idea
 example/Example
 venv
-cffi_dist/example_typescript/node_modules
-cffi_dist/example_typescript/build
-cffi_dist/example_typescript/package-lock.json
+cffi/example_node/node_modules
 cffi_dist/example_node/package-lock.json
+cffi_dist/example_node/index_ftl_cookies.js
+cffi_dist/example_node/index_nike_cookies.js
 cffi_dist/example_node/node_modules
 .DS_Store
