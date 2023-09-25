@@ -3,6 +3,7 @@ package tls_client
 import (
 	"crypto/x509"
 	"fmt"
+	"github.com/bogdanfinn/tls-client/profiles"
 	"net"
 	"time"
 
@@ -37,12 +38,13 @@ type httpClientConfig struct {
 	customRedirectFunc          func(req *http.Request, via []*http.Request) error
 	insecureSkipVerify          bool
 	certificatePins             map[string][]string
+	defaultHeaders              http.Header
 	badPinHandler               BadPinHandlerFunc
 	proxyUrl                    string
 	serverNameOverwrite         string
 	transportOptions            *TransportOptions
 	cookieJar                   http.CookieJar
-	clientProfile               ClientProfile
+	clientProfile               profiles.ClientProfile
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
 	timeout                     time.Duration
@@ -197,9 +199,16 @@ func WithForceHttp1() HttpClientOption {
 }
 
 // WithClientProfile configures a TLS client to use the specified client profile.
-func WithClientProfile(clientProfile ClientProfile) HttpClientOption {
+func WithClientProfile(clientProfile profiles.ClientProfile) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.clientProfile = clientProfile
+	}
+}
+
+// WithDefaultHeaders configures a TLS client to use a set of default headers if none are specified on the request.
+func WithDefaultHeaders(defaultHeaders http.Header) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.defaultHeaders = defaultHeaders
 	}
 }
 

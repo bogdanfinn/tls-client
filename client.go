@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"net/url"
 	"strings"
@@ -49,7 +50,7 @@ var DefaultTimeoutSeconds = 30
 
 var DefaultOptions = []HttpClientOption{
 	WithTimeoutSeconds(DefaultTimeoutSeconds),
-	WithClientProfile(DefaultClientProfile),
+	WithClientProfile(profiles.DefaultClientProfile),
 	WithRandomTLSExtensionOrder(),
 	WithNotFollowRedirects(),
 }
@@ -66,7 +67,8 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		followRedirects:    true,
 		badPinHandler:      nil,
 		customRedirectFunc: nil,
-		clientProfile:      DefaultClientProfile,
+		defaultHeaders:     make(http.Header),
+		clientProfile:      profiles.DefaultClientProfile,
 		timeout:            time.Duration(DefaultTimeoutSeconds) * time.Second,
 	}
 
@@ -109,14 +111,14 @@ func validateConfig(_ *httpClientConfig) error {
 	return nil
 }
 
-func buildFromConfig(config *httpClientConfig) (*http.Client, ClientProfile, error) {
+func buildFromConfig(config *httpClientConfig) (*http.Client, profiles.ClientProfile, error) {
 	var dialer proxy.ContextDialer
 	dialer = newDirectDialer(config.timeout, config.localAddr)
 
 	if config.proxyUrl != "" {
 		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr)
 		if err != nil {
-			return nil, ClientProfile{}, err
+			return nil, profiles.ClientProfile{}, err
 		}
 
 		dialer = proxyDialer
@@ -180,7 +182,7 @@ func (c *httpClient) applyFollowRedirect() {
 		c.CheckRedirect = defaultRedirectFunc
 	}
 
-	if c.config.customRedirectFunc != nil {
+	if c.config.customRedirectFunc != nil && c.config.followRedirects {
 		c.CheckRedirect = c.config.customRedirectFunc
 	}
 }
@@ -191,11 +193,21 @@ func (c *httpClient) applyFollowRedirect() {
 //
 //	"http://user:pass@host:port"
 func (c *httpClient) SetProxy(proxyUrl string) error {
+	currentProxy := c.config.proxyUrl
+
 	c.logger.Debug("set proxy from %s to %s", c.config.proxyUrl, proxyUrl)
 	c.config.proxyUrl = proxyUrl
 	c.logger.Info(fmt.Sprintf("set proxy to: %s", proxyUrl))
 
-	return c.applyProxy()
+	err := c.applyProxy()
+	if err != nil {
+		c.logger.Error("failed to apply new proxy. rolling back to previous used proxy: %w", err)
+		c.config.proxyUrl = currentProxy
+
+		return c.applyProxy()
+	}
+
+	return nil
 }
 
 // GetProxy returns the proxy URL used by the client.
@@ -281,6 +293,11 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
 	c.headerLck.Lock()
+
+	if len(req.Header) == 0 {
+		req.Header = c.config.defaultHeaders
+	}
+
 	req.Header[http.HeaderOrderKey] = allToLower(req.Header[http.HeaderOrderKey])
 	c.headerLck.Unlock()
 

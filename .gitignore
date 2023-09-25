@@ -6,5 +6,4 @@ cffi_dist/example_node/package-lock.json
 cffi_dist/example_node/index_ftl_cookies.js
 cffi_dist/example_node/index_nike_cookies.js
 cffi_dist/example_node/node_modules
-examples_externals
 .DS_Store

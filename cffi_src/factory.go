@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"net"
 	"os"
@@ -133,13 +134,13 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	return tlsReq, nil
 }
 
-func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]byte, *TLSClientError) {
+func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]byte, error) {
 	var respBodyBytes []byte
 	var err error
 
 	f, err := os.OpenFile(*input.StreamOutputPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
-		return nil, NewTLSClientError(err)
+		return nil, err
 	}
 	defer f.Close()
 
@@ -165,7 +166,7 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 				fmt.Printf("Append stream output error: %+v\n", err)
 			}
 
-			return nil, NewTLSClientError(err)
+			return nil, err
 		}
 
 		if input.WithDebug {
@@ -256,7 +257,7 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		return modifiedClient, nil
 	}
 
-	clientProfile := tls_client.DefaultClientProfile
+	clientProfile := profiles.DefaultClientProfile
 
 	if requestInput.CustomTlsClient != nil {
 		clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, err := getCustomTlsClientProfile(requestInput.CustomTlsClient)
@@ -264,7 +265,7 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 			return nil, fmt.Errorf("can not build http client out of custom tls client information: %w", err)
 		}
 
-		clientProfile = tls_client.NewClientProfile(clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority)
+		clientProfile = profiles.NewClientProfile(clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority)
 	}
 
 	if tlsClientIdentifier != "" {
@@ -296,6 +297,23 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 	if requestInput.DisableIPV6 {
 		options = append(options, tls_client.WithDisableIPV6())
+	}
+
+	if requestInput.TransportOptions != nil {
+		transportOptions := &tls_client.TransportOptions{
+			DisableKeepAlives:      requestInput.TransportOptions.DisableKeepAlives,
+			DisableCompression:     requestInput.TransportOptions.DisableCompression,
+			MaxIdleConns:           requestInput.TransportOptions.MaxIdleConns,
+			MaxIdleConnsPerHost:    requestInput.TransportOptions.MaxIdleConnsPerHost,
+			MaxConnsPerHost:        requestInput.TransportOptions.MaxConnsPerHost,
+			MaxResponseHeaderBytes: requestInput.TransportOptions.MaxResponseHeaderBytes,
+			WriteBufferSize:        requestInput.TransportOptions.WriteBufferSize,
+			ReadBufferSize:         requestInput.TransportOptions.ReadBufferSize,
+			IdleConnTimeout:        requestInput.TransportOptions.IdleConnTimeout,
+			// RootCAs:                requestInput.TransportOptions.RootCAs,
+		}
+
+		options = append(options, tls_client.WithTransportOptions(transportOptions))
 	}
 
 	if requestInput.LocalAddress != nil {
@@ -341,6 +359,14 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 	if requestInput.InsecureSkipVerify {
 		options = append(options, tls_client.WithInsecureSkipVerify())
+	}
+
+	if requestInput.DefaultHeaders != nil && len(requestInput.DefaultHeaders) != 0 {
+		options = append(options, tls_client.WithDefaultHeaders(requestInput.DefaultHeaders))
+	}
+
+	if requestInput.ServerNameOverwrite != nil && *requestInput.ServerNameOverwrite != "" {
+		options = append(options, tls_client.WithServerNameOverwrite(*requestInput.ServerNameOverwrite))
 	}
 
 	proxy := proxyUrl
@@ -419,11 +445,11 @@ func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.Cli
 	return clientHelloId, resolvedH2Settings, resolvedH2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, nil
 }
 
-func getTlsClientProfile(tlsClientIdentifier string) tls_client.ClientProfile {
-	tlsClientProfile, ok := tls_client.MappedTLSClients[tlsClientIdentifier]
+func getTlsClientProfile(tlsClientIdentifier string) profiles.ClientProfile {
+	tlsClientProfile, ok := profiles.MappedTLSClients[tlsClientIdentifier]
 
 	if !ok {
-		return tls_client.DefaultClientProfile
+		return profiles.DefaultClientProfile
 	}
 
 	return tlsClientProfile
