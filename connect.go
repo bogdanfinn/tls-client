@@ -23,10 +23,8 @@ type directDialer struct {
 	dialer net.Dialer
 }
 
-func newDirectDialer(timeout time.Duration, localAddr *net.TCPAddr) proxy.ContextDialer {
-	_dialer := net.Dialer{
-		Timeout: timeout,
-	}
+func newDirectDialer(timeout time.Duration, localAddr *net.TCPAddr, _dialer net.Dialer) proxy.ContextDialer {
+	_dialer.Timeout = timeout
 	if nil != localAddr {
 		_dialer.LocalAddr = localAddr
 	}

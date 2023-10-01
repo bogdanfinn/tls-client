@@ -51,6 +51,7 @@ type httpClientConfig struct {
 	localAddr                   *net.TCPAddr
 	// Establish a connection to origin server via ipv4 only
 	disableIPV6 bool
+	dialer net.Dialer
 }
 
 // WithProxyUrl configures a HTTP client to use the specified proxy URL.
@@ -97,6 +98,13 @@ func WithCookieJar(jar http.CookieJar) HttpClientOption {
 func WithTimeoutMilliseconds(timeout int) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.timeout = time.Millisecond * time.Duration(timeout)
+	}
+}
+
+// WithDialer configures an HTTP client to use the specified dialer. This allows the use of a custom DNS resolver
+func WithDialer(dialer net.Dialer) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.dialer = dialer
 	}
 }
 
