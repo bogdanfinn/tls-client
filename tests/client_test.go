@@ -5,7 +5,6 @@ import (
 	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"testing"
-	"time"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
@@ -16,55 +15,55 @@ import (
 func TestClients(t *testing.T) {
 	t.Log("testing chrome 117")
 	chrome_117(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing firefox 117")
 	firefox_117(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing chrome 112")
 	chrome112(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing chrome 111")
 	chrome111(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing chrome 110")
 	chrome110(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing chrome 109")
 	chrome109(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing chrome 108")
 	chrome108(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing chrome 107")
 	chrome107(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing chrome 105")
 	chrome105(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing chrome 104")
 	chrome104(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing chrome 103")
 	chrome103(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing safari 16")
 	safari_16_0(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing safari ios 16")
 	safari_iOS_16_0(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing firefox 105")
 	firefox_105(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing firefox 106")
 	firefox_106(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing firefox 108")
 	firefox_108(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing firefox 110")
 	firefox_110(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing opera 91")
 	opera_91(t)
 }
@@ -72,22 +71,22 @@ func TestClients(t *testing.T) {
 func TestCustomClients(t *testing.T) {
 	t.Log("testing okhttp4 android 13")
 	okhttp4Android13(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing okhttp4 android 12")
 	okhttp4Android12(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing okhttp4 android 11")
 	okhttp4Android11(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing okhttp4 android 10")
 	okhttp4Android10(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing okhttp4 android 9")
 	okhttp4Android9(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing okhttp4 android 8")
 	okhttp4Android8(t)
-	time.Sleep(2 * time.Second)
+
 	t.Log("testing okhttp4 android 7")
 	okhttp4Android7(t)
 }
