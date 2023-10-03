@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/bogdanfinn/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/httputil"
@@ -116,7 +117,7 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, profiles.ClientPro
 	dialer = newDirectDialer(config.timeout, config.localAddr, config.dialer)
 
 	if config.proxyUrl != "" {
-		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr)
+		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr, &config.dialer)
 		if err != nil {
 			return nil, profiles.ClientProfile{}, err
 		}
@@ -221,7 +222,7 @@ func (c *httpClient) applyProxy() error {
 
 	if c.config.proxyUrl != "" {
 		c.logger.Debug("proxy url %s supplied - using proxy connect dialer", c.config.proxyUrl)
-		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout, c.config.localAddr)
+		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout, c.config.localAddr, &c.config.dialer)
 		if err != nil {
 			c.logger.Error("failed to create proxy connect dialer: %s", err.Error())
 			return err
