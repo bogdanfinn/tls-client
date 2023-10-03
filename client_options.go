@@ -102,9 +102,9 @@ func WithTimeoutMilliseconds(timeout int) HttpClientOption {
 }
 
 // WithDialer configures an HTTP client to use the specified dialer. This allows the use of a custom DNS resolver
-func WithDialer(dialer net.Dialer) HttpClientOption {
+func WithDialer(dialer *net.Dialer) HttpClientOption {
 	return func(config *httpClientConfig) {
-		config.dialer = dialer
+		config.dialer = *dialer
 	}
 }
 
