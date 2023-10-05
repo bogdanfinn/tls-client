@@ -3,7 +3,7 @@ module tls_client_cffi
 go 1.20
 
 require (
-	github.com/bogdanfinn/tls-client v1.7.0-cookiejar
+	github.com/bogdanfinn/tls-client v1.7.1-cookiejar
 	github.com/google/uuid v1.3.0
 )
 
