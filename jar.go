@@ -174,9 +174,6 @@ func (jar *cookieJar) GetAllCookies() map[string][]*http.Cookie {
 }
 
 func (jar *cookieJar) SetAllCookies(cookies map[string][]*http.Cookie) {
-	jar.Lock()
-	defer jar.Unlock()
-
 	for urlString, urlCookies := range cookies {
 		u, err := url.Parse(urlString)
 		if err != nil {
@@ -303,9 +300,6 @@ func (jar *httpCookieJar) GetAllCookies() map[string][]*http.Cookie {
 }
 
 func (jar *httpCookieJar) SetAllCookies(cookies map[string][]*http.Cookie) {
-	jar.Lock()
-	defer jar.Unlock()
-
 	for urlString, urlCookies := range cookies {
 		u, err := url.Parse(urlString)
 		if err != nil {
