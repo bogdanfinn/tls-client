@@ -25,6 +25,7 @@ func main() {
 	requestWithCustomClient()
 	rotateProxiesOnClient()
 	downloadImageWithTlsClient()
+	testPskExtension()
 }
 
 type TlsApiResponse struct {
@@ -684,4 +685,205 @@ func requestWithCustomClient() {
 	defer resp.Body.Close()
 
 	log.Printf("requesting topps as customClient1 => status code: %d\n", resp.StatusCode)
+}
+
+func testPskExtension() {
+	settings := map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      65536,
+		http2.SettingEnablePush:           0,
+		http2.SettingMaxConcurrentStreams: 1000,
+		http2.SettingInitialWindowSize:    6291456,
+		http2.SettingMaxHeaderListSize:    262144,
+	}
+	settingsOrder := []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingEnablePush,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	}
+
+	pseudoHeaderOrder := []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	}
+
+	connectionFlow := uint32(15663105)
+
+	specFactory := func() (tls.ClientHelloSpec, error) {
+		return tls.ClientHelloSpec{
+			CipherSuites: []uint16{
+				tls.GREASE_PLACEHOLDER,
+				tls.TLS_AES_128_GCM_SHA256,
+				tls.TLS_AES_256_GCM_SHA384,
+				tls.TLS_CHACHA20_POLY1305_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+			},
+			CompressionMethods: []uint8{
+				tls.CompressionNone,
+			},
+			Extensions: []tls.TLSExtension{
+				&tls.UtlsGREASEExtension{},
+				&tls.PSKKeyExchangeModesExtension{[]uint8{
+					tls.PskModeDHE,
+				}},
+				&tls.KeyShareExtension{[]tls.KeyShare{
+					{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
+					{Group: tls.X25519},
+				}},
+				&tls.ApplicationSettingsExtension{SupportedProtocols: []string{"h2"}},
+				&tls.SupportedVersionsExtension{[]uint16{
+					tls.GREASE_PLACEHOLDER,
+					tls.VersionTLS13,
+					tls.VersionTLS12,
+				}},
+				&tls.SNIExtension{},
+				&tls.SupportedPointsExtension{SupportedPoints: []byte{
+					tls.PointFormatUncompressed,
+				}},
+				&tls.StatusRequestExtension{},
+				&tls.ExtendedMasterSecretExtension{},
+				&tls.ALPNExtension{AlpnProtocols: []string{"h2", "http/1.1"}},
+				&tls.SupportedCurvesExtension{[]tls.CurveID{
+					tls.CurveID(tls.GREASE_PLACEHOLDER),
+					tls.X25519,
+					tls.CurveP256,
+					tls.CurveP384,
+				}},
+				&tls.RenegotiationInfoExtension{Renegotiation: tls.RenegotiateOnceAsClient},
+				&tls.UtlsCompressCertExtension{[]tls.CertCompressionAlgo{
+					tls.CertCompressionBrotli,
+				}},
+				&tls.SCTExtension{},
+				&tls.SessionTicketExtension{},
+				&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
+					tls.ECDSAWithP256AndSHA256,
+					tls.PSSWithSHA256,
+					tls.PKCS1WithSHA256,
+					tls.ECDSAWithP384AndSHA384,
+					tls.PSSWithSHA384,
+					tls.PKCS1WithSHA384,
+					tls.PSSWithSHA512,
+					tls.PKCS1WithSHA512,
+				}},
+				&tls.UtlsGREASEExtension{},
+				&tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
+				&tls.UtlsPreSharedKeyExtension{OmitEmptyPsk: true},
+			},
+		}, nil
+	}
+
+	customClientProfile := tls_client.NewClientProfile(tls.ClientHelloID{
+		Client:      "MyCustomProfileWithPSK",
+		Version:     "1",
+		Seed:        nil,
+		SpecFactory: specFactory,
+	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil)
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeoutSeconds(60),
+		tls_client.WithClientProfile(customClientProfile),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://tls.peet.ws/api/all", nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req.Header = http.Header{
+		"accept":     {"*/*"},
+		"user-agent": {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"user-agent",
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	readBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	tlsApiResponse := TlsApiResponse{}
+	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if strings.Contains(tlsApiResponse.TLS.Ja3, "-41,") {
+		log.Println("profile includes PSK extension (41)")
+	} else {
+		log.Println("profile does not include PSK extension (41)")
+	}
+
+	// Now we are doing the second request that the session resumption kicks in
+	req, err = http.NewRequest(http.MethodGet, "https://tls.peet.ws/api/all", nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req.Header = http.Header{
+		"accept":     {"*/*"},
+		"user-agent": {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"user-agent",
+		},
+	}
+
+	secondResp, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer secondResp.Body.Close()
+
+	secondRespReadBytes, err := io.ReadAll(secondResp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	secondTlsApiResponse := TlsApiResponse{}
+	if err := json.Unmarshal(secondRespReadBytes, &secondTlsApiResponse); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if strings.Contains(secondTlsApiResponse.TLS.Ja3, "-41,") {
+		log.Println("profile includes PSK extension (41)")
+	} else {
+		log.Println("profile does not include PSK extension (41)")
+	}
 }
