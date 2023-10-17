@@ -125,7 +125,7 @@ class TLSSession
         string responseJson = Marshal.PtrToStringAnsi(responsePtr);
 
         RequestResult result = JsonConvert.DeserializeObject<RequestResult>(responseJson);
-        freeMemory(this.sessionID);
+        freeMemory(result.Id);
 
         return result;
     }
