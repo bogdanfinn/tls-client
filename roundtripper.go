@@ -145,7 +145,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	}
 
 	conn := tls.UClient(rawConn, tlsConfig, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
-	if err = conn.Handshake(); err != nil {
+	if err = conn.HandshakeContext(ctx); err != nil {
 		_ = conn.Close()
 
 		return nil, err
