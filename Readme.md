@@ -12,7 +12,7 @@ requesting a resource is a specific browser.
 Nowadays this is not enough, because the server might use a technique to detect the client browser which is called TLS
 Fingerprinting.
 
-Even tho this article is about TLS Fingerprinting in NodeJS it well describes the technique in general.
+Even though this article is about TLS Fingerprinting in NodeJS it well describes the technique in general.
 https://httptoolkit.tech/blog/tls-fingerprinting-node-js/#how-does-tls-fingerprinting-work
 
 ### Why is this library needed?
