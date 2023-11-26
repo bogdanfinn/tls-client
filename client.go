@@ -175,10 +175,10 @@ func (c *httpClient) GetFollowRedirect() bool {
 
 func (c *httpClient) applyFollowRedirect() {
 	if c.config.followRedirects {
-		c.logger.Info("automatic redirect following is enabled")
+		c.logger.Debug("automatic redirect following is enabled")
 		c.CheckRedirect = nil
 	} else {
-		c.logger.Info("automatic redirect following is disabled")
+		c.logger.Debug("automatic redirect following is disabled")
 		c.CheckRedirect = defaultRedirectFunc
 	}
 
@@ -197,7 +197,6 @@ func (c *httpClient) SetProxy(proxyUrl string) error {
 
 	c.logger.Debug("set proxy from %s to %s", c.config.proxyUrl, proxyUrl)
 	c.config.proxyUrl = proxyUrl
-	c.logger.Info(fmt.Sprintf("set proxy to: %s", proxyUrl))
 
 	err := c.applyProxy()
 	if err != nil {
@@ -242,7 +241,7 @@ func (c *httpClient) applyProxy() error {
 
 // GetCookies returns the cookies in the client's cookie jar for a given URL.
 func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
-	c.logger.Info(fmt.Sprintf("get cookies for url: %s", u.String()))
+	c.logger.Debug(fmt.Sprintf("get cookies for url: %s", u.String()))
 	if c.Jar == nil {
 		c.logger.Warn("you did not setup a cookie jar")
 		return nil
@@ -253,7 +252,7 @@ func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
 
 // SetCookies sets a list of cookies for a given URL in the client's cookie jar.
 func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
-	c.logger.Info(fmt.Sprintf("set cookies for url: %s", u.String()))
+	c.logger.Debug(fmt.Sprintf("set cookies for url: %s", u.String()))
 
 	if c.Jar == nil {
 		c.logger.Warn("you did not setup a cookie jar")
