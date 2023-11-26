@@ -117,7 +117,7 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, profiles.ClientPro
 	dialer = newDirectDialer(config.timeout, config.localAddr, config.dialer)
 
 	if config.proxyUrl != "" {
-		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr, &config.dialer)
+		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr, config.dialer)
 		if err != nil {
 			return nil, profiles.ClientProfile{}, err
 		}
@@ -130,10 +130,10 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, profiles.ClientPro
 		redirectFunc = defaultRedirectFunc
 	} else {
 		redirectFunc = nil
-	}
 
-	if config.customRedirectFunc != nil {
-		redirectFunc = config.customRedirectFunc
+		if config.customRedirectFunc != nil {
+			redirectFunc = config.customRedirectFunc
+		}
 	}
 
 	clientProfile := config.clientProfile
@@ -221,7 +221,7 @@ func (c *httpClient) applyProxy() error {
 
 	if c.config.proxyUrl != "" {
 		c.logger.Debug("proxy url %s supplied - using proxy connect dialer", c.config.proxyUrl)
-		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout, c.config.localAddr, &c.config.dialer)
+		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout, c.config.localAddr, c.config.dialer)
 		if err != nil {
 			c.logger.Error("failed to create proxy connect dialer: %s", err.Error())
 			return err
