@@ -28,6 +28,11 @@ var clients = make(map[string]tls_client.HttpClient)
 func RemoveSession(sessionId string) {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
+	client, ok := clients[sessionId]
+	if !ok {
+             return
+	}
+	client.CloseIdleConnections()
 
 	delete(clients, sessionId)
 }
