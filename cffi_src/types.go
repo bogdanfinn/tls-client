@@ -92,6 +92,8 @@ type CustomTlsClient struct {
 	HeaderPriority                          *PriorityParam        `json:"headerPriority"`
 	Ja3String                               string                `json:"ja3String"`
 	KeyShareCurves                          []string              `json:"keyShareCurves"`
+	ALPNProtocols                           []string              `json:"alpnProtocols"`
+	ALPSProtocols                           []string              `json:"alpsProtocols"`
 	ECHCandidatePayloads                    []uint16              `json:"ECHCandidatePayloads"`
 	ECHCandidateCipherSuites                CandidateCipherSuites `json:"ECHCandidateCipherSuites"`
 	PriorityFrames                          []PriorityFrames      `json:"priorityFrames"`
