@@ -35,6 +35,7 @@ var MappedTLSClients = map[string]ClientProfile{
 	"firefox_108":            Firefox_108,
 	"firefox_110":            Firefox_110,
 	"firefox_117":            Firefox_117,
+	"firefox_120":		  Firefox_120,
 	"opera_89":               Opera_89,
 	"opera_90":               Opera_90,
 	"opera_91":               Opera_91,
