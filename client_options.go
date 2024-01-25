@@ -3,9 +3,11 @@ package tls_client
 import (
 	"crypto/x509"
 	"fmt"
-	"github.com/bogdanfinn/tls-client/profiles"
+	"io"
 	"net"
 	"time"
+
+	"github.com/bogdanfinn/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
 )
@@ -27,6 +29,10 @@ type TransportOptions struct {
 	// RootCAs is the set of root certificate authorities used to verify
 	// the remote server's certificate.
 	RootCAs *x509.CertPool
+	// KeyLogWriter is an io.Writer that the TLS client will use to write the
+	// TLS master secrets to. This can be used to decrypt TLS connections in
+	// Wireshark and other applications.
+	KeyLogWriter io.Writer
 }
 
 type BadPinHandlerFunc func(req *http.Request)
