@@ -141,9 +141,10 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		host = rt.serverNameOverwrite
 	}
 
-	tlsConfig := &tls.Config{ClientSessionCache: rt.clientSessionCache, ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify, OmitEmptyPsk: true, KeyLogWriter: rt.transportOptions.KeyLogWriter}
+	tlsConfig := &tls.Config{ClientSessionCache: rt.clientSessionCache, ServerName: host, InsecureSkipVerify: rt.insecureSkipVerify, OmitEmptyPsk: true}
 	if rt.transportOptions != nil {
 		tlsConfig.RootCAs = rt.transportOptions.RootCAs
+		tlsConfig.KeyLogWriter = rt.transportOptions.KeyLogWriter
 	}
 
 	conn := tls.UClient(rawConn, tlsConfig, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
