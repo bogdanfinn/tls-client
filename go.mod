@@ -1,6 +1,6 @@
-module github.com/bogdanfinn/tls-client
+module github.com/Enven-LLC/enven-tls
 
-go 1.20
+go 1.21
 
 require (
 	github.com/bogdanfinn/fhttp v0.5.27

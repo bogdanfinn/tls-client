@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bogdanfinn/tls-client/profiles"
+	"github.com/Enven-LLC/enven-tls/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
 	"golang.org/x/net/proxy"
