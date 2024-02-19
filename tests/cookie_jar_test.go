@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"io"
 	"net/url"
 	"testing"
 
@@ -109,14 +108,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 		},
 	}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	_, err = io.ReadAll(resp.Body)
+	_, err = client.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,14 +147,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 		},
 	}
 
-	resp, err = client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	_, err = io.ReadAll(resp.Body)
+	_, err = client.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

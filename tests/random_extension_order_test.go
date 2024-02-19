@@ -3,10 +3,10 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bogdanfinn/tls-client/profiles"
-	"io"
 	"strings"
 	"testing"
+
+	"github.com/bogdanfinn/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
@@ -34,15 +34,8 @@ func TestClient_RandomExtensionOrderChrome(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer resp.Body.Close()
-
-	readBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	tlsApiResponse := TlsApiResponse{}
-	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
+	if err := json.Unmarshal(resp.BodyBytes, &tlsApiResponse); err != nil {
 		t.Fatal(err)
 	}
 
@@ -84,15 +77,8 @@ func TestClient_RandomExtensionOrderCustom(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer resp.Body.Close()
-
-	readBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	tlsApiResponse := TlsApiResponse{}
-	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
+	if err := json.Unmarshal(resp.BodyBytes, &tlsApiResponse); err != nil {
 		t.Fatal(err)
 	}
 
