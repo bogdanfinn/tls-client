@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/bogdanfinn/fhttp v0.5.27
-	github.com/bogdanfinn/tls-client v1.7.2
+	github.com/bogdanfinn/tls-client v1.7.3-proxy-connect
 	github.com/google/uuid v1.3.0
 )
 
