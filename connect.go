@@ -10,6 +10,7 @@ import (
 	"io"
 	"net"
 	"net/url"
+	"os"
 	"sync"
 	"time"
 
@@ -74,6 +75,7 @@ func (s *socksContextDialer) DialContext(ctx context.Context, network, address s
 
 // connectDialer allows to configure one-time use HTTP CONNECT client
 type connectDialer struct {
+	logger        Logger
 	ProxyUrl      url.URL
 	DefaultHeader http.Header
 
@@ -92,7 +94,7 @@ type connectDialer struct {
 // newConnectDialer creates a dialer to issue CONNECT requests and tunnel traffic via HTTP/S proxy.
 // proxyUrlStr must provide Scheme and Host, may provide credentials and port.
 // Example: https://username:password@golang.org:443
-func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.TCPAddr, configDialer net.Dialer) (proxy.ContextDialer, error) {
+func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.TCPAddr, configDialer net.Dialer, logger Logger) (proxy.ContextDialer, error) {
 	proxyUrl, err := url.Parse(proxyUrlStr)
 	if err != nil {
 		return nil, err
@@ -126,6 +128,7 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 	}
 
 	dialer := &connectDialer{
+		logger:            logger,
 		ProxyUrl:          *proxyUrl,
 		Dialer:            _dialer,
 		Timeout:           timeout,
@@ -219,6 +222,7 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 			_ = rawConn.Close()
 			return nil, errors.New("Proxy responded with non 200 code: " + resp.Status)
 		}
+
 		return newHttp2Conn(rawConn, pw, resp.Body), nil
 	}
 
@@ -227,14 +231,29 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 		req.ProtoMajor = 1
 		req.ProtoMinor = 1
 
-		err := req.Write(rawConn)
+		deadline := time.Now().Add(c.Timeout)
+		err := rawConn.SetDeadline(deadline)
 		if err != nil {
+			_ = rawConn.Close()
+			return nil, err
+		}
+
+		err = req.Write(rawConn)
+		if err != nil {
+			if errors.Is(err, os.ErrDeadlineExceeded) {
+				c.logger.Error("deadline exceeded while trying to write proxy connection")
+			}
+
 			_ = rawConn.Close()
 			return nil, err
 		}
 
 		resp, err := http.ReadResponse(bufio.NewReader(rawConn), req)
 		if err != nil {
+			if errors.Is(err, os.ErrDeadlineExceeded) {
+				c.logger.Error("deadline exceeded while trying to read proxy connection")
+			}
+
 			_ = rawConn.Close()
 			return nil, err
 		}
@@ -243,6 +262,9 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 			_ = rawConn.Close()
 			return nil, errors.New("Proxy responded with non 200 code: " + resp.Status)
 		}
+
+		rawConn.SetDeadline(time.Time{})
+
 		return rawConn, nil
 	}
 
@@ -255,6 +277,7 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 				cc := c.cachedH2ClientConn
 				c.cacheH2Mu.Unlock()
 				unlocked = true
+
 				proxyConn, err := connectHttp2(rc, cc)
 				if err == nil {
 					return proxyConn, err
@@ -273,6 +296,7 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 	switch c.ProxyUrl.Scheme {
 	case "http":
 		rawConn, err = c.Dialer.DialContext(ctx, network, c.ProxyUrl.Host)
+
 		if err != nil {
 			return nil, err
 		}
@@ -306,7 +330,9 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 	case "":
 		fallthrough
 	case "http/1.1":
-		return connectHttp1(rawConn)
+		a, err := connectHttp1(rawConn)
+
+		return a, err
 	case "h2":
 		t := http2.Transport{}
 		h2clientConn, err := t.NewClientConn(rawConn)
@@ -320,6 +346,7 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 			_ = rawConn.Close()
 			return nil, err
 		}
+
 		if c.EnableH2ConnReuse {
 			c.cacheH2Mu.Lock()
 			c.cachedH2ClientConn = h2clientConn
