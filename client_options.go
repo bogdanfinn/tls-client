@@ -50,6 +50,7 @@ type httpClientConfig struct {
 	serverNameOverwrite         string
 	transportOptions            *TransportOptions
 	cookieJar                   http.CookieJar
+	betterJar                   *BetterJar
 	clientProfile               profiles.ClientProfile
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
@@ -96,6 +97,11 @@ func WithCharlesProxy(host string, port string) HttpClientOption {
 func WithCookieJar(jar http.CookieJar) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.cookieJar = jar
+	}
+}
+func WithBetterJar(bjar *BetterJar) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.betterJar = bjar
 	}
 }
 

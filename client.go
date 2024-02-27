@@ -23,6 +23,10 @@ type HttpClient interface {
 	SetCookies(u *url.URL, cookies []*http.Cookie)
 	SetCookieJar(jar http.CookieJar)
 	GetCookieJar() http.CookieJar
+
+	SetBJar(jar *BetterJar)
+	GetBJar() *BetterJar
+
 	SetProxy(proxyUrl string) error
 	GetProxy() string
 	SetFollowRedirect(followRedirect bool)
@@ -101,12 +105,24 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		logger = NewNoopLogger()
 	}
 
-	return &httpClient{
+	// return &httpClient{
+	// 	Client:    *client,
+	// 	logger:    logger,
+	// 	config:    config,
+	// 	headerLck: sync.Mutex{},
+	// }, nil
+
+	c := &httpClient{
 		Client:    *client,
 		logger:    logger,
 		config:    config,
 		headerLck: sync.Mutex{},
-	}, nil
+	}
+	if config.betterJar != nil {
+		c.bjar = config.betterJar
+	}
+
+	return c, nil
 }
 
 func validateConfig(_ *httpClientConfig) error {
