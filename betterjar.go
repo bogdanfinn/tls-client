@@ -48,6 +48,12 @@ func (bj *BetterJar) GetCookies() string {
 
 	return strings.TrimSuffix(cookies, ";")
 }
+func (bj *BetterJar) GetCookieJar() map[string]string {
+	bj.mu.RLock()
+	defer bj.mu.RUnlock()
+
+	return bj.cookies
+}
 func (bj *BetterJar) processCookies(resp *WebResp) {
 	setCookies := resp.Header.Values("Set-Cookie")
 
