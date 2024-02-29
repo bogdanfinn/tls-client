@@ -1,7 +1,6 @@
 package tls_client
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 )
@@ -58,7 +57,6 @@ func (bj *BetterJar) processCookies(resp *WebResp) {
 	}
 
 	bj.mu.Lock()
-	defer bj.mu.Unlock()
 
 	for _, setCookie := range setCookies {
 		cookieAttributes := strings.Split(setCookie, ";")
@@ -79,7 +77,6 @@ func (bj *BetterJar) processCookies(resp *WebResp) {
 			case "path", "domain", "expires":
 				continue
 			default:
-				fmt.Println("cookie:", name, value)
 				if shouldProcessCookie(name, value) {
 					bj.cookies[name] = value
 				}
@@ -88,6 +85,7 @@ func (bj *BetterJar) processCookies(resp *WebResp) {
 		}
 	}
 
+	bj.mu.Unlock()
 	resp.Cookies = bj.GetCookies()
 }
 
