@@ -1,6 +1,7 @@
 package tls_client
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/url"
@@ -319,6 +320,10 @@ func (c *httpClient) Do(req *http.Request) (*WebResp, error) {
 		}
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Millisecond*80))
+	defer cancel()
+
+	req = req.WithContext(ctx)
 	resp, err := c.Client.Do(req)
 	if err != nil {
 		return &WebResp{StatusCode: -1}, err
