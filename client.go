@@ -320,7 +320,7 @@ func (c *httpClient) Do(req *http.Request) (*WebResp, error) {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Millisecond*80))
+	ctx, cancel := context.WithTimeout(context.Background(), c.config.timeout)
 	defer cancel()
 
 	req = req.WithContext(ctx)
