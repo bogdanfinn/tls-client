@@ -227,7 +227,14 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 		req.ProtoMajor = 1
 		req.ProtoMinor = 1
 
-		err := req.Write(rawConn)
+		deadline := time.Now().Add(c.Timeout)
+		err := rawConn.SetDeadline(deadline)
+		if err != nil {
+			_ = rawConn.Close()
+			return nil, err
+		}
+
+		err = req.Write(rawConn)
 		if err != nil {
 			_ = rawConn.Close()
 			return nil, err
@@ -243,6 +250,8 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 			_ = rawConn.Close()
 			return nil, errors.New("Proxy responded with non 200 code: " + resp.Status)
 		}
+
+		rawConn.SetDeadline(time.Time{})
 		return rawConn, nil
 	}
 
