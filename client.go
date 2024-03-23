@@ -21,6 +21,8 @@ var defaultRedirectFunc = func(req *http.Request, via []*http.Request) error {
 	return http.ErrUseLastResponse
 }
 
+type customRedirectFunc func(req *http.Request, via []*http.Request) error
+
 type HttpClient interface {
 	GetCookies(u *url.URL) []*http.Cookie
 	SetCookies(u *url.URL, cookies []*http.Cookie)
@@ -30,6 +32,7 @@ type HttpClient interface {
 	GetProxy() string
 	SetFollowRedirect(followRedirect bool)
 	GetFollowRedirect() bool
+	SetRedirectFunc(redirectFunc customRedirectFunc)
 	CloseIdleConnections()
 	Do(req *http.Request) (*http.Response, error)
 	Get(url string) (resp *http.Response, err error)
@@ -172,6 +175,11 @@ func (c *httpClient) SetFollowRedirect(followRedirect bool) {
 // GetFollowRedirect returns the client's HTTP redirect following policy.
 func (c *httpClient) GetFollowRedirect() bool {
 	return c.config.followRedirects
+}
+
+// SetRedirectFunc allows the user to custom configure the client's HTTP redirect function.
+func (c *httpClient) SetRedirectFunc(redirectFunc customRedirectFunc) {
+	c.CheckRedirect = redirectFunc
 }
 
 func (c *httpClient) applyFollowRedirect() {
