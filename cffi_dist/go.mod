@@ -3,8 +3,8 @@ module tls_client_cffi
 go 1.20
 
 require (
-	github.com/bogdanfinn/fhttp v0.5.27
-	github.com/bogdanfinn/tls-client v1.7.3-proxy-connect
+	github.com/bogdanfinn/fhttp v0.5.28
+	github.com/bogdanfinn/tls-client v1.7.4
 	github.com/google/uuid v1.3.0
 )
 
