@@ -112,7 +112,7 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 		if proxyUrl.Port() == "" {
 			proxyUrl.Host = net.JoinHostPort(proxyUrl.Host, "443")
 		}
-	case "socks5":
+	case "socks5", "socks5h":
 		return handleSocks5ProxyDialer(proxyUrl, localAddr)
 	case "":
 		return nil, errors.New("specify scheme explicitly (https://)")
