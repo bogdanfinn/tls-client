@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"github.com/bogdanfinn/tls-client/profiles"
+	"github.com/Enven-LLC/enven-tls/profiles"
 	tls "github.com/bogdanfinn/utls"
 )
 

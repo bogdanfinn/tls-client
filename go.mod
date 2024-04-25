@@ -1,11 +1,10 @@
-module github.com/bogdanfinn/tls-client
+module github.com/Enven-LLC/enven-tls
 
-go 1.20
+go 1.21
 
 require (
-	github.com/bogdanfinn/fhttp v0.5.27
+	github.com/bogdanfinn/fhttp v0.5.28-0.20240227070929-1ec8f13f8c87
 	github.com/bogdanfinn/utls v1.6.1
-	github.com/google/uuid v1.3.0
 	github.com/stretchr/testify v1.8.0
 	github.com/tam7t/hpkp v0.0.0-20160821193359-2b70b4024ed5
 	golang.org/x/net v0.17.0

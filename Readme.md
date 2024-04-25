@@ -53,8 +53,8 @@ import (
 	"log"
 
 	http "github.com/bogdanfinn/fhttp"
-	tls_client "github.com/bogdanfinn/tls-client"
-	"github.com/bogdanfinn/tls-client/profiles"
+	tls_client "github.com/Enven-LLC/enven-tls"
+	"github.com/Enven-LLC/enven-tls/profiles"
 )
 
 func main() {

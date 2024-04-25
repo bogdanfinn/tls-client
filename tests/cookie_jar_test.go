@@ -1,14 +1,13 @@
 package tests
 
 import (
-	"io"
 	"net/url"
 	"testing"
 
-	"github.com/bogdanfinn/tls-client/profiles"
+	"github.com/Enven-LLC/enven-tls/profiles"
 
+	tls_client "github.com/Enven-LLC/enven-tls"
 	http "github.com/bogdanfinn/fhttp"
-	tls_client "github.com/bogdanfinn/tls-client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -109,14 +108,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 		},
 	}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	_, err = io.ReadAll(resp.Body)
+	_, err = client.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,14 +147,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 		},
 	}
 
-	resp, err = client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	_, err = io.ReadAll(resp.Body)
+	_, err = client.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

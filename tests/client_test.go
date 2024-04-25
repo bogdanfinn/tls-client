@@ -2,14 +2,13 @@ package tests
 
 import (
 	"encoding/json"
-	"io"
 	"testing"
 	"time"
 
-	"github.com/bogdanfinn/tls-client/profiles"
+	"github.com/Enven-LLC/enven-tls/profiles"
 
+	tls_client "github.com/Enven-LLC/enven-tls"
 	http "github.com/bogdanfinn/fhttp"
-	tls_client "github.com/bogdanfinn/tls-client"
 	tls "github.com/bogdanfinn/utls"
 )
 
@@ -634,16 +633,9 @@ func opera_91(t *testing.T) {
 	compareResponse(t, "opera", clientFingerprints[opera][tls.HelloOpera_91.Str()], resp)
 }
 
-func compareResponse(t *testing.T, clientName string, expectedValues map[string]string, resp *http.Response) {
-	defer resp.Body.Close()
-
-	readBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+func compareResponse(t *testing.T, clientName string, expectedValues map[string]string, resp *tls_client.WebResp) {
 	tlsApiResponse := TlsApiResponse{}
-	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
+	if err := json.Unmarshal(resp.BodyBytes, &tlsApiResponse); err != nil {
 		t.Fatal(err)
 	}
 
