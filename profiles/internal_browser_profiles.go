@@ -499,6 +499,26 @@ var Chrome_103 = ClientProfile{
 	},
 	connectionFlow: 15663105,
 }
+var Safari_IOS_17_0 = ClientProfile{
+	clientHelloId: tls.HelloIOS_16_0,
+	settings: map[http2.SettingID]uint32{
+		http2.SettingEnablePush:           0,
+		http2.SettingInitialWindowSize:    2097152,
+		http2.SettingMaxConcurrentStreams: 100,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingEnablePush,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxConcurrentStreams,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":scheme",
+		":path",
+		":authority",
+	},
+	connectionFlow: 10485760,
+}
 
 var Safari_15_6_1 = ClientProfile{
 	clientHelloId: tls.HelloSafari_15_6_1,
