@@ -51,6 +51,8 @@ const requestPayload = {
         "supportedVersions": ["GREASE", "1.3", "1.2"],
         "keyShareCurves": ["GREASE", "X25519"],
         "certCompressionAlgo": "brotli",
+        "alpnProtocols": ["h2", "http/1.1"],
+        "alpsProtocols": ["h2"],
         "pseudoHeaderOrder": [
             ":method",
             ":authority",
