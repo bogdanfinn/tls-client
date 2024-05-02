@@ -2,7 +2,7 @@ import ctypes
 import json
 
 # load the tls-client shared package for your OS you are currently running your python script (i'm running on mac)
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.6.1.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.7.2.dylib')
 
 # extract the exposed request function from the shared package
 request = library.request
@@ -68,6 +68,8 @@ requestPayload = {
         "supportedVersions": ["GREASE", "1.3", "1.2"],
         "keyShareCurves": ["GREASE", "X25519"],
         "certCompressionAlgo": "brotli",
+        "alpnProtocols": ["h2", "http/1.1"],
+        "alpsProtocols": ["h2"],
         "pseudoHeaderOrder": [
             ":method",
             ":authority",

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"log"
 	"net/url"
@@ -12,10 +11,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bogdanfinn/tls-client/profiles"
+
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/http2"
 	tls_client "github.com/bogdanfinn/tls-client"
-	"github.com/bogdanfinn/tls-client/shared"
 	tls "github.com/bogdanfinn/utls"
 )
 
@@ -27,6 +27,65 @@ func main() {
 	requestWithCustomClient()
 	rotateProxiesOnClient()
 	downloadImageWithTlsClient()
+	testPskExtension()
+}
+
+type TlsApiResponse struct {
+	IP          string `json:"ip"`
+	HTTPVersion string `json:"http_version"`
+	Method      string `json:"method"`
+	TLS         struct {
+		Ciphers    []string `json:"ciphers"`
+		Extensions []struct {
+			Name                       string      `json:"name"`
+			ServerName                 string      `json:"server_name,omitempty"`
+			Data                       string      `json:"data,omitempty"`
+			SupportedGroups            []string    `json:"supported_groups,omitempty"`
+			EllipticCurvesPointFormats interface{} `json:"elliptic_curves_point_formats,omitempty"`
+			Protocols                  []string    `json:"protocols,omitempty"`
+			StatusRequest              struct {
+				CertificateStatusType   string `json:"certificate_status_type"`
+				ResponderIDListLength   int    `json:"responder_id_list_length"`
+				RequestExtensionsLength int    `json:"request_extensions_length"`
+			} `json:"status_request,omitempty"`
+			SignatureAlgorithms []string `json:"signature_algorithms,omitempty"`
+			SharedKeys          []struct {
+				TLSGrease0X7A7A string `json:"TLS_GREASE (0x7a7a),omitempty"`
+				X2551929        string `json:"X25519 (29),omitempty"`
+			} `json:"shared_keys,omitempty"`
+			PskKeyExchangeMode string   `json:"PSK_Key_Exchange_Mode,omitempty"`
+			Versions           []string `json:"versions,omitempty"`
+			Algorithms         []string `json:"algorithms,omitempty"`
+			PaddingDataLength  int      `json:"padding_data_length,omitempty"`
+		} `json:"extensions"`
+		TLSVersionRecord     string `json:"tls_version_record"`
+		TLSVersionNegotiated string `json:"tls_version_negotiated"`
+		Ja3                  string `json:"ja3"`
+		Ja3Hash              string `json:"ja3_hash"`
+		ClientRandom         string `json:"client_random"`
+		SessionID            string `json:"session_id"`
+	} `json:"tls"`
+	HTTP2 struct {
+		AkamaiFingerprint     string `json:"akamai_fingerprint"`
+		AkamaiFingerprintHash string `json:"akamai_fingerprint_hash"`
+		SentFrames            []struct {
+			FrameType string   `json:"frame_type"`
+			Length    int      `json:"length"`
+			Settings  []string `json:"settings,omitempty"`
+			Increment int      `json:"increment,omitempty"`
+			StreamID  int      `json:"stream_id,omitempty"`
+			Headers   []string `json:"headers,omitempty"`
+			Flags     []string `json:"flags,omitempty"`
+			Priority  struct {
+				Weight    int `json:"weight"`
+				DependsOn int `json:"depends_on"`
+				Exclusive int `json:"exclusive"`
+			} `json:"priority,omitempty"`
+		} `json:"sent_frames"`
+	} `json:"http2"`
+	HTTP1 struct {
+		Headers []string `json:"headers"`
+	} `json:"http1"`
 }
 
 func sslPinning() {
@@ -45,7 +104,7 @@ func sslPinning() {
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(60),
-		tls_client.WithClientProfile(profiles.Chrome_108),
+		tls_client.WithClientProfile(profiles.Chrome_107),
 		tls_client.WithRandomTLSExtensionOrder(),
 		tls_client.WithCookieJar(jar),
 		tls_client.WithCertificatePinning(pins, tls_client.DefaultBadPinHandler),
@@ -364,7 +423,7 @@ func rotateProxiesOnClient() {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithClientProfile(profiles.Chrome_107),
-		tls_client.WithProxyUrl("http://user:pass@host:port"),
+		tls_client.WithProxyUrl("http://user:pass@host:port"), // you can also use socks5://user:pass@host:port or socks5h://user:pass@host:port
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
@@ -427,7 +486,7 @@ func rotateProxiesOnClient() {
 		return
 	}
 
-	tlsApiResponse := shared.TlsApiResponse{}
+	tlsApiResponse := TlsApiResponse{}
 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
 		log.Println(err)
 		return
@@ -456,7 +515,7 @@ func rotateProxiesOnClient() {
 		return
 	}
 
-	tlsApiResponse = shared.TlsApiResponse{}
+	tlsApiResponse = TlsApiResponse{}
 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
 		log.Println(err)
 		return
@@ -514,7 +573,7 @@ func requestWithCustomClient() {
 			Extensions: []tls.TLSExtension{
 				&tls.UtlsGREASEExtension{},
 				&tls.SNIExtension{},
-				&tls.UtlsExtendedMasterSecretExtension{},
+				&tls.ExtendedMasterSecretExtension{},
 				&tls.RenegotiationInfoExtension{Renegotiation: tls.RenegotiateOnceAsClient},
 				&tls.SupportedCurvesExtension{Curves: []tls.CurveID{
 					tls.CurveID(tls.GREASE_PLACEHOLDER),
@@ -628,4 +687,205 @@ func requestWithCustomClient() {
 	defer resp.Body.Close()
 
 	log.Printf("requesting topps as customClient1 => status code: %d\n", resp.StatusCode)
+}
+
+func testPskExtension() {
+	settings := map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:      65536,
+		http2.SettingEnablePush:           0,
+		http2.SettingMaxConcurrentStreams: 1000,
+		http2.SettingInitialWindowSize:    6291456,
+		http2.SettingMaxHeaderListSize:    262144,
+	}
+	settingsOrder := []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingEnablePush,
+		http2.SettingMaxConcurrentStreams,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	}
+
+	pseudoHeaderOrder := []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	}
+
+	connectionFlow := uint32(15663105)
+
+	specFactory := func() (tls.ClientHelloSpec, error) {
+		return tls.ClientHelloSpec{
+			CipherSuites: []uint16{
+				tls.GREASE_PLACEHOLDER,
+				tls.TLS_AES_128_GCM_SHA256,
+				tls.TLS_AES_256_GCM_SHA384,
+				tls.TLS_CHACHA20_POLY1305_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+			},
+			CompressionMethods: []uint8{
+				tls.CompressionNone,
+			},
+			Extensions: []tls.TLSExtension{
+				&tls.UtlsGREASEExtension{},
+				&tls.PSKKeyExchangeModesExtension{[]uint8{
+					tls.PskModeDHE,
+				}},
+				&tls.KeyShareExtension{[]tls.KeyShare{
+					{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
+					{Group: tls.X25519},
+				}},
+				&tls.ApplicationSettingsExtension{SupportedProtocols: []string{"h2"}},
+				&tls.SupportedVersionsExtension{[]uint16{
+					tls.GREASE_PLACEHOLDER,
+					tls.VersionTLS13,
+					tls.VersionTLS12,
+				}},
+				&tls.SNIExtension{},
+				&tls.SupportedPointsExtension{SupportedPoints: []byte{
+					tls.PointFormatUncompressed,
+				}},
+				&tls.StatusRequestExtension{},
+				&tls.ExtendedMasterSecretExtension{},
+				&tls.ALPNExtension{AlpnProtocols: []string{"h2", "http/1.1"}},
+				&tls.SupportedCurvesExtension{[]tls.CurveID{
+					tls.CurveID(tls.GREASE_PLACEHOLDER),
+					tls.X25519,
+					tls.CurveP256,
+					tls.CurveP384,
+				}},
+				&tls.RenegotiationInfoExtension{Renegotiation: tls.RenegotiateOnceAsClient},
+				&tls.UtlsCompressCertExtension{[]tls.CertCompressionAlgo{
+					tls.CertCompressionBrotli,
+				}},
+				&tls.SCTExtension{},
+				&tls.SessionTicketExtension{},
+				&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
+					tls.ECDSAWithP256AndSHA256,
+					tls.PSSWithSHA256,
+					tls.PKCS1WithSHA256,
+					tls.ECDSAWithP384AndSHA384,
+					tls.PSSWithSHA384,
+					tls.PKCS1WithSHA384,
+					tls.PSSWithSHA512,
+					tls.PKCS1WithSHA512,
+				}},
+				&tls.UtlsGREASEExtension{},
+				&tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
+				&tls.UtlsPreSharedKeyExtension{OmitEmptyPsk: true},
+			},
+		}, nil
+	}
+
+	customClientProfile := profiles.NewClientProfile(tls.ClientHelloID{
+		Client:      "MyCustomProfileWithPSK",
+		Version:     "1",
+		Seed:        nil,
+		SpecFactory: specFactory,
+	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil)
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeoutSeconds(60),
+		tls_client.WithClientProfile(customClientProfile),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://tls.peet.ws/api/all", nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req.Header = http.Header{
+		"accept":     {"*/*"},
+		"user-agent": {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"user-agent",
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	readBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	tlsApiResponse := TlsApiResponse{}
+	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if strings.Contains(tlsApiResponse.TLS.Ja3, "-41,") {
+		log.Println("profile includes PSK extension (41)")
+	} else {
+		log.Println("profile does not include PSK extension (41)")
+	}
+
+	// Now we are doing the second request that the session resumption kicks in
+	req, err = http.NewRequest(http.MethodGet, "https://tls.peet.ws/api/all", nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req.Header = http.Header{
+		"accept":     {"*/*"},
+		"user-agent": {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"user-agent",
+		},
+	}
+
+	secondResp, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer secondResp.Body.Close()
+
+	secondRespReadBytes, err := io.ReadAll(secondResp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	secondTlsApiResponse := TlsApiResponse{}
+	if err := json.Unmarshal(secondRespReadBytes, &secondTlsApiResponse); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if strings.Contains(secondTlsApiResponse.TLS.Ja3, "-41,") {
+		log.Println("profile includes PSK extension (41)")
+	} else {
+		log.Println("profile does not include PSK extension (41)")
+	}
 }

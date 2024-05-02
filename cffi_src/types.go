@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	tls_client "github.com/bogdanfinn/tls-client"
 )
 
 type TLSClientError struct {
@@ -83,18 +85,41 @@ type RequestInput struct {
 
 // CustomTlsClient contains custom TLS specifications to construct a client from.
 type CustomTlsClient struct {
-	CertCompressionAlgo                     string            `json:"certCompressionAlgo"`
-	ConnectionFlow                          uint32            `json:"connectionFlow"`
-	H2Settings                              map[string]uint32 `json:"h2Settings"`
-	H2SettingsOrder                         []string          `json:"h2SettingsOrder"`
-	HeaderPriority                          *PriorityParam    `json:"headerPriority"`
-	Ja3String                               string            `json:"ja3String"`
-	KeyShareCurves                          []string          `json:"keyShareCurves"`
-	PriorityFrames                          []PriorityFrames  `json:"priorityFrames"`
-	PseudoHeaderOrder                       []string          `json:"pseudoHeaderOrder"`
-	SupportedDelegatedCredentialsAlgorithms []string          `json:"supportedDelegatedCredentialsAlgorithms"`
-	SupportedSignatureAlgorithms            []string          `json:"supportedSignatureAlgorithms"`
-	SupportedVersions                       []string          `json:"supportedVersions"`
+	CertCompressionAlgo                     string                `json:"certCompressionAlgo"`
+	ConnectionFlow                          uint32                `json:"connectionFlow"`
+	H2Settings                              map[string]uint32     `json:"h2Settings"`
+	H2SettingsOrder                         []string              `json:"h2SettingsOrder"`
+	HeaderPriority                          *PriorityParam        `json:"headerPriority"`
+	Ja3String                               string                `json:"ja3String"`
+	KeyShareCurves                          []string              `json:"keyShareCurves"`
+	ALPNProtocols                           []string              `json:"alpnProtocols"`
+	ALPSProtocols                           []string              `json:"alpsProtocols"`
+	ECHCandidatePayloads                    []uint16              `json:"ECHCandidatePayloads"`
+	ECHCandidateCipherSuites                CandidateCipherSuites `json:"ECHCandidateCipherSuites"`
+	PriorityFrames                          []PriorityFrames      `json:"priorityFrames"`
+	PseudoHeaderOrder                       []string              `json:"pseudoHeaderOrder"`
+	SupportedDelegatedCredentialsAlgorithms []string              `json:"supportedDelegatedCredentialsAlgorithms"`
+	SupportedSignatureAlgorithms            []string              `json:"supportedSignatureAlgorithms"`
+	SupportedVersions                       []string              `json:"supportedVersions"`
+}
+
+type CandidateCipherSuites []CandidateCipherSuite
+
+func (c CandidateCipherSuites) Translate() []tls_client.CandidateCipherSuites {
+	suites := make([]tls_client.CandidateCipherSuites, len(c))
+	for i, suite := range c {
+		suites[i] = tls_client.CandidateCipherSuites{
+			KdfId:  suite.KdfId,
+			AeadId: suite.AeadId,
+		}
+	}
+
+	return suites
+}
+
+type CandidateCipherSuite struct {
+	KdfId  string `json:"kdfId"`
+	AeadId string `json:"aeadId"`
 }
 
 // TransportOptions contains settings for the underlying http transport of the tls client
@@ -126,6 +151,7 @@ type PriorityParam struct {
 type Cookie struct {
 	Domain  string    `json:"domain"`
 	Expires Timestamp `json:"expires"`
+	MaxAge  int       `json:"maxAge"`
 	Name    string    `json:"name"`
 	Path    string    `json:"path"`
 	Value   string    `json:"value"`

@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/bogdanfinn/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/httputil"
@@ -80,7 +81,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		return nil, err
 	}
 
-	client, clientProfile, err := buildFromConfig(config)
+	client, clientProfile, err := buildFromConfig(logger, config)
 	if err != nil {
 		return nil, err
 	}
@@ -111,12 +112,12 @@ func validateConfig(_ *httpClientConfig) error {
 	return nil
 }
 
-func buildFromConfig(config *httpClientConfig) (*http.Client, profiles.ClientProfile, error) {
+func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, profiles.ClientProfile, error) {
 	var dialer proxy.ContextDialer
-	dialer = newDirectDialer(config.timeout, config.localAddr)
+	dialer = newDirectDialer(config.timeout, config.localAddr, config.dialer)
 
 	if config.proxyUrl != "" {
-		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr)
+		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr, config.dialer, logger)
 		if err != nil {
 			return nil, profiles.ClientProfile{}, err
 		}
@@ -129,10 +130,10 @@ func buildFromConfig(config *httpClientConfig) (*http.Client, profiles.ClientPro
 		redirectFunc = defaultRedirectFunc
 	} else {
 		redirectFunc = nil
-	}
 
-	if config.customRedirectFunc != nil {
-		redirectFunc = config.customRedirectFunc
+		if config.customRedirectFunc != nil {
+			redirectFunc = config.customRedirectFunc
+		}
 	}
 
 	clientProfile := config.clientProfile
@@ -175,10 +176,10 @@ func (c *httpClient) GetFollowRedirect() bool {
 
 func (c *httpClient) applyFollowRedirect() {
 	if c.config.followRedirects {
-		c.logger.Info("automatic redirect following is enabled")
+		c.logger.Debug("automatic redirect following is enabled")
 		c.CheckRedirect = nil
 	} else {
-		c.logger.Info("automatic redirect following is disabled")
+		c.logger.Debug("automatic redirect following is disabled")
 		c.CheckRedirect = defaultRedirectFunc
 	}
 
@@ -197,7 +198,6 @@ func (c *httpClient) SetProxy(proxyUrl string) error {
 
 	c.logger.Debug("set proxy from %s to %s", c.config.proxyUrl, proxyUrl)
 	c.config.proxyUrl = proxyUrl
-	c.logger.Info(fmt.Sprintf("set proxy to: %s", proxyUrl))
 
 	err := c.applyProxy()
 	if err != nil {
@@ -221,7 +221,7 @@ func (c *httpClient) applyProxy() error {
 
 	if c.config.proxyUrl != "" {
 		c.logger.Debug("proxy url %s supplied - using proxy connect dialer", c.config.proxyUrl)
-		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout, c.config.localAddr)
+		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout, c.config.localAddr, c.config.dialer, c.logger)
 		if err != nil {
 			c.logger.Error("failed to create proxy connect dialer: %s", err.Error())
 			return err
@@ -242,7 +242,7 @@ func (c *httpClient) applyProxy() error {
 
 // GetCookies returns the cookies in the client's cookie jar for a given URL.
 func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
-	c.logger.Info(fmt.Sprintf("get cookies for url: %s", u.String()))
+	c.logger.Debug(fmt.Sprintf("get cookies for url: %s", u.String()))
 	if c.Jar == nil {
 		c.logger.Warn("you did not setup a cookie jar")
 		return nil
@@ -253,7 +253,7 @@ func (c *httpClient) GetCookies(u *url.URL) []*http.Cookie {
 
 // SetCookies sets a list of cookies for a given URL in the client's cookie jar.
 func (c *httpClient) SetCookies(u *url.URL, cookies []*http.Cookie) {
-	c.logger.Info(fmt.Sprintf("set cookies for url: %s", u.String()))
+	c.logger.Debug(fmt.Sprintf("set cookies for url: %s", u.String()))
 
 	if c.Jar == nil {
 		c.logger.Warn("you did not setup a cookie jar")

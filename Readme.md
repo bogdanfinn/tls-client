@@ -2,8 +2,8 @@
 
 ### Preface
 
-This TLS Client is built upon https://github.com/Carcraftz/fhttp and https://github.com/Carcraftz/utls. Big thanks to
-all contributors so far. Sadly it seems that the original repositories are not maintained anymore.
+This TLS Client is built upon https://github.com/Carcraftz/fhttp and https://github.com/Carcraftz/utls (https://github.com/refraction-networking/utls). Big thanks to
+all contributors so far. Sadly it seems that the original repositories from Carcraftz are not maintained anymore.
 
 ### What is TLS Fingerprinting?
 
@@ -12,7 +12,7 @@ requesting a resource is a specific browser.
 Nowadays this is not enough, because the server might use a technique to detect the client browser which is called TLS
 Fingerprinting.
 
-Even tho this article is about TLS Fingerprinting in NodeJS it well describes the technique in general.
+Even though this article is about TLS Fingerprinting in NodeJS it well describes the technique in general.
 https://httptoolkit.tech/blog/tls-fingerprinting-node-js/#how-does-tls-fingerprinting-work
 
 ### Why is this library needed?
@@ -61,7 +61,7 @@ func main() {
     jar := tls_client.NewCookieJar()
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(30),
-		tls_client.WithClientProfile(profiles.Chrome_105),
+		tls_client.WithClientProfile(profiles.Chrome_120),
 		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
 	}
@@ -81,7 +81,7 @@ func main() {
 	req.Header = http.Header{
 		"accept":                    {"*/*"},
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
-		"user-agent":                {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"},
+		"user-agent":                {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
 			"accept-language",
@@ -117,3 +117,9 @@ https://bogdanfinn.gitbook.io/open-source-oasis/
 
 Join my discord support server for free: https://discord.gg/7Ej9eJvHqk
 No Support in DMs!
+
+
+### Appreciate my work?
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/CaptainBarnius)
+

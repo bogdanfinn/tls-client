@@ -5,6 +5,64 @@ import (
 	tls "github.com/bogdanfinn/utls"
 )
 
+type TlsApiResponse struct {
+	IP          string `json:"ip"`
+	HTTPVersion string `json:"http_version"`
+	Method      string `json:"method"`
+	TLS         struct {
+		Ciphers    []string `json:"ciphers"`
+		Extensions []struct {
+			Name                       string      `json:"name"`
+			ServerName                 string      `json:"server_name,omitempty"`
+			Data                       string      `json:"data,omitempty"`
+			SupportedGroups            []string    `json:"supported_groups,omitempty"`
+			EllipticCurvesPointFormats interface{} `json:"elliptic_curves_point_formats,omitempty"`
+			Protocols                  []string    `json:"protocols,omitempty"`
+			StatusRequest              struct {
+				CertificateStatusType   string `json:"certificate_status_type"`
+				ResponderIDListLength   int    `json:"responder_id_list_length"`
+				RequestExtensionsLength int    `json:"request_extensions_length"`
+			} `json:"status_request,omitempty"`
+			SignatureAlgorithms []string `json:"signature_algorithms,omitempty"`
+			SharedKeys          []struct {
+				TLSGrease0X7A7A string `json:"TLS_GREASE (0x7a7a),omitempty"`
+				X2551929        string `json:"X25519 (29),omitempty"`
+			} `json:"shared_keys,omitempty"`
+			PskKeyExchangeMode string   `json:"PSK_Key_Exchange_Mode,omitempty"`
+			Versions           []string `json:"versions,omitempty"`
+			Algorithms         []string `json:"algorithms,omitempty"`
+			PaddingDataLength  int      `json:"padding_data_length,omitempty"`
+		} `json:"extensions"`
+		TLSVersionRecord     string `json:"tls_version_record"`
+		TLSVersionNegotiated string `json:"tls_version_negotiated"`
+		Ja3                  string `json:"ja3"`
+		Ja3Hash              string `json:"ja3_hash"`
+		ClientRandom         string `json:"client_random"`
+		SessionID            string `json:"session_id"`
+	} `json:"tls"`
+	HTTP2 struct {
+		AkamaiFingerprint     string `json:"akamai_fingerprint"`
+		AkamaiFingerprintHash string `json:"akamai_fingerprint_hash"`
+		SentFrames            []struct {
+			FrameType string   `json:"frame_type"`
+			Length    int      `json:"length"`
+			Settings  []string `json:"settings,omitempty"`
+			Increment int      `json:"increment,omitempty"`
+			StreamID  int      `json:"stream_id,omitempty"`
+			Headers   []string `json:"headers,omitempty"`
+			Flags     []string `json:"flags,omitempty"`
+			Priority  struct {
+				Weight    int `json:"weight"`
+				DependsOn int `json:"depends_on"`
+				Exclusive int `json:"exclusive"`
+			} `json:"priority,omitempty"`
+		} `json:"sent_frames"`
+	} `json:"http2"`
+	HTTP1 struct {
+		Headers []string `json:"headers"`
+	} `json:"http1"`
+}
+
 const (
 	chrome        = "chrome"
 	firefox       = "firefox"
@@ -24,11 +82,29 @@ const (
 
 var clientFingerprints = map[string]map[string]map[string]string{
 	chrome: {
+		profiles.Chrome_124.GetClientHelloStr(): map[string]string{
+			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,27-18-23-17513-16-43-13-11-0-35-10-65037-5-65281-45-51,25497-29-23-24,0",
+			ja3Hash:               "64aff24dbef210f33880d4f62e1493dd",
+			akamaiFingerprint:     "1:65536,2:0,4:6291456,6:262144|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "90224459f8bf70b7d0a8797eb916dbc9",
+		},
+		profiles.Chrome_120.GetClientHelloStr(): map[string]string{
+			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-45-43-5-23-35-13-65281-16-65037-18-51-10-11-17513-27,29-23-24,0",
+			ja3Hash:               "1d9a054bac1eef41f30d370f9bbb2ad2",
+			akamaiFingerprint:     "1:65536,2:0,4:6291456,6:262144|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "90224459f8bf70b7d0a8797eb916dbc9",
+		},
 		profiles.Chrome_117.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,45-0-16-13-43-17513-10-23-35-27-18-5-51-65281-11-21,29-23-24,0",
 			ja3Hash:               "1ddf8a0ebd957d10c1ab320b10450028",
 			akamaiFingerprint:     "1:65536,2:0,4:6291456,6:262144|15663105|0|m,a,s,p",
 			akamaiFingerprintHash: "90224459f8bf70b7d0a8797eb916dbc9",
+		},
+		tls.HelloChrome_112_PSK.Str(): map[string]string{
+			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,45-51-17513-43-0-11-5-23-16-10-65281-27-18-35-13-21-41,29-23-24,0",
+			ja3Hash:               "11d372983aac706304b678a44351c8dd",
+			akamaiFingerprint:     "1:65536,2:0,3:1000,4:6291456,6:262144|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "46cedabdca2073198a42fa10ca4494d0",
 		},
 		tls.HelloChrome_112.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,45-51-17513-43-0-11-5-23-16-10-65281-27-18-35-13-21,29-23-24,0",
@@ -195,6 +271,12 @@ var clientFingerprints = map[string]map[string]map[string]string{
 			ja3Hash:               "773906b0efdefa24a7f2b8eb6985bf37",
 			akamaiFingerprint:     "4:2097152,3:100|10485760|0|m,s,p,a",
 			akamaiFingerprintHash: "8fe3e4ae51fb38d5c5108eabbf2a123c",
+		},
+		profiles.Safari_IOS_17_0.GetClientHelloStr(): map[string]string{
+			ja3String:             "771,4865-4866-4867-49196-49195-52393-49200-49199-52392-49162-49161-49172-49171-157-156-53-47-49160-49170-10,0-23-65281-10-11-16-5-13-18-51-45-43-27-21,29-23-24-25,0",
+			ja3Hash:               "773906b0efdefa24a7f2b8eb6985bf37",
+			akamaiFingerprint:     "2:0,4:2097152,3:100|10485760|0|m,s,p,a",
+			akamaiFingerprintHash: "44e2112c513fdb93cd12e6ccd1b9dce5",
 		},
 	},
 	okhttpAndroid: {

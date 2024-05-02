@@ -66,10 +66,10 @@ export class TLSClient implements TLSClientInstance {
 const createWrapper = (): LibraryObject<never> => {
     const sharedLibraryPath = join(__dirname, './../../dist/');
     const sharedLibraryFilename = platform() === 'win32'
-        ? `tls-client-windows-64-1.6.1.dll`
+        ? `tls-client-windows-64-1.7.2.dll`
         : arch() === 'arm64'
-            ? `tls-client-darwin-arm64-1.6.1.dylib`
-            : `tls-client-darwin-amd64-1.6.1.dylib`;
+            ? `tls-client-darwin-arm64-1.7.2.dylib`
+            : `tls-client-darwin-amd64-1.7.2.dylib`;
 
     return Library(join(sharedLibraryPath, sharedLibraryFilename), {
         request: ['string', ['string']],

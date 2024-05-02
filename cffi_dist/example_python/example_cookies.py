@@ -2,7 +2,7 @@ import ctypes
 import json
 
 # load the tls-client shared package for your OS you are currently running your python script (i'm running on mac)
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.7.2.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-xgo-1.7.2-linux-amd64.so')
 
 # extract the exposed request function from the shared package
 request = library.request
@@ -59,7 +59,25 @@ requestPayload = {
     "requestUrl": "https://microsoft.com",
     "requestMethod": "GET",
     "requestBody": "",
-    "requestCookies": []
+    "requestCookies": [{
+        "name": "foo",
+        "value": "bar",
+    },{
+        "name": "bar",
+        "value": "baz",
+    }]
+}
+
+cookiesPayload = {
+    "cookies": [{
+        "name": "foo2",
+        "value": "bar2",
+    },{
+        "name": "bar2",
+        "value": "baz2",
+    }],
+    "sessionId": "my-session-id",
+    "url": "https://microsoft.com",
 }
 
 # this is a pointer to the response
@@ -93,18 +111,8 @@ cookieResponse_object = json.loads(cookieResponse_string)
 # print out output
 print(cookieResponse_object)
 
-
-destroySessionPayload = {
-    "sessionId": "my-session-id",
-}
-
-destroySessionResponse = destroySession(json.dumps(destroySessionPayload).encode('utf-8'))
-# we dereference the pointer to a byte array
-destroySessionResponse_bytes = ctypes.string_at(destroySessionResponse)
-# convert our byte array to a string (tls client returns json)
-destroySessionResponse_string = destroySessionResponse_bytes.decode('utf-8')
-# convert response string to json
-destroySessionResponse_object = json.loads(destroySessionResponse_string)
-
-# print out output
-print(destroySessionResponse_object)
+addCookiesToSessionResponse = addCookiesToSession(json.dumps(cookiesPayload).encode('utf-8'))
+addCookies_bytes = ctypes.string_at(addCookiesToSessionResponse)
+addCookies_string = addCookies_bytes.decode('utf-8')
+addCookies_object = json.loads(addCookies_string)
+print(addCookies_object)

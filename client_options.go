@@ -3,9 +3,11 @@ package tls_client
 import (
 	"crypto/x509"
 	"fmt"
-	"github.com/bogdanfinn/tls-client/profiles"
+	"io"
 	"net"
 	"time"
+
+	"github.com/bogdanfinn/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
 )
@@ -27,6 +29,10 @@ type TransportOptions struct {
 	// RootCAs is the set of root certificate authorities used to verify
 	// the remote server's certificate.
 	RootCAs *x509.CertPool
+	// KeyLogWriter is an io.Writer that the TLS client will use to write the
+	// TLS master secrets to. This can be used to decrypt TLS connections in
+	// Wireshark and other applications.
+	KeyLogWriter io.Writer
 }
 
 type BadPinHandlerFunc func(req *http.Request)
@@ -49,8 +55,10 @@ type httpClientConfig struct {
 	forceHttp1                  bool
 	timeout                     time.Duration
 	localAddr                   *net.TCPAddr
+
 	// Establish a connection to origin server via ipv4 only
 	disableIPV6 bool
+	dialer      net.Dialer
 }
 
 // WithProxyUrl configures a HTTP client to use the specified proxy URL.
@@ -97,6 +105,13 @@ func WithCookieJar(jar http.CookieJar) HttpClientOption {
 func WithTimeoutMilliseconds(timeout int) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.timeout = time.Millisecond * time.Duration(timeout)
+	}
+}
+
+// WithDialer configures an HTTP client to use the specified dialer. This allows the use of a custom DNS resolver
+func WithDialer(dialer net.Dialer) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.dialer = dialer
 	}
 }
 

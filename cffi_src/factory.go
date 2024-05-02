@@ -5,11 +5,12 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"net"
 	"os"
 	"sync"
+
+	"github.com/bogdanfinn/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/cookiejar"
@@ -28,6 +29,11 @@ var clients = make(map[string]tls_client.HttpClient)
 func RemoveSession(sessionId string) {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
+	client, ok := clients[sessionId]
+	if !ok {
+		return
+	}
+	client.CloseIdleConnections()
 
 	delete(clients, sessionId)
 }
@@ -385,7 +391,7 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 }
 
 func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.ClientHelloID, map[http2.SettingID]uint32, []http2.SettingID, []string, uint32, []http2.Priority, *http2.PriorityParam, error) {
-	specFactory, err := tls_client.GetSpecFactoryFromJa3String(customClientDefinition.Ja3String, customClientDefinition.SupportedSignatureAlgorithms, customClientDefinition.SupportedDelegatedCredentialsAlgorithms, customClientDefinition.SupportedVersions, customClientDefinition.KeyShareCurves, customClientDefinition.CertCompressionAlgo)
+	specFactory, err := tls_client.GetSpecFactoryFromJa3String(customClientDefinition.Ja3String, customClientDefinition.SupportedSignatureAlgorithms, customClientDefinition.SupportedDelegatedCredentialsAlgorithms, customClientDefinition.SupportedVersions, customClientDefinition.KeyShareCurves, customClientDefinition.ALPNProtocols, customClientDefinition.ALPSProtocols, customClientDefinition.ECHCandidateCipherSuites.Translate(), customClientDefinition.ECHCandidatePayloads, customClientDefinition.CertCompressionAlgo)
 	if err != nil {
 		return tls.ClientHelloID{}, nil, nil, nil, 0, nil, nil, err
 	}
