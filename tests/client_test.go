@@ -2,24 +2,31 @@ package tests
 
 import (
 	"encoding/json"
-	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"testing"
 	"time"
 
+	"github.com/bogdanfinn/tls-client/profiles"
+
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
-	"github.com/bogdanfinn/tls-client/shared"
 	tls "github.com/bogdanfinn/utls"
 )
 
 func TestClients(t *testing.T) {
+	t.Log("testing chrome 124")
+	chrome_124(t)
+	t.Log("testing chrome 120")
+	chrome_120(t)
+	time.Sleep(2 * time.Second)
 	t.Log("testing chrome 117")
 	chrome_117(t)
 	time.Sleep(2 * time.Second)
 	t.Log("testing firefox 117")
 	firefox_117(t)
 	time.Sleep(2 * time.Second)
+	t.Log("testing chrome 116 with psk")
+	chrome116WithPsk(t)
 	t.Log("testing chrome 112")
 	chrome112(t)
 	time.Sleep(2 * time.Second)
@@ -67,6 +74,8 @@ func TestClients(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	t.Log("testing opera 91")
 	opera_91(t)
+	t.Log("testing safari ios 17")
+	safariIos17(t)
 }
 
 func TestCustomClients(t *testing.T) {
@@ -112,6 +121,46 @@ var defaultOkHttp4Header = http.Header{
 		"accept-encoding",
 		"user-agent",
 	},
+}
+
+func chrome116WithPsk(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_116_PSK),
+		tls_client.WithTimeoutSeconds(120),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_112.Str()], resp)
+
+	req, err = http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][tls.HelloChrome_112_PSK.Str()], resp)
 }
 
 func chrome112(t *testing.T) {
@@ -464,6 +513,56 @@ func firefox_108(t *testing.T) {
 	compareResponse(t, "firefox", clientFingerprints[firefox][tls.HelloFirefox_108.Str()], resp)
 }
 
+func chrome_124(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_124),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_124.GetClientHelloStr()], resp)
+}
+
+func chrome_120(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_120),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_120.GetClientHelloStr()], resp)
+}
+
 func chrome_117(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(profiles.Chrome_117),
@@ -564,6 +663,31 @@ func opera_91(t *testing.T) {
 	compareResponse(t, "opera", clientFingerprints[opera][tls.HelloOpera_91.Str()], resp)
 }
 
+func safariIos17(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Safari_IOS_17_0),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "safari_IOS", clientFingerprints[safariIos][profiles.Safari_IOS_17_0.GetClientHelloStr()], resp)
+}
+
 func compareResponse(t *testing.T, clientName string, expectedValues map[string]string, resp *http.Response) {
 	defer resp.Body.Close()
 
@@ -572,7 +696,7 @@ func compareResponse(t *testing.T, clientName string, expectedValues map[string]
 		t.Fatal(err)
 	}
 
-	tlsApiResponse := shared.TlsApiResponse{}
+	tlsApiResponse := TlsApiResponse{}
 	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
 		t.Fatal(err)
 	}

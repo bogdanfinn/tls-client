@@ -316,6 +316,7 @@ func buildCookies(cookies []tls_client_cffi_src.Cookie) []*http.Cookie {
 			Path:    cookie.Path,
 			Domain:  cookie.Domain,
 			Expires: cookie.Expires.Time,
+			MaxAge:  cookie.MaxAge,
 		})
 	}
 
@@ -331,6 +332,7 @@ func transformCookies(cookies []*http.Cookie) []tls_client_cffi_src.Cookie {
 			Value:  cookie.Value,
 			Path:   cookie.Path,
 			Domain: cookie.Domain,
+			MaxAge: cookie.MaxAge,
 			Expires: tls_client_cffi_src.Timestamp{
 				Time: cookie.Expires,
 			},

@@ -45,11 +45,11 @@ class RequestPayload
 
 class TLSSession
 {
-    [DllImport("../dist/tls-client-windows-64-1.6.1.dll", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("../dist/tls-client-windows-64-1.7.2.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern IntPtr request(byte[] requestPayload, string sessionID);
 
 
-    [DllImport("../dist/tls-client-windows-64-1.6.1.dll", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("../dist/tls-client-windows-64-1.7.2.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern void freeMemory(string sessionID);
 
     private string sessionID;
