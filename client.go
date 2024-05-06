@@ -35,6 +35,8 @@ type HttpClient interface {
 	Get(url string) (resp *http.Response, err error)
 	Head(url string) (resp *http.Response, err error)
 	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
+
+	GetBandwidthTracker() BandwidthTracker
 }
 
 // Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
@@ -45,6 +47,8 @@ type httpClient struct {
 	headerLck sync.Mutex
 	logger    Logger
 	config    *httpClientConfig
+
+	bandwidthTracker *bandwidthTracker
 }
 
 var DefaultTimeoutSeconds = 30
@@ -81,7 +85,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		return nil, err
 	}
 
-	client, clientProfile, err := buildFromConfig(logger, config)
+	client, bandwidthTracker, clientProfile, err := buildFromConfig(logger, config)
 	if err != nil {
 		return nil, err
 	}
@@ -101,10 +105,11 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 	}
 
 	return &httpClient{
-		Client:    *client,
-		logger:    logger,
-		config:    config,
-		headerLck: sync.Mutex{},
+		Client:           *client,
+		logger:           logger,
+		config:           config,
+		headerLck:        sync.Mutex{},
+		bandwidthTracker: bandwidthTracker,
 	}, nil
 }
 
@@ -112,14 +117,14 @@ func validateConfig(_ *httpClientConfig) error {
 	return nil
 }
 
-func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, profiles.ClientProfile, error) {
+func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, *bandwidthTracker, profiles.ClientProfile, error) {
 	var dialer proxy.ContextDialer
 	dialer = newDirectDialer(config.timeout, config.localAddr, config.dialer)
 
 	if config.proxyUrl != "" {
 		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr, config.dialer, logger)
 		if err != nil {
-			return nil, profiles.ClientProfile{}, err
+			return nil, nil, profiles.ClientProfile{}, err
 		}
 
 		dialer = proxyDialer
@@ -136,11 +141,13 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, pro
 		}
 	}
 
+	bandwidthTracker := newBandwidthTracker()
+
 	clientProfile := config.clientProfile
 
-	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.certificatePins, config.badPinHandler, config.disableIPV6, dialer)
+	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.certificatePins, config.badPinHandler, config.disableIPV6, bandwidthTracker, dialer)
 	if err != nil {
-		return nil, clientProfile, err
+		return nil, nil, clientProfile, err
 	}
 
 	client := &http.Client{
@@ -153,7 +160,7 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, pro
 		client.Jar = config.cookieJar
 	}
 
-	return client, clientProfile, nil
+	return client, bandwidthTracker, clientProfile, nil
 }
 
 // CloseIdleConnections closes all idle connections of the underlying http client.
@@ -230,7 +237,7 @@ func (c *httpClient) applyProxy() error {
 		dialer = proxyDialer
 	}
 
-	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.certificatePins, c.config.badPinHandler, c.config.disableIPV6, dialer)
+	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.certificatePins, c.config.badPinHandler, c.config.disableIPV6, c.bandwidthTracker, dialer)
 	if err != nil {
 		return err
 	}
@@ -271,6 +278,11 @@ func (c *httpClient) SetCookieJar(jar http.CookieJar) {
 // GetCookieJar returns the jar the client is currently using
 func (c *httpClient) GetCookieJar() http.CookieJar {
 	return c.Jar
+}
+
+// GetBandwidthTracker returns the bandwidth tracker
+func (c *httpClient) GetBandwidthTracker() BandwidthTracker {
+	return c.bandwidthTracker
 }
 
 // Do issues a given HTTP request and returns the corresponding response.
