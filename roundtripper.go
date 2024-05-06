@@ -36,6 +36,8 @@ type roundTripper struct {
 
 	forceHttp1 bool
 
+	bandwidthTracker *bandwidthTracker
+
 	headerPriority     *http2.PriorityParam
 	clientSessionCache tls.ClientSessionCache
 
@@ -147,7 +149,9 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		tlsConfig.KeyLogWriter = rt.transportOptions.KeyLogWriter
 	}
 
-	conn := tls.UClient(rawConn, tlsConfig, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
+	trackedConn := newBandwidthTrackedConn(rawConn, rt.bandwidthTracker)
+
+	conn := tls.UClient(trackedConn, tlsConfig, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
 	if err = conn.HandshakeContext(ctx); err != nil {
 		_ = conn.Close()
 
@@ -307,7 +311,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, bandwidthTracker *bandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -341,6 +345,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		cachedTransports:            make(map[string]http.RoundTripper),
 		cachedConnections:           make(map[string]net.Conn),
 		disableIPV6:                 disableIPV6,
+		bandwidthTracker:            bandwidthTracker,
 	}
 
 	if len(dialer) > 0 {
