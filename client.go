@@ -36,8 +36,7 @@ type HttpClient interface {
 	Head(url string) (resp *http.Response, err error)
 	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
 
-	GetReadBytes() int64
-	GetWriteBytes() int64
+	GetBandwidthTracker() BandwidthTracker
 }
 
 // Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
@@ -50,14 +49,6 @@ type httpClient struct {
 	config    *httpClientConfig
 
 	bandwidthTracker *bandwidthTracker
-}
-
-func (c *httpClient) GetReadBytes() int64 {
-	return c.bandwidthTracker.GetReadBytes()
-}
-
-func (c *httpClient) GetWriteBytes() int64 {
-	return c.bandwidthTracker.GetWriteBytes()
 }
 
 var DefaultTimeoutSeconds = 30
@@ -287,6 +278,11 @@ func (c *httpClient) SetCookieJar(jar http.CookieJar) {
 // GetCookieJar returns the jar the client is currently using
 func (c *httpClient) GetCookieJar() http.CookieJar {
 	return c.Jar
+}
+
+// GetBandwidthTracker returns the bandwidth tracker
+func (c *httpClient) GetBandwidthTracker() BandwidthTracker {
+	return c.bandwidthTracker
 }
 
 // Do issues a given HTTP request and returns the corresponding response.
