@@ -85,7 +85,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		return nil, err
 	}
 
-	client, bandwidth, clientProfile, err := buildFromConfig(logger, config)
+	client, bandwidthTracker, clientProfile, err := buildFromConfig(logger, config)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		logger:           logger,
 		config:           config,
 		headerLck:        sync.Mutex{},
-		bandwidthTracker: bandwidth,
+		bandwidthTracker: bandwidthTracker,
 	}, nil
 }
 
