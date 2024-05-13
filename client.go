@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bogdanfinn/tls-client/profiles"
-
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/httputil"
+	"github.com/bogdanfinn/tls-client/bandwidth"
+	"github.com/bogdanfinn/tls-client/profiles"
 	"golang.org/x/net/proxy"
 )
 
@@ -36,7 +36,7 @@ type HttpClient interface {
 	Head(url string) (resp *http.Response, err error)
 	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
 
-	GetBandwidthTracker() BandwidthTracker
+	GetBandwidthTracker() bandwidth.BandwidthTracker
 }
 
 // Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
@@ -48,7 +48,7 @@ type httpClient struct {
 	logger    Logger
 	config    *httpClientConfig
 
-	bandwidthTracker *bandwidthTracker
+	bandwidthTracker bandwidth.BandwidthTracker
 }
 
 var DefaultTimeoutSeconds = 30
@@ -85,7 +85,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		return nil, err
 	}
 
-	client, bandwidthTracker, clientProfile, err := buildFromConfig(logger, config)
+	client, bandwidth, clientProfile, err := buildFromConfig(logger, config)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		logger:           logger,
 		config:           config,
 		headerLck:        sync.Mutex{},
-		bandwidthTracker: bandwidthTracker,
+		bandwidthTracker: bandwidth,
 	}, nil
 }
 
@@ -117,7 +117,7 @@ func validateConfig(_ *httpClientConfig) error {
 	return nil
 }
 
-func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, *bandwidthTracker, profiles.ClientProfile, error) {
+func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, bandwidth.BandwidthTracker, profiles.ClientProfile, error) {
 	var dialer proxy.ContextDialer
 	dialer = newDirectDialer(config.timeout, config.localAddr, config.dialer)
 
@@ -141,7 +141,12 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, *ba
 		}
 	}
 
-	bandwidthTracker := newBandwidthTracker()
+	var bandwidthTracker bandwidth.BandwidthTracker
+	if config.enabledBandwidthTracker {
+		bandwidthTracker = bandwidth.NewTracker()
+	} else {
+		bandwidthTracker = bandwidth.NewNopeTracker()
+	}
 
 	clientProfile := config.clientProfile
 
@@ -281,7 +286,7 @@ func (c *httpClient) GetCookieJar() http.CookieJar {
 }
 
 // GetBandwidthTracker returns the bandwidth tracker
-func (c *httpClient) GetBandwidthTracker() BandwidthTracker {
+func (c *httpClient) GetBandwidthTracker() bandwidth.BandwidthTracker {
 	return c.bandwidthTracker
 }
 
