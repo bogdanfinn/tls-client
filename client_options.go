@@ -243,8 +243,8 @@ func WithDisableIPV6() HttpClientOption {
 	}
 }
 
-func WithBandwidthTracker(enabled bool) HttpClientOption {
+func WithBandwidthTracker() HttpClientOption {
 	return func(config *httpClientConfig) {
-		config.enabledBandwidthTracker = enabled
+		config.enabledBandwidthTracker = true
 	}
 }
