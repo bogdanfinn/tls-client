@@ -1,6 +1,7 @@
 package bandwidth
 
 import (
+	"context"
 	"net"
 	"sync/atomic"
 )
@@ -9,7 +10,7 @@ type BandwidthTracker interface {
 	GetTotalBandwidth() int64
 	GetWriteBytes() int64
 	GetReadBytes() int64
-	TrackConnection(conn net.Conn) net.Conn
+	TrackConnection(ctx context.Context, conn net.Conn) net.Conn
 }
 
 type Tracker struct {
@@ -29,7 +30,7 @@ func (bt *Tracker) GetTotalBandwidth() int64 {
 	return bt.readBytes.Load() + bt.writeBytes.Load()
 }
 
-func (bt *Tracker) TrackConnection(conn net.Conn) net.Conn {
+func (bt *Tracker) TrackConnection(ctx context.Context, conn net.Conn) net.Conn {
 	return newTrackedConn(conn, bt)
 }
 

@@ -149,7 +149,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		tlsConfig.KeyLogWriter = rt.transportOptions.KeyLogWriter
 	}
 
-	rawConn = rt.bandwidthTracker.TrackConnection(rawConn)
+	rawConn = rt.bandwidthTracker.TrackConnection(ctx, rawConn)
 
 	conn := tls.UClient(rawConn, tlsConfig, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
 	if err = conn.HandshakeContext(ctx); err != nil {

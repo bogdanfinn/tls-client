@@ -1,6 +1,7 @@
 package bandwidth
 
 import (
+	"context"
 	"net"
 )
 
@@ -19,7 +20,7 @@ func (bt *NopeTracker) GetTotalBandwidth() int64 {
 	return 0
 }
 
-func (bt *NopeTracker) TrackConnection(conn net.Conn) net.Conn {
+func (bt *NopeTracker) TrackConnection(ctx context.Context, conn net.Conn) net.Conn {
 	return conn
 }
 
