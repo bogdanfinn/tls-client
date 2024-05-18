@@ -68,11 +68,14 @@ var aeadIds = map[string]uint16{
 }
 
 var curves = map[string]tls.CurveID{
-	"GREASE": tls.CurveID(tls.GREASE_PLACEHOLDER),
-	"P256":   tls.CurveP256,
-	"P384":   tls.CurveP384,
-	"P521":   tls.CurveP521,
-	"X25519": tls.X25519,
+	"GREASE":          tls.CurveID(tls.GREASE_PLACEHOLDER),
+	"P256":            tls.CurveP256,
+	"P384":            tls.CurveP384,
+	"P521":            tls.CurveP521,
+	"X25519":          tls.X25519,
+	"P256Kyber768":    tls.P256Kyber768Draft00,
+	"X25519Kyber512D": tls.X25519Kyber512Draft00,
+	"X25519Kyber768":  tls.X25519Kyber768Draft00,
 }
 
 var certCompression = map[string]tls.CertCompressionAlgo{
