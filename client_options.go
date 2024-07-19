@@ -7,9 +7,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/bogdanfinn/tls-client/profiles"
-
 	http "github.com/bogdanfinn/fhttp"
+	"github.com/bogdanfinn/tls-client/profiles"
 )
 
 type HttpClientOption func(config *httpClientConfig)
@@ -59,6 +58,8 @@ type httpClientConfig struct {
 	// Establish a connection to origin server via ipv4 only
 	disableIPV6 bool
 	dialer      net.Dialer
+
+	enabledBandwidthTracker bool
 }
 
 // WithProxyUrl configures a HTTP client to use the specified proxy URL.
@@ -239,5 +240,11 @@ func WithServerNameOverwrite(serverName string) HttpClientOption {
 func WithDisableIPV6() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.disableIPV6 = true
+	}
+}
+
+func WithBandwidthTracker() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.enabledBandwidthTracker = true
 	}
 }
