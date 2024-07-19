@@ -165,9 +165,9 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 		bodyLen += n
 		fmt.Printf("Reading at: %d\n", bodyLen)
 		if _, err = f.Write(buf[:n]); err != nil {
-			// if input.WithDebug {
-			fmt.Printf("Append stream output error: %+v\n", err)
-			// }
+			if input.WithDebug {
+				fmt.Printf("Append stream output error: %+v\n", err)
+			}
 
 			return nil, err
 		}
@@ -180,9 +180,9 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 
 			break
 		} else if readErr != nil {
-			// if input.WithDebug {
-			fmt.Printf("Body error: %+v\n", readErr)
-			// }
+			if input.WithDebug {
+				fmt.Printf("Reading Response Body error: %+v\n", readErr)
+			}
 			return nil, readErr
 		}
 	}
