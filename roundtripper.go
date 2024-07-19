@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bogdanfinn/tls-client/profiles"
-
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/http2"
+	"github.com/bogdanfinn/tls-client/bandwidth"
+	"github.com/bogdanfinn/tls-client/profiles"
 	tls "github.com/bogdanfinn/utls"
 	"golang.org/x/net/proxy"
 )
@@ -35,6 +35,8 @@ type roundTripper struct {
 	dialer proxy.ContextDialer
 
 	forceHttp1 bool
+
+	bandwidthTracker bandwidth.BandwidthTracker
 
 	headerPriority     *http2.PriorityParam
 	clientSessionCache tls.ClientSessionCache
@@ -98,7 +100,7 @@ func (rt *roundTripper) getTransport(req *http.Request, addr string) error {
 		return fmt.Errorf("invalid URL scheme: [%v]", req.URL.Scheme)
 	}
 
-	_, err := rt.dialTLS(context.Background(), "tcp", addr)
+	_, err := rt.dialTLS(req.Context(), "tcp", addr)
 	switch err {
 	case errProtocolNegotiated:
 	case nil:
@@ -146,6 +148,8 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		tlsConfig.RootCAs = rt.transportOptions.RootCAs
 		tlsConfig.KeyLogWriter = rt.transportOptions.KeyLogWriter
 	}
+
+	rawConn = rt.bandwidthTracker.TrackConnection(ctx, rawConn)
 
 	conn := tls.UClient(rawConn, tlsConfig, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
 	if err = conn.HandshakeContext(ctx); err != nil {
@@ -307,7 +311,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -341,6 +345,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		cachedTransports:            make(map[string]http.RoundTripper),
 		cachedConnections:           make(map[string]net.Conn),
 		disableIPV6:                 disableIPV6,
+		bandwidthTracker:            bandwidthTracker,
 	}
 
 	if len(dialer) > 0 {
