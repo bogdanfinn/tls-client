@@ -234,8 +234,12 @@ func request(requestParams *C.char) *C.char {
 
 	cookies := buildCookies(requestInput.RequestCookies)
 
-	if len(cookies) > 0 {
+	if tlsClient.GetCookieJar() != nil && len(cookies) > 0 {
 		tlsClient.SetCookies(req.URL, cookies)
+	} else {
+		for _, cookie := range cookies {
+			req.AddCookie(cookie)
+		}
 	}
 
 	resp, reqErr := tlsClient.Do(req)
