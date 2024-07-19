@@ -123,6 +123,10 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 		tlsReq, err = http.NewRequest(input.RequestMethod, input.RequestUrl, nil)
 	}
 
+	if input.RequestHostOverride != nil {
+		tlsReq.Host = *input.RequestHostOverride
+	}
+
 	if err != nil {
 		return nil, NewTLSClientError(fmt.Errorf("failed to create request object: %w", err))
 	}

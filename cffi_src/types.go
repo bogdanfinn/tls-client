@@ -70,6 +70,7 @@ type RequestInput struct {
 	RequestCookies              []Cookie            `json:"requestCookies"`
 	RequestMethod               string              `json:"requestMethod"`
 	RequestUrl                  string              `json:"requestUrl"`
+	RequestHostOverride         *string             `json:"requestHostOverride"`
 	SessionId                   *string             `json:"sessionId"`
 	StreamOutputBlockSize       *int                `json:"streamOutputBlockSize"`
 	StreamOutputEOFSymbol       *string             `json:"streamOutputEOFSymbol"`

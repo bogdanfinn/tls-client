@@ -243,6 +243,7 @@ func WithDisableIPV6() HttpClientOption {
 	}
 }
 
+// WithBandwidthTracker configures a client to track the bandwidth used by the client.
 func WithBandwidthTracker() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.enabledBandwidthTracker = true
