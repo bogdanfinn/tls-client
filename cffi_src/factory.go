@@ -163,7 +163,9 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 	for {
 		n, readErr := respBody.Read(buf)
 		bodyLen += n
-		fmt.Printf("Reading at: %d\n", bodyLen)
+		if input.WithDebug {
+			fmt.Printf("Reading at: %d\n", bodyLen)
+		}
 		if _, err = f.Write(buf[:n]); err != nil {
 			if input.WithDebug {
 				fmt.Printf("Append stream output error: %+v\n", err)
