@@ -57,6 +57,8 @@ type httpClientConfig struct {
 
 	// Establish a connection to origin server via ipv4 only
 	disableIPV6 bool
+	// Establish a connection to origin server via ipv6 only
+	disableIPV4 bool
 	dialer      net.Dialer
 
 	enabledBandwidthTracker bool
@@ -240,6 +242,13 @@ func WithServerNameOverwrite(serverName string) HttpClientOption {
 func WithDisableIPV6() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.disableIPV6 = true
+	}
+}
+
+// WithDisableIPV4 configures a dialer to use tcp6 network argument
+func WithDisableIPV4() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.disableIPV4 = true
 	}
 }
 

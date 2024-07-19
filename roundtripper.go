@@ -50,6 +50,7 @@ type roundTripper struct {
 	transportOptions            *TransportOptions
 	withRandomTlsExtensionOrder bool
 	disableIPV6                 bool
+	disableIPV4                 bool
 }
 
 func (rt *roundTripper) CloseIdleConnections() {
@@ -127,6 +128,10 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 
 	if network == "tcp" && rt.disableIPV6 {
 		network = "tcp4"
+	}
+
+	if network == "tcp" && rt.disableIPV4 {
+		network = "tcp6"
 	}
 
 	rawConn, err := rt.dialer.DialContext(ctx, network, addr)
@@ -311,7 +316,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -345,6 +350,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		cachedTransports:            make(map[string]http.RoundTripper),
 		cachedConnections:           make(map[string]net.Conn),
 		disableIPV6:                 disableIPV6,
+		disableIPV4:                 disableIPV4,
 		bandwidthTracker:            bandwidthTracker,
 	}
 

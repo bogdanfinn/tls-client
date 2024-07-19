@@ -63,6 +63,7 @@ type RequestInput struct {
 	IsByteResponse              bool                `json:"isByteResponse"`
 	IsRotatingProxy             bool                `json:"isRotatingProxy"`
 	DisableIPV6                 bool                `json:"disableIPV6"`
+	DisableIPV4                 bool                `json:"disableIPV4"`
 	LocalAddress                *string             `json:"localAddress"`
 	ServerNameOverwrite         *string             `json:"serverNameOverwrite"`
 	ProxyUrl                    *string             `json:"proxyUrl"`

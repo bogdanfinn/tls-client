@@ -309,6 +309,10 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithDisableIPV6())
 	}
 
+	if requestInput.DisableIPV4 {
+		options = append(options, tls_client.WithDisableIPV4())
+	}
+
 	if requestInput.TransportOptions != nil {
 		transportOptions := &tls_client.TransportOptions{
 			DisableKeepAlives:      requestInput.TransportOptions.DisableKeepAlives,
@@ -320,7 +324,7 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 			WriteBufferSize:        requestInput.TransportOptions.WriteBufferSize,
 			ReadBufferSize:         requestInput.TransportOptions.ReadBufferSize,
 			IdleConnTimeout:        requestInput.TransportOptions.IdleConnTimeout,
-			// RootCAs:                requestInput.TransportOptions.RootCAs,
+			//RootCAs:                requestInput.TransportOptions.RootCAs,
 		}
 
 		options = append(options, tls_client.WithTransportOptions(transportOptions))
