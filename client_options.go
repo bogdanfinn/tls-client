@@ -50,6 +50,7 @@ type httpClientConfig struct {
 	transportOptions            *TransportOptions
 	cookieJar                   http.CookieJar
 	clientProfile               profiles.ClientProfile
+	userAgent                   string
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
 	timeout                     time.Duration
@@ -72,6 +73,13 @@ type httpClientConfig struct {
 func WithProxyUrl(proxyUrl string) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.proxyUrl = proxyUrl
+	}
+}
+
+// /Use useragent in the CONNECT request
+func WithConnectUserAgent(userAgent string) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.userAgent = userAgent
 	}
 }
 

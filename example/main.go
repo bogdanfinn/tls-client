@@ -172,6 +172,7 @@ func requestToppsAsChrome107Client() {
 		// tls_client.WithNotFollowRedirects(),
 		// tls_client.WithInsecureSkipVerify(),
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
+		//tls_client.WithConnectUserAgent("TestUA"),
 	}
 
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)

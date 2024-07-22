@@ -94,7 +94,7 @@ type connectDialer struct {
 // newConnectDialer creates a dialer to issue CONNECT requests and tunnel traffic via HTTP/S proxy.
 // proxyUrlStr must provide Scheme and Host, may provide credentials and port.
 // Example: https://username:password@golang.org:443
-func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.TCPAddr, configDialer net.Dialer, logger Logger) (proxy.ContextDialer, error) {
+func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.TCPAddr, configDialer net.Dialer, logger Logger, userAgent string) (proxy.ContextDialer, error) {
 	proxyUrl, err := url.Parse(proxyUrlStr)
 	if err != nil {
 		return nil, err
@@ -147,6 +147,9 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 	} else {
 		//example format (without credentials): http://127.0.0.1:12312
 		dialer.DefaultHeader.Set("Proxy-Authorization", "")
+	}
+	if userAgent != "" {
+		dialer.DefaultHeader.Set("User-Agent", userAgent)
 	}
 	return dialer, nil
 }
