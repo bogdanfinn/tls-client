@@ -15,7 +15,7 @@ import (
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/cookiejar"
 	"github.com/bogdanfinn/fhttp/http2"
-	"github.com/bogdanfinn/tls-client"
+	tls_client "github.com/bogdanfinn/tls-client"
 	tls "github.com/bogdanfinn/utls"
 	"github.com/google/uuid"
 )
@@ -147,12 +147,16 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]byte, error) {
 	var respBodyBytes []byte
 	var err error
-
+	var bodyLen = 0
 	f, err := os.OpenFile(*input.StreamOutputPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil {
+			fmt.Printf("failed to close file: %v\n", closeErr)
+		}
+	}()
 
 	blockSize := 1024 // 1 KB
 	if input.StreamOutputBlockSize != nil {
@@ -161,16 +165,11 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 	buf := make([]byte, blockSize)
 	// Read the response body
 	for {
-		n, err := respBody.Read(buf)
-		if err == io.EOF {
-			if input.StreamOutputEOFSymbol != nil {
-				f.Write([]byte(*input.StreamOutputEOFSymbol))
-			}
-
-			break
+		n, readErr := respBody.Read(buf)
+		bodyLen += n
+		if input.WithDebug {
+			fmt.Printf("Reading at: %d\n", bodyLen)
 		}
-
-		respBodyBytes = append(respBodyBytes, buf[:n]...)
 		if _, err = f.Write(buf[:n]); err != nil {
 			if input.WithDebug {
 				fmt.Printf("Append stream output error: %+v\n", err)
@@ -179,8 +178,18 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 			return nil, err
 		}
 
-		if input.WithDebug {
-			fmt.Printf("[stream decode result]==========\n%+v\n==========\n", string(buf[:n]))
+		if readErr == io.EOF {
+
+			if input.StreamOutputEOFSymbol != nil {
+				f.Write([]byte(*input.StreamOutputEOFSymbol))
+			}
+
+			break
+		} else if readErr != nil {
+			if input.WithDebug {
+				fmt.Printf("Reading Response Body error: %+v\n", readErr)
+			}
+			return nil, readErr
 		}
 	}
 
