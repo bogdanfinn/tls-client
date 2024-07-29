@@ -58,6 +58,7 @@ type RequestInput struct {
 	HeaderOrder                 []string            `json:"headerOrder"`
 	Headers                     map[string]string   `json:"headers"`
 	DefaultHeaders              map[string][]string `json:"defaultHeaders"`
+	ConnectHeaders              map[string][]string `json:"connectHeaders"`
 	InsecureSkipVerify          bool                `json:"insecureSkipVerify"`
 	IsByteRequest               bool                `json:"isByteRequest"`
 	IsByteResponse              bool                `json:"isByteResponse"`

@@ -388,6 +388,10 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithDefaultHeaders(requestInput.DefaultHeaders))
 	}
 
+	if requestInput.ConnectHeaders != nil && len(requestInput.ConnectHeaders) != 0 {
+		options = append(options, tls_client.WithConnectHeaders(requestInput.ConnectHeaders))
+	}
+
 	if requestInput.ServerNameOverwrite != nil && *requestInput.ServerNameOverwrite != "" {
 		options = append(options, tls_client.WithServerNameOverwrite(*requestInput.ServerNameOverwrite))
 	}

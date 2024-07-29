@@ -44,6 +44,7 @@ type httpClientConfig struct {
 	insecureSkipVerify          bool
 	certificatePins             map[string][]string
 	defaultHeaders              http.Header
+	connectHeaders              http.Header
 	badPinHandler               BadPinHandlerFunc
 	proxyUrl                    string
 	serverNameOverwrite         string
@@ -256,5 +257,12 @@ func WithDisableIPV4() HttpClientOption {
 func WithBandwidthTracker() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.enabledBandwidthTracker = true
+	}
+}
+
+// WithConnectHeaders configures a client to use the specified headers for the CONNECT request.
+func WithConnectHeaders(headers http.Header) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.connectHeaders = headers
 	}
 }
