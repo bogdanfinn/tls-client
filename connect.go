@@ -132,7 +132,7 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 		ProxyUrl:          *proxyUrl,
 		Dialer:            _dialer,
 		Timeout:           timeout,
-		DefaultHeader:     connectHeaders,
+		DefaultHeader:     connectHeaders.Clone(),
 		EnableH2ConnReuse: true,
 	}
 
