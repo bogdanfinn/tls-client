@@ -2,8 +2,8 @@ github.com/andybalholm/brotli v1.0.5 h1:8uQZIdzKmjc/iuPu7O2ioW48L81FgatrcpfFmiq/
 github.com/andybalholm/brotli v1.0.5/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
 github.com/bogdanfinn/fhttp v0.5.28 h1:G6thT8s8v6z1IuvXMUsX9QKy3ZHseTQTzxuIhSiaaAw=
 github.com/bogdanfinn/fhttp v0.5.28/go.mod h1:oJiYPG3jQTKzk/VFmogH8jxjH5yiv2rrOH48Xso2lrE=
-github.com/bogdanfinn/tls-client v1.7.7 h1:c3mf6LX6bxEsunJhP2BJeJE7qN/7BniWUpIpBc9Igu8=
-github.com/bogdanfinn/tls-client v1.7.7/go.mod h1:pQwF0eqfL0gf0mu8hikvu6deZ3ijSPruJDzEKEnnXjU=
+github.com/bogdanfinn/tls-client v1.7.8 h1:oAr+Ox0syJjgcY5ibKLb+r1ofabB1WDysNTY5sQN2wg=
+github.com/bogdanfinn/tls-client v1.7.8/go.mod h1:pQwF0eqfL0gf0mu8hikvu6deZ3ijSPruJDzEKEnnXjU=
 github.com/bogdanfinn/utls v1.6.1 h1:dKDYAcXEyFFJ3GaWaN89DEyjyRraD1qb4osdEK89ass=
 github.com/bogdanfinn/utls v1.6.1/go.mod h1:VXIbRZaiY/wHZc6Hu+DZ4O2CgTzjhjCg/Ou3V4r/39Y=
 github.com/cloudflare/circl v1.3.6 h1:/xbKIqSHbZXHwkhbrhrt2YOHIwYJlXH94E3tI/gDlUg=
