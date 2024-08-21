@@ -60,6 +60,12 @@ func TestClients(t *testing.T) {
 	t.Log("testing safari ios 16")
 	safari_iOS_16_0(t)
 	time.Sleep(2 * time.Second)
+	t.Log("testing safari ios 17")
+	safariIos17(t)
+	time.Sleep(2 * time.Second)
+	t.Log("testing safari ios 18")
+	safari_iOS_18_0(t)
+	time.Sleep(2 * time.Second)
 	t.Log("testing firefox 105")
 	firefox_105(t)
 	time.Sleep(2 * time.Second)
@@ -74,8 +80,6 @@ func TestClients(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	t.Log("testing opera 91")
 	opera_91(t)
-	t.Log("testing safari ios 17")
-	safariIos17(t)
 }
 
 func TestCustomClients(t *testing.T) {
@@ -436,6 +440,31 @@ func safari_iOS_16_0(t *testing.T) {
 	}
 
 	compareResponse(t, "safari ios", clientFingerprints[safariIos][tls.HelloIOS_16_0.Str()], resp)
+}
+
+func safari_iOS_18_0(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Safari_IOS_18_0),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "safari ios", clientFingerprints[safariIos][profiles.Safari_IOS_18_0.GetClientHelloStr()], resp)
 }
 
 func firefox_105(t *testing.T) {
