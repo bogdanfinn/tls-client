@@ -13,10 +13,10 @@ import (
 type CookieJarOption func(config *cookieJarConfig)
 
 type cookieJarConfig struct {
+	logger            Logger
 	skipExisting      bool
 	debug             bool
 	allowEmptyCookies bool
-	logger            Logger
 }
 
 func WithSkipExisting() CookieJarOption {

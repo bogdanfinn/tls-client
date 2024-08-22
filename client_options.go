@@ -14,53 +14,55 @@ import (
 type HttpClientOption func(config *httpClientConfig)
 
 type TransportOptions struct {
-	DisableKeepAlives      bool
-	DisableCompression     bool
+	// KeyLogWriter is an io.Writer that the TLS client will use to write the
+	// TLS master secrets to. This can be used to decrypt TLS connections in
+	// Wireshark and other applications.
+	KeyLogWriter io.Writer
+	// IdleConnTimeout is the maximum amount of time an idle (keep-alive)
+	// connection will remain idle before closing itself. Zero means no limit.
+	IdleConnTimeout *time.Duration
+	// RootCAs is the set of root certificate authorities used to verify
+	// the remote server's certificate.
+	RootCAs                *x509.CertPool
 	MaxIdleConns           int
 	MaxIdleConnsPerHost    int
 	MaxConnsPerHost        int
 	MaxResponseHeaderBytes int64 // Zero means to use a default limit.
 	WriteBufferSize        int   // If zero, a default (currently 4KB) is used.
 	ReadBufferSize         int   // If zero, a default (currently 4KB) is used.
-	// IdleConnTimeout is the maximum amount of time an idle (keep-alive)
-	// connection will remain idle before closing itself. Zero means no limit.
-	IdleConnTimeout *time.Duration
-	// RootCAs is the set of root certificate authorities used to verify
-	// the remote server's certificate.
-	RootCAs *x509.CertPool
-	// KeyLogWriter is an io.Writer that the TLS client will use to write the
-	// TLS master secrets to. This can be used to decrypt TLS connections in
-	// Wireshark and other applications.
-	KeyLogWriter io.Writer
+	DisableKeepAlives      bool
+	DisableCompression     bool
 }
 
 type BadPinHandlerFunc func(req *http.Request)
 
 type httpClientConfig struct {
+	cookieJar          http.CookieJar
+	customRedirectFunc func(req *http.Request, via []*http.Request) error
+	certificatePins    map[string][]string
+	defaultHeaders     http.Header
+	connectHeaders     http.Header
+	badPinHandler      BadPinHandlerFunc
+	transportOptions   *TransportOptions
+	localAddr          *net.TCPAddr
+
+	dialer net.Dialer
+
+	proxyUrl                    string
+	serverNameOverwrite         string
+	clientProfile               profiles.ClientProfile
+	timeout                     time.Duration
 	catchPanics                 bool
 	debug                       bool
 	followRedirects             bool
-	customRedirectFunc          func(req *http.Request, via []*http.Request) error
 	insecureSkipVerify          bool
-	certificatePins             map[string][]string
-	defaultHeaders              http.Header
-	connectHeaders              http.Header
-	badPinHandler               BadPinHandlerFunc
-	proxyUrl                    string
-	serverNameOverwrite         string
-	transportOptions            *TransportOptions
-	cookieJar                   http.CookieJar
-	clientProfile               profiles.ClientProfile
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
-	timeout                     time.Duration
-	localAddr                   *net.TCPAddr
 
 	// Establish a connection to origin server via ipv4 only
 	disableIPV6 bool
 	// Establish a connection to origin server via ipv6 only
 	disableIPV4 bool
-	dialer      net.Dialer
 
 	enabledBandwidthTracker bool
 }

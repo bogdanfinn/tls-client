@@ -75,20 +75,21 @@ func (s *socksContextDialer) DialContext(ctx context.Context, network, address s
 
 // connectDialer allows to configure one-time use HTTP CONNECT client
 type connectDialer struct {
-	logger        Logger
-	ProxyUrl      url.URL
-	DefaultHeader http.Header
-
-	Dialer net.Dialer // overridden dialer allow to control establishment of TCP connection
+	logger          Logger
+	cachedH2RawConn net.Conn
+	DefaultHeader   http.Header
 
 	// overridden DialTLS allows user to control establishment of TLS connection
 	// MUST return connection with completed Handshake, and NegotiatedProtocol
 	DialTLS            func(network string, address string) (net.Conn, string, error)
-	Timeout            time.Duration
-	EnableH2ConnReuse  bool
-	cacheH2Mu          sync.Mutex
 	cachedH2ClientConn *http2.ClientConn
-	cachedH2RawConn    net.Conn
+	ProxyUrl           url.URL
+
+	Dialer net.Dialer // overridden dialer allow to control establishment of TCP connection
+
+	Timeout           time.Duration
+	cacheH2Mu         sync.Mutex
+	EnableH2ConnReuse bool
 }
 
 // newConnectDialer creates a dialer to issue CONNECT requests and tunnel traffic via HTTP/S proxy.

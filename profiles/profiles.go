@@ -71,12 +71,12 @@ var MappedTLSClients = map[string]ClientProfile{
 
 type ClientProfile struct {
 	clientHelloId     tls.ClientHelloID
-	connectionFlow    uint32
 	headerPriority    *http2.PriorityParam
+	settings          map[http2.SettingID]uint32
 	priorities        []http2.Priority
 	pseudoHeaderOrder []string
-	settings          map[http2.SettingID]uint32
 	settingsOrder     []http2.SettingID
+	connectionFlow    uint32
 }
 
 func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, pseudoHeaderOrder []string, connectionFlow uint32, priorities []http2.Priority, headerPriority *http2.PriorityParam) ClientProfile {
