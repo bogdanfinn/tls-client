@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/antibotaio/tls-client/bandwidth"
+	"github.com/antibotaio/tls-client/profiles"
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/httputil"
-	"github.com/bogdanfinn/tls-client/bandwidth"
-	"github.com/bogdanfinn/tls-client/profiles"
 	"golang.org/x/net/proxy"
 )
 
