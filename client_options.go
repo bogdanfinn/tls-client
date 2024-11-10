@@ -63,6 +63,17 @@ type httpClientConfig struct {
 	dialer      net.Dialer
 
 	enabledBandwidthTracker bool
+
+	antibotaio *antibotAIO
+}
+
+// WithAntibotAIO configures a HTTP client to use the antibotaio to solve datadome.
+//
+// apikey is the apikey to use for the antibotaio service.
+func WithAntibotAIO(apikey string, hosts []string) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.antibotaio = NewAntibotAIO(apikey, hosts)
+	}
 }
 
 // WithProxyUrl configures a HTTP client to use the specified proxy URL.

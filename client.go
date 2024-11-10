@@ -380,6 +380,10 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		c.logger.Debug("raw response bytes received over wire: %d (%d kb)", len(responseBytes), len(responseBytes)/1024)
 	}
 
+	if c.config.antibotaio != nil && c.config.antibotaio.isHostnameInList(req.URL.Hostname()) {
+		c.handleResponse(resp)
+	}
+
 	return resp, nil
 }
 
