@@ -1,6 +1,6 @@
 module tls_client_cffi
 
-go 1.20
+go 1.22.0
 
 require (
 	github.com/antibotaio/tls-client v0.0.0-20241031194901-4ea9cf58d029

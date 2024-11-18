@@ -43,12 +43,13 @@ type HttpClient interface {
 var _ HttpClient = (*httpClient)(nil)
 
 type httpClient struct {
-	http.Client
-	headerLck sync.Mutex
-	logger    Logger
-	config    *httpClientConfig
+	logger Logger
 
 	bandwidthTracker bandwidth.BandwidthTracker
+	config           *httpClientConfig
+
+	http.Client
+	headerLck sync.Mutex
 }
 
 var DefaultTimeoutSeconds = 30
