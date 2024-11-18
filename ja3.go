@@ -193,6 +193,12 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 			return tls.ClientHelloSpec{}, err
 		}
 
+		if uint16(eId) == tls.GREASE_PLACEHOLDER {
+			// if we use multiple grease extensions with need to generate always a new value. therefore we are creating a new instance here
+			exts = append(exts, &tls.UtlsGREASEExtension{})
+			continue
+		}
+
 		te, ok := extMap[uint16(eId)]
 		if !ok {
 			return tls.ClientHelloSpec{}, fmt.Errorf("unknown extension with id %s provided", e)
@@ -211,7 +217,7 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 
 	return tls.ClientHelloSpec{
 		CipherSuites:       suites,
-		CompressionMethods: []byte{0},
+		CompressionMethods: []byte{tls.CompressionNone},
 		Extensions:         exts,
 		GetSessionID:       sha256.Sum256,
 	}, nil
@@ -219,7 +225,9 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 
 func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 	return map[uint16]tls.TLSExtension{
-		tls.GREASE_PLACEHOLDER:     &tls.UtlsGREASEExtension{},
+		// This extension needs to be instantiated every time and not be reused if it occurs multiple times in the same ja3
+		//tls.GREASE_PLACEHOLDER:     &tls.UtlsGREASEExtension{},
+
 		tls.ExtensionServerName:    &tls.SNIExtension{},
 		tls.ExtensionStatusRequest: &tls.StatusRequestExtension{},
 
