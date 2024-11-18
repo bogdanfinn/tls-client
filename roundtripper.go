@@ -22,32 +22,34 @@ const defaultIdleConnectionTimeout = 90 * time.Second
 var errProtocolNegotiated = errors.New("protocol negotiated")
 
 type roundTripper struct {
-	sync.Mutex
+	clientHelloId     tls.ClientHelloID
+	certificatePinner CertificatePinner
+
+	dialer proxy.ContextDialer
+
+	bandwidthTracker bandwidth.BandwidthTracker
+
+	clientSessionCache tls.ClientSessionCache
+
 	badPinHandlerFunc BadPinHandlerFunc
 	cachedConnections map[string]net.Conn
 	cachedTransports  map[string]http.RoundTripper
 
-	cachedTransportsLck sync.Mutex
-	certificatePinner   CertificatePinner
-	clientHelloId       tls.ClientHelloID
-	connectionFlow      uint32
+	headerPriority      *http2.PriorityParam
+	settings            map[http2.SettingID]uint32
+	transportOptions    *TransportOptions
+	serverNameOverwrite string
+	priorities          []http2.Priority
+	pseudoHeaderOrder   []string
+	settingsOrder       []http2.SettingID
+	sync.Mutex
 
-	dialer proxy.ContextDialer
+	cachedTransportsLck sync.Mutex
+	connectionFlow      uint32
 
 	forceHttp1 bool
 
-	bandwidthTracker bandwidth.BandwidthTracker
-
-	headerPriority     *http2.PriorityParam
-	clientSessionCache tls.ClientSessionCache
-
 	insecureSkipVerify          bool
-	priorities                  []http2.Priority
-	pseudoHeaderOrder           []string
-	serverNameOverwrite         string
-	settings                    map[http2.SettingID]uint32
-	settingsOrder               []http2.SettingID
-	transportOptions            *TransportOptions
 	withRandomTlsExtensionOrder bool
 	disableIPV6                 bool
 	disableIPV4                 bool
