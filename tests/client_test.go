@@ -14,6 +14,8 @@ import (
 )
 
 func TestClients(t *testing.T) {
+	t.Log("testing chrome 131")
+	chrome_131(t)
 	t.Log("testing chrome 124")
 	chrome_124(t)
 	t.Log("testing chrome 120")
@@ -77,6 +79,9 @@ func TestClients(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	t.Log("testing firefox 110")
 	firefox_110(t)
+	time.Sleep(2 * time.Second)
+	t.Log("testing firefox 124")
+	firefox_132(t)
 	time.Sleep(2 * time.Second)
 	t.Log("testing opera 91")
 	opera_91(t)
@@ -567,6 +572,31 @@ func chrome_124(t *testing.T) {
 	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_124.GetClientHelloStr()], resp)
 }
 
+func chrome_131(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_131),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_131.GetClientHelloStr()], resp)
+}
+
 func chrome_120(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(profiles.Chrome_120),
@@ -665,6 +695,31 @@ func firefox_110(t *testing.T) {
 	}
 
 	compareResponse(t, "firefox", clientFingerprints[firefox][tls.HelloFirefox_110.Str()], resp)
+}
+
+func firefox_132(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Firefox_132),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "firefox", clientFingerprints[firefox][profiles.Firefox_132.GetClientHelloStr()], resp)
 }
 
 func opera_91(t *testing.T) {
