@@ -8,6 +8,8 @@ import (
 type NopeTracker struct {
 }
 
+func (bt *NopeTracker) Reset() {}
+
 func (bt *NopeTracker) GetWriteBytes() int64 {
 	return 0
 }
