@@ -7,6 +7,7 @@ import (
 )
 
 type BandwidthTracker interface {
+	Reset()
 	GetTotalBandwidth() int64
 	GetWriteBytes() int64
 	GetReadBytes() int64
@@ -16,6 +17,11 @@ type BandwidthTracker interface {
 type Tracker struct {
 	writeBytes atomic.Int64
 	readBytes  atomic.Int64
+}
+
+func (bt *Tracker) Reset() {
+	bt.writeBytes.Store(0)
+	bt.readBytes.Store(0)
 }
 
 func (bt *Tracker) GetWriteBytes() int64 {
