@@ -152,7 +152,7 @@ func sslPinning() {
 		return
 	}
 
-	resp.Body.Close()
+	err = resp.Body.Close()
 
 	if err != nil {
 		log.Println(err)
