@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/bogdanfinn/fhttp v0.5.29
 	github.com/bogdanfinn/utls v1.6.2
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tam7t/hpkp v0.0.0-20160821193359-2b70b4024ed5
 	golang.org/x/net v0.31.0
