@@ -13,6 +13,9 @@ var H2SettingsMap = map[string]http2.SettingID{
 	"INITIAL_WINDOW_SIZE":    http2.SettingInitialWindowSize,
 	"MAX_FRAME_SIZE":         http2.SettingMaxFrameSize,
 	"MAX_HEADER_LIST_SIZE":   http2.SettingMaxHeaderListSize,
+	"UNKNOWN_SETTING_7":      0x7,
+	"UNKNOWN_SETTING_8":      0x8,
+	"UNKNOWN_SETTING_9":      0x9,
 }
 
 var tlsVersions = map[string]uint16{
