@@ -10,22 +10,25 @@ parameters:
 
 orbs:
   pinwheel-cicd: underdog-tech/pinwheel-cicd-orb@1.4
+  macos: circleci/macos@2.4.0
+  go: circleci/go@1.7.3
 
 jobs:
   test:
-    docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+    macos:
+      xcode: 14.3.1
     resource_class: small
     working_directory: ~/<< pipeline.parameters.service-name >>
+    executor:
+      name: go/default
+      tag: '1.20'
     steps:
       - checkout
-      - run:
-          name: Download Dependencies
-          command: go mod download
-      - run:
-          name: Run Tests
-          command: |
-            go test -race ./tests
+      - go/load-cache
+      - go/mod-download
+      - go/save-cache
+      - go/test:
+          race: true
 
 workflows:
   test:
