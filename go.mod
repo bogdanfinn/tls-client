@@ -1,6 +1,6 @@
 module github.com/bogdanfinn/tls-client
 
-go 1.20
+go 1.22.0
 
 require (
 	github.com/bogdanfinn/fhttp v0.5.29
