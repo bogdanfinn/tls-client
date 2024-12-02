@@ -1,0 +1,39 @@
+version: 2.1
+
+parameters:
+  go-version:
+    type: string
+    default: "1.20"
+  service-name:
+    type: string
+    default: tls-client-forked
+
+orbs:
+  pinwheel-cicd: underdog-tech/pinwheel-cicd-orb@1.4
+
+jobs:
+  test:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>
+    resource_class: small
+    working_directory: ~/<< pipeline.parameters.service-name >>
+    steps:
+      - checkout
+      - run:
+          name: Download Dependencies
+          command: go mod download
+      - run:
+          name: Run Tests
+          command: |
+            go test -race ./tests
+
+workflows:
+  test:
+    jobs:
+      - test:
+          name: unit-test
+          context: 'testing'
+          filters:
+            branches:
+              ignore:
+                - main
