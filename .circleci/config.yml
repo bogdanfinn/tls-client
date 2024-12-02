@@ -24,6 +24,7 @@ jobs:
       - go/save-cache
       - go/test:
           race: true
+          covermode: "atomic"
 
 workflows:
   test:
