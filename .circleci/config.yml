@@ -15,9 +15,6 @@ jobs:
     macos:
       xcode: 14.3.1
     working_directory: ~/<< pipeline.parameters.service-name >>
-    executor:
-      name: go/default
-      tag: '1.20'
     steps:
       - checkout
       - go/load-cache
