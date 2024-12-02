@@ -1,31 +1,30 @@
 version: 2.1
 
 parameters:
-  go-version:
-    type: string
-    default: "1.20"
   service-name:
     type: string
     default: tls-client-forked
 
 orbs:
   pinwheel-cicd: underdog-tech/pinwheel-cicd-orb@1.4
+  macos: circleci/macos@2.4.0
+  go: circleci/go@1.7.3
 
 jobs:
   test:
-    docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
-    resource_class: small
+    macos:
+      xcode: 14.3.1
     working_directory: ~/<< pipeline.parameters.service-name >>
     steps:
       - checkout
-      - run:
-          name: Download Dependencies
-          command: go mod download
-      - run:
-          name: Run Tests
-          command: |
-            go test -race ./tests
+      - go/install:
+          version: "1.22.0"
+      - go/load-cache
+      - go/mod-download
+      - go/save-cache
+      - go/test:
+          race: true
+          covermode: "atomic"
 
 workflows:
   test:
