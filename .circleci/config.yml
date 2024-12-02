@@ -17,7 +17,8 @@ jobs:
     working_directory: ~/<< pipeline.parameters.service-name >>
     steps:
       - checkout
-      - go/install
+      - go/install:
+          version: 1.22
       - go/load-cache
       - go/mod-download
       - go/save-cache
