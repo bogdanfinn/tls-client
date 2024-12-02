@@ -18,7 +18,7 @@ jobs:
     steps:
       - checkout
       - go/install:
-          version: 1.22
+          version: "1.22.0"
       - go/load-cache
       - go/mod-download
       - go/save-cache
