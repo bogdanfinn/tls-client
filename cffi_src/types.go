@@ -152,12 +152,14 @@ type PriorityParam struct {
 }
 
 type Cookie struct {
-	Expires Timestamp `json:"expires"`
-	Domain  string    `json:"domain"`
-	Name    string    `json:"name"`
-	Path    string    `json:"path"`
-	Value   string    `json:"value"`
-	MaxAge  int       `json:"maxAge"`
+	Expires  Timestamp `json:"expires"`
+	Domain   string    `json:"domain"`
+	Name     string    `json:"name"`
+	Path     string    `json:"path"`
+	Value    string    `json:"value"`
+	MaxAge   int       `json:"maxAge"`
+	Secure   bool      `json:"secure"`
+	HttpOnly bool      `json:"httpOnly"`
 }
 
 type Timestamp struct {
