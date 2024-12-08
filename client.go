@@ -314,7 +314,7 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	c.headerLck.Lock()
 
 	if len(req.Header) == 0 {
-		req.Header = c.config.defaultHeaders
+		req.Header = c.config.defaultHeaders.Clone()
 	}
 
 	req.Header[http.HeaderOrderKey] = allToLower(req.Header[http.HeaderOrderKey])
