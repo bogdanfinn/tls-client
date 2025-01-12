@@ -44,6 +44,7 @@ type httpClientConfig struct {
 	customRedirectFunc          func(req *http.Request, via []*http.Request) error
 	insecureSkipVerify          bool
 	certificatePins             map[string][]string
+	connectHeaders              http.Header
 	defaultHeaders              http.Header
 	badPinHandler               BadPinHandlerFunc
 	proxyUrl                    string
@@ -245,5 +246,12 @@ func WithServerNameOverwrite(serverName string) HttpClientOption {
 func WithDisableIPV6() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.disableIPV6 = true
+	}
+}
+
+// WithConnectHeaders configures a client to use the specified headers for the CONNECT request.
+func WithConnectHeaders(headers http.Header) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.connectHeaders = headers
 	}
 }

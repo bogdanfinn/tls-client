@@ -38,12 +38,6 @@ type HttpClient interface {
 // Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
 var _ HttpClient = (*httpClient)(nil)
 
-//	type httpClient struct {
-//		http.Client
-//		headerLck sync.Mutex
-//		logger    Logger
-//		config    *httpClientConfig
-//	}
 type httpClient struct {
 	bjar *BetterJar
 	http.Client
@@ -73,6 +67,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		followRedirects:    true,
 		badPinHandler:      nil,
 		customRedirectFunc: nil,
+		connectHeaders:     make(http.Header),
 		defaultHeaders:     make(http.Header),
 		clientProfile:      profiles.DefaultClientProfile,
 		timeout:            time.Duration(DefaultTimeoutSeconds) * time.Second,
@@ -86,7 +81,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		return nil, err
 	}
 
-	client, clientProfile, err := buildFromConfig(config)
+	client, clientProfile, err := buildFromConfig(logger, config)
 	if err != nil {
 		return nil, err
 	}
@@ -105,13 +100,6 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		logger = NewNoopLogger()
 	}
 
-	// return &httpClient{
-	// 	Client:    *client,
-	// 	logger:    logger,
-	// 	config:    config,
-	// 	headerLck: sync.Mutex{},
-	// }, nil
-
 	c := &httpClient{
 		Client:    *client,
 		logger:    logger,
@@ -129,16 +117,14 @@ func validateConfig(_ *httpClientConfig) error {
 	return nil
 }
 
-func buildFromConfig(config *httpClientConfig) (*http.Client, profiles.ClientProfile, error) {
-	var dialer proxy.ContextDialer
-	dialer = newDirectDialer(config.timeout, config.localAddr, config.dialer)
+func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, profiles.ClientProfile, error) {
+	dialer := newDirectDialer(config.timeout, config.localAddr, config.dialer)
 
 	if config.proxyUrl != "" {
-		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr, config.dialer)
+		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr, config.dialer, config.connectHeaders, logger)
 		if err != nil {
 			return nil, profiles.ClientProfile{}, err
 		}
-
 		dialer = proxyDialer
 	}
 
@@ -238,7 +224,7 @@ func (c *httpClient) applyProxy() error {
 
 	if c.config.proxyUrl != "" {
 		c.logger.Debug("proxy url %s supplied - using proxy connect dialer", c.config.proxyUrl)
-		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout, c.config.localAddr, c.config.dialer)
+		proxyDialer, err := newConnectDialer(c.config.proxyUrl, c.config.timeout, c.config.localAddr, c.config.dialer, c.config.connectHeaders, c.logger)
 		if err != nil {
 			c.logger.Error("failed to create proxy connect dialer: %s", err.Error())
 			return err
