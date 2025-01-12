@@ -144,9 +144,6 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 				base64.StdEncoding.EncodeToString([]byte(proxyUrl.User.Username()+":"+password)))
 
 		}
-	} else {
-		//example format (without credentials): http://127.0.0.1:12312
-		dialer.DefaultHeader.Set("Proxy-Authorization", "")
 	}
 	return dialer, nil
 }
