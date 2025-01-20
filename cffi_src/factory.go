@@ -26,16 +26,18 @@ var clientsLock = sync.Mutex{}
 var clients = make(map[string]tls_client.HttpClient)
 
 // RemoveSession deletes the client with the given sessionId from the client session storage.
-func RemoveSession(sessionId string) {
+func RemoveSession(sessionId string) error {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
 	client, ok := clients[sessionId]
 	if !ok {
-		return
+		return fmt.Errorf("no client found for sessionId: %s", sessionId)
 	}
 	client.CloseIdleConnections()
 
 	delete(clients, sessionId)
+
+	return nil
 }
 
 // ClearSessionCache empties the client session storage.
