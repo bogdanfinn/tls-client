@@ -743,7 +743,7 @@ func requestWithJa3CustomClientWithTwoGreaseExtensions() {
 	candidatePayloads := []uint16{128, 160, 192, 224}
 	certCompressionAlgo := "brotli"
 
-	specFactory, err := tls_client.GetSpecFactoryFromJa3String(ja3String, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS, echCandidateCipherSuites, candidatePayloads, certCompressionAlgo)
+	specFactory, err := tls_client.GetSpecFactoryFromJa3String(ja3String, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS, echCandidateCipherSuites, candidatePayloads, []string{certCompressionAlgo})
 
 	customClientProfile := profiles.NewClientProfile(tls.ClientHelloID{
 		Client:      "MyCustomProfile",
