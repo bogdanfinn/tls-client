@@ -94,8 +94,8 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 			resolvedKeyShare, ok := curves[keyShareCurve]
 
 			if !ok {
-				curveID64, _ := strconv.ParseUint(keyShareCurve, 10, 16);
-				resolvedKeyShare = tls.CurveID(uint16(curveID64));
+				curveID64, _ := strconv.ParseUint(keyShareCurve, 10, 16)
+				resolvedKeyShare = tls.CurveID(uint16(curveID64))
 			}
 
 			mappedKeyShare := tls.KeyShare{Group: resolvedKeyShare}
@@ -107,12 +107,11 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 			mappedKeyShares = append(mappedKeyShares, mappedKeyShare)
 		}
 
-        var compressionAlgos []tls.CertCompressionAlgo
+		var compressionAlgos []tls.CertCompressionAlgo
 
-        for _, certCompressionAlgo := range certCompressionAlgos {
-            compressionAlgos = append(compressionAlgos, certCompression[certCompressionAlgo])
-        }
-
+		for _, certCompressionAlgo := range certCompressionAlgos {
+			compressionAlgos = append(compressionAlgos, certCompression[certCompressionAlgo])
+		}
 
 		return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedDelegatedCredentialsAlgorithms, mappedTlsVersions, mappedKeyShares, mappedHpkeSymmetricCipherSuites, candidatePayloads, supportedProtocolsALPN, supportedProtocolsALPS, compressionAlgos)
 	}, nil
@@ -203,7 +202,11 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 
 		te, ok := extMap[uint16(eId)]
 		if !ok {
-			return tls.ClientHelloSpec{}, fmt.Errorf("unknown extension with id %s provided", e)
+			if eId == 17613 {
+				te = extMap[tls.ExtensionALPS]
+			} else {
+				exts = append(exts, &tls.UtlsGREASEExtension{})
+			}
 		}
 		exts = append(exts, te)
 	}
