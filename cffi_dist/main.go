@@ -13,7 +13,7 @@ import (
 	"unsafe"
 
 	http "github.com/bogdanfinn/fhttp"
-	tls_client_cffi_src "github.com/bogdanfinn/tls-client/cffi_src"
+	tls_client_cffi_src "github.com/Pear-Commerce/tls-client/cffi_src"
 	"github.com/google/uuid"
 )
 

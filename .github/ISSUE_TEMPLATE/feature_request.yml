@@ -8,7 +8,7 @@ body:
   attributes:
     value: |
       - Write a proposal title above.
-      - Search [open](https://github.com/bogdanfinn/tls-client/issues?q=is%3Aopen) and [closed](https://github.com/bogdanfinn/tls-client/issues?q=is%3Aclosed) proposals to ensure the feature has not already been suggested.
+      - Search [open](https://github.com/Pear-Commerce/tls-client/issues?q=is%3Aopen) and [closed](https://github.com/Pear-Commerce/tls-client/issues?q=is%3Aclosed) proposals to ensure the feature has not already been suggested.
   
 - type: textarea
   attributes:

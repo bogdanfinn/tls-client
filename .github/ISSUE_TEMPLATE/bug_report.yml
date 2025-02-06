@@ -8,7 +8,7 @@ body:
   attributes:
     value: |
       - Write an issue title above.
-      - Search [open](https://github.com/bogdanfinn/tls-client/issues?q=is%3Aopen) and [closed](https://github.com/bogdanfinn/tls-client/issues?q=is%3Aclosed) issues to ensure it has not already been reported.
+      - Search [open](https://github.com/Pear-Commerce/tls-client/issues?q=is%3Aopen) and [closed](https://github.com/Pear-Commerce/tls-client/issues?q=is%3Aclosed) issues to ensure it has not already been reported.
 
 - type: input
   attributes:

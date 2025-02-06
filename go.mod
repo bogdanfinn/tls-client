@@ -4,7 +4,6 @@ go 1.22.0
 
 require (
 	github.com/bogdanfinn/fhttp v0.5.32
-	github.com/bogdanfinn/tls-client v1.7.11
 	github.com/bogdanfinn/utls v1.6.3
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.9.0
