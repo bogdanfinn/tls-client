@@ -1,4 +1,4 @@
-module github.com/bogdanfinn/tls-client
+module github.com/Pear-Commerce/tls-client
 
 go 1.22.0
 
