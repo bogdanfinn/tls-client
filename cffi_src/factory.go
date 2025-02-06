@@ -9,7 +9,7 @@ import (
 	"net"
 	"os"
 	"sync"
-
+    "strconv"
 	"github.com/Pear-Commerce/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -431,7 +431,7 @@ func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.Cli
 	for _, order := range customClientDefinition.H2SettingsOrder {
 		resolvedKey, ok := tls_client.H2SettingsMap[order]
 		if !ok {
-			resolvedKey = strconv.ParseUint(key, 10, 16);
+			resolvedKey = strconv.ParseUint(order, 10, 16);
 		}
 
 		resolvedH2SettingsOrder = append(resolvedH2SettingsOrder, resolvedKey)
