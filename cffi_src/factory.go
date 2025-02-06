@@ -421,7 +421,8 @@ func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.Cli
 	for key, value := range customClientDefinition.H2Settings {
 		resolvedKey, ok := tls_client.H2SettingsMap[key]
 		if !ok {
-			resolvedKey, _ = strconv.ParseUint(key, 10, 16);
+			numVal, _ = strconv.ParseUint(key, 10, 16);
+			resolvedKey = http2.SettingID(numVal);
 		}
 
 		resolvedH2Settings[resolvedKey] = value
@@ -431,7 +432,8 @@ func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.Cli
 	for _, order := range customClientDefinition.H2SettingsOrder {
 		resolvedKey, ok := tls_client.H2SettingsMap[order]
 		if !ok {
-			resolvedKey, _ = strconv.ParseUint(order, 10, 16);
+			numVal, _ = strconv.ParseUint(order, 10, 16);
+			resolvedKey = http2.SettingID(numVal);
 		}
 
 		resolvedH2SettingsOrder = append(resolvedH2SettingsOrder, resolvedKey)
