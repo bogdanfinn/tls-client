@@ -181,7 +181,13 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 		AlpnProtocols: supportedProtocolsALPN,
 	}
 
+	extMap[tls.ExtensionALPSOld] = &tls.ApplicationSettingsExtension{
+		CodePoint:          tls.ExtensionALPSOld,
+		SupportedProtocols: supportedProtocolsALPS,
+	}
+
 	extMap[tls.ExtensionALPS] = &tls.ApplicationSettingsExtension{
+		CodePoint:          tls.ExtensionALPS,
 		SupportedProtocols: supportedProtocolsALPS,
 	}
 
