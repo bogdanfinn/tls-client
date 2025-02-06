@@ -94,7 +94,8 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 			resolvedKeyShare, ok := curves[keyShareCurve]
 
 			if !ok {
-				continue
+				curveID64, _ := strconv.ParseUint(keyShareCurve, 10, 16);
+				resolvedKeyShare = tls.CurveID(uint16(curveID64));
 			}
 
 			mappedKeyShare := tls.KeyShare{Group: resolvedKeyShare}
