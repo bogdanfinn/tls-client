@@ -196,9 +196,10 @@ var Chrome_131_PSK = ClientProfile{
 						tls.CurveP256,
 						tls.CurveP384,
 					}},
-					&tls.ApplicationSettingsExtension{SupportedProtocols: []string{
-						"h2",
-					}},
+					&tls.ApplicationSettingsExtension{
+						CodePoint:          tls.ExtensionALPSOld,
+						SupportedProtocols: []string{"h2"},
+					},
 					&tls.SupportedPointsExtension{SupportedPoints: []byte{
 						tls.PointFormatUncompressed,
 					}},
@@ -306,9 +307,10 @@ var Chrome_131 = ClientProfile{
 						tls.CurveP256,
 						tls.CurveP384,
 					}},
-					&tls.ApplicationSettingsExtension{SupportedProtocols: []string{
-						"h2",
-					}},
+					&tls.ApplicationSettingsExtension{
+						CodePoint:          tls.ExtensionALPSOld,
+						SupportedProtocols: []string{"h2"},
+					},
 					&tls.SupportedPointsExtension{SupportedPoints: []byte{
 						tls.PointFormatUncompressed,
 					}},
