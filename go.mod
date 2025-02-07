@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/bogdanfinn/fhttp v0.5.32
-	github.com/bogdanfinn/utls v1.6.3
+	github.com/bogdanfinn/utls v1.6.4
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tam7t/hpkp v0.0.0-20160821193359-2b70b4024ed5
