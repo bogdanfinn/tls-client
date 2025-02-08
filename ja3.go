@@ -202,9 +202,10 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 
 		te, ok := extMap[uint16(eId)]
 		if !ok {
-			exts = append(exts, &tls.UtlsGREASEExtension{})
+			exts = append(exts, &tls.GenericExtension{Id: uint16(eId)})
+		} else {
+		    exts = append(exts, te)
 		}
-		exts = append(exts, te)
 	}
 
 	var suites []uint16
