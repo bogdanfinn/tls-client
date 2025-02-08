@@ -26,4 +26,4 @@ require (
 
 // replace github.com/bogdanfinn/utls => ../utls
 
-// replace github.com/bogdanfinn/fhttp => ../fhttp
+replace github.com/bogdanfinn/fhttp => ../fhttp
