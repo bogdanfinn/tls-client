@@ -252,7 +252,6 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		}
 
 		t2.InitialWindowSize = t2.Settings[http2.SettingInitialWindowSize]
-
 		t2.Priorities = rt.priorities
 
 		t2.PushHandler = &http2.DefaultPushHandler{}
