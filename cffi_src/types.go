@@ -52,7 +52,7 @@ type RequestInput struct {
 	CertificatePinningHosts     map[string][]string `json:"certificatePinningHosts"`
 	CustomTlsClient             *CustomTlsClient    `json:"customTlsClient"`
 	TransportOptions            *TransportOptions   `json:"transportOptions"`
-	Headers                     map[string]string   `json:"headers"`
+	Headers                     map[string][]string   `json:"headers"`
 	DefaultHeaders              map[string][]string `json:"defaultHeaders"`
 	ConnectHeaders              map[string][]string `json:"connectHeaders"`
 	LocalAddress                *string             `json:"localAddress"`

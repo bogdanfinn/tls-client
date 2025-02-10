@@ -134,7 +134,7 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	headers := http.Header{}
 
 	for key, value := range input.Headers {
-		headers[key] = []string{value}
+		headers[key] = value
 	}
 
 	headers[http.HeaderOrderKey] = input.HeaderOrder
