@@ -29,6 +29,67 @@ func main() {
 	rotateProxiesOnClient()
 	downloadImageWithTlsClient()
 	testPskExtension()
+	testALPSExtension()
+}
+
+type TlsBrowserleaksResponse struct {
+	UserAgent  string `json:"user_agent"`
+	Ja3Hash    string `json:"ja3_hash"`
+	Ja3Text    string `json:"ja3_text"`
+	Ja3NHash   string `json:"ja3n_hash"`
+	Ja3NText   string `json:"ja3n_text"`
+	Ja4        string `json:"ja4"`
+	Ja4R       string `json:"ja4_r"`
+	Ja4O       string `json:"ja4_o"`
+	Ja4Ro      string `json:"ja4_ro"`
+	AkamaiHash string `json:"akamai_hash"`
+	AkamaiText string `json:"akamai_text"`
+	TLS        struct {
+		CipherSuite []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+		} `json:"cipher_suite"`
+		ConnectionVersion []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+		} `json:"connection_version"`
+		RecordVersion []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+		} `json:"record_version"`
+		HandshakeVersion []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+		} `json:"handshake_version"`
+		CipherSuites []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+		} `json:"cipher_suites"`
+		Extensions []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+			Data  struct {
+				SupportedVersions []struct {
+					Name  string `json:"name"`
+					Value int    `json:"value"`
+				} `json:"supported_versions"`
+			} `json:"data,omitempty"`
+		} `json:"extensions"`
+	} `json:"tls"`
+	HTTP2 []struct {
+		Type                string   `json:"type"`
+		Length              int      `json:"length"`
+		Settings            []string `json:"settings,omitempty"`
+		WindowSizeIncrement int      `json:"window_size_increment,omitempty"`
+		StreamID            int      `json:"stream_id,omitempty"`
+		Headers             []string `json:"headers,omitempty"`
+		Flags               []string `json:"flags,omitempty"`
+		Priority            struct {
+			Weight    int `json:"weight"`
+			DepID     int `json:"dep_id"`
+			Exclusive int `json:"exclusive"`
+		} `json:"priority,omitempty"`
+	} `json:"http2"`
 }
 
 type TlsApiResponse struct {
@@ -615,7 +676,10 @@ func requestWithCustomClient() {
 				&tls.UtlsCompressCertExtension{Algorithms: []tls.CertCompressionAlgo{
 					tls.CertCompressionBrotli,
 				}},
-				&tls.ApplicationSettingsExtension{SupportedProtocols: []string{"h2"}},
+				&tls.ApplicationSettingsExtension{
+					CodePoint:          tls.ExtensionALPSOld,
+					SupportedProtocols: []string{"h2"},
+				},
 				&tls.UtlsGREASEExtension{},
 				&tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
 			},
@@ -844,7 +908,10 @@ func testPskExtension() {
 					{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
 					{Group: tls.X25519},
 				}},
-				&tls.ApplicationSettingsExtension{SupportedProtocols: []string{"h2"}},
+				&tls.ApplicationSettingsExtension{
+					CodePoint:          tls.ExtensionALPSOld,
+					SupportedProtocols: []string{"h2"},
+				},
 				&tls.SupportedVersionsExtension{[]uint16{
 					tls.GREASE_PLACEHOLDER,
 					tls.VersionTLS13,
@@ -985,5 +1052,59 @@ func testPskExtension() {
 		log.Println("profile includes PSK extension (41)")
 	} else {
 		log.Println("profile does not include PSK extension (41)")
+	}
+}
+
+func testALPSExtension() {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeoutSeconds(60),
+		tls_client.WithClientProfile(profiles.Chrome_133),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://tls.browserleaks.com", nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req.Header = http.Header{
+		"accept":     {"*/*"},
+		"user-agent": {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"user-agent",
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	readBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	tlsApiResponse := TlsBrowserleaksResponse{}
+	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if strings.Contains(tlsApiResponse.Ja3Text, "17613") && !strings.Contains(tlsApiResponse.Ja3Text, "17513") {
+		log.Println("profile includes new ALPS extension (17613) and not old one (17513)")
+	} else {
+		log.Println("profile does not include new ALPS extension (17613)")
 	}
 }
