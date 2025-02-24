@@ -24,6 +24,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+replace github.com/bogdanfinn/utls => github.com/dsekz/utls v0.0.0-20250222203924-18786310b988
+
 // replace github.com/bogdanfinn/utls => ../utls
 
 // replace github.com/bogdanfinn/fhttp => ../fhttp
