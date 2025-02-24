@@ -14,6 +14,8 @@ import (
 )
 
 func TestClients(t *testing.T) {
+	t.Log("testing chrome 133")
+	chrome_133(t)
 	t.Log("testing chrome 131")
 	chrome_131(t)
 	t.Log("testing chrome 124")
@@ -570,6 +572,31 @@ func chrome_124(t *testing.T) {
 	}
 
 	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_124.GetClientHelloStr()], resp)
+}
+
+func chrome_133(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_133),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_133.GetClientHelloStr()], resp)
 }
 
 func chrome_131(t *testing.T) {
