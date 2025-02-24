@@ -2,6 +2,7 @@ package tls_client
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -223,7 +224,11 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 
 	customSessionIdByte := []byte(nil)
 	if customSessionId != "" {
-		customSessionIdByte = []byte(customSessionId)
+		decodedSessionId, err := hex.DecodeString(customSessionId)
+		if err != nil {
+			return tls.ClientHelloSpec{}, err
+		}
+		customSessionIdByte = decodedSessionId
 	}
 
 	return tls.ClientHelloSpec{
