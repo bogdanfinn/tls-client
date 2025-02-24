@@ -104,6 +104,8 @@ type CustomTlsClient struct {
 	SupportedSignatureAlgorithms            []string              `json:"supportedSignatureAlgorithms"`
 	SupportedVersions                       []string              `json:"supportedVersions"`
 	ConnectionFlow                          uint32                `json:"connectionFlow"`
+	DisableSessionID                        bool                  `json:"disableSessionID"`
+	CustomSessionID                         []byte                `json:"customSessionID"`
 }
 
 type CandidateCipherSuites []CandidateCipherSuite

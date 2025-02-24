@@ -14,7 +14,7 @@ type CandidateCipherSuites struct {
 	AeadId string
 }
 
-func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS []string, echCandidateCipherSuites []CandidateCipherSuites, candidatePayloads []uint16, certCompressionAlgo string) (func() (tls.ClientHelloSpec, error), error) {
+func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS []string, echCandidateCipherSuites []CandidateCipherSuites, candidatePayloads []uint16, certCompressionAlgo string, disableSessionId bool, customSessionId []byte) (func() (tls.ClientHelloSpec, error), error) {
 	return func() (tls.ClientHelloSpec, error) {
 		var mappedSignatureAlgorithms []tls.SignatureScheme
 
@@ -109,14 +109,14 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 		compressionAlgo, ok := certCompression[certCompressionAlgo]
 
 		if !ok {
-			return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedDelegatedCredentialsAlgorithms, mappedTlsVersions, mappedKeyShares, mappedHpkeSymmetricCipherSuites, candidatePayloads, supportedProtocolsALPN, supportedProtocolsALPS, nil)
+			return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedDelegatedCredentialsAlgorithms, mappedTlsVersions, mappedKeyShares, mappedHpkeSymmetricCipherSuites, candidatePayloads, supportedProtocolsALPN, supportedProtocolsALPS, nil, disableSessionId, customSessionId)
 		}
 
-		return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedDelegatedCredentialsAlgorithms, mappedTlsVersions, mappedKeyShares, mappedHpkeSymmetricCipherSuites, candidatePayloads, supportedProtocolsALPN, supportedProtocolsALPS, &compressionAlgo)
+		return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedDelegatedCredentialsAlgorithms, mappedTlsVersions, mappedKeyShares, mappedHpkeSymmetricCipherSuites, candidatePayloads, supportedProtocolsALPN, supportedProtocolsALPS, &compressionAlgo, disableSessionId, customSessionId)
 	}, nil
 }
 
-func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegatedCredentialsAlgorithms []tls.SignatureScheme, tlsVersions []uint16, keyShares []tls.KeyShare, hpkeSymmetricCipherSuites []tls.HPKESymmetricCipherSuite, candidatePayloads []uint16, supportedProtocolsALPN, supportedProtocolsALPS []string, certCompression *tls.CertCompressionAlgo) (tls.ClientHelloSpec, error) {
+func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegatedCredentialsAlgorithms []tls.SignatureScheme, tlsVersions []uint16, keyShares []tls.KeyShare, hpkeSymmetricCipherSuites []tls.HPKESymmetricCipherSuite, candidatePayloads []uint16, supportedProtocolsALPN, supportedProtocolsALPS []string, certCompression *tls.CertCompressionAlgo, disableSessionId bool, customSessionId []byte) (tls.ClientHelloSpec, error) {
 	extMap := getExtensionBaseMap()
 	ja3StringParts := strings.Split(ja3, ",")
 
@@ -226,6 +226,8 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 		CompressionMethods: []byte{tls.CompressionNone},
 		Extensions:         exts,
 		GetSessionID:       sha256.Sum256,
+		DisableSessionID:   disableSessionId,
+		CustomSessionID:    customSessionId,
 	}, nil
 }
 
