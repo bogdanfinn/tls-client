@@ -221,6 +221,10 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 		suites = append(suites, uint16(cid))
 	}
 
+	if customSessionId != nil {
+		customSessionId = []byte(customSessionId)
+	}
+
 	return tls.ClientHelloSpec{
 		CipherSuites:       suites,
 		CompressionMethods: []byte{tls.CompressionNone},
