@@ -105,7 +105,7 @@ type CustomTlsClient struct {
 	SupportedVersions                       []string              `json:"supportedVersions"`
 	ConnectionFlow                          uint32                `json:"connectionFlow"`
 	DisableSessionID                        bool                  `json:"disableSessionID"`
-	CustomSessionID                         []string              `json:"customSessionID"`
+	CustomSessionID                         string                `json:"customSessionID"`
 }
 
 type CandidateCipherSuites []CandidateCipherSuite

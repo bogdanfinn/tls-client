@@ -14,7 +14,7 @@ type CandidateCipherSuites struct {
 	AeadId string
 }
 
-func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS []string, echCandidateCipherSuites []CandidateCipherSuites, candidatePayloads []uint16, certCompressionAlgo string, disableSessionId bool, customSessionId []byte) (func() (tls.ClientHelloSpec, error), error) {
+func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS []string, echCandidateCipherSuites []CandidateCipherSuites, candidatePayloads []uint16, certCompressionAlgo string, disableSessionId bool, customSessionId string) (func() (tls.ClientHelloSpec, error), error) {
 	return func() (tls.ClientHelloSpec, error) {
 		var mappedSignatureAlgorithms []tls.SignatureScheme
 
@@ -116,7 +116,7 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 	}, nil
 }
 
-func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegatedCredentialsAlgorithms []tls.SignatureScheme, tlsVersions []uint16, keyShares []tls.KeyShare, hpkeSymmetricCipherSuites []tls.HPKESymmetricCipherSuite, candidatePayloads []uint16, supportedProtocolsALPN, supportedProtocolsALPS []string, certCompression *tls.CertCompressionAlgo, disableSessionId bool, customSessionId []byte) (tls.ClientHelloSpec, error) {
+func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegatedCredentialsAlgorithms []tls.SignatureScheme, tlsVersions []uint16, keyShares []tls.KeyShare, hpkeSymmetricCipherSuites []tls.HPKESymmetricCipherSuite, candidatePayloads []uint16, supportedProtocolsALPN, supportedProtocolsALPS []string, certCompression *tls.CertCompressionAlgo, disableSessionId bool, customSessionId string) (tls.ClientHelloSpec, error) {
 	extMap := getExtensionBaseMap()
 	ja3StringParts := strings.Split(ja3, ",")
 
@@ -221,8 +221,9 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 		suites = append(suites, uint16(cid))
 	}
 
-	if customSessionId != nil {
-		customSessionId = []byte(customSessionId)
+	customSessionIdByte := []byte(nil)
+	if customSessionId != "" {
+		customSessionIdByte = []byte(customSessionId)
 	}
 
 	return tls.ClientHelloSpec{
@@ -231,7 +232,7 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 		Extensions:         exts,
 		GetSessionID:       sha256.Sum256,
 		DisableSessionID:   disableSessionId,
-		CustomSessionID:    customSessionId,
+		CustomSessionID:    customSessionIdByte,
 	}, nil
 }
 
