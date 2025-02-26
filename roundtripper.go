@@ -251,7 +251,6 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 			t2.SettingsOrder = rt.settingsOrder
 		}
 
-		t2.InitialWindowSize = t2.Settings[http2.SettingInitialWindowSize]
 		t2.Priorities = rt.priorities
 
 		t2.PushHandler = &http2.DefaultPushHandler{}
@@ -333,11 +332,6 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		clientSessionCache = tls.NewLRUClientSessionCache(32)
 	}
 
-	connectionFlow := http2.TransportDefaultConnFlow
-	if clientProfile.GetConnectionFlow() > 0 {
-		connectionFlow = int(clientProfile.GetConnectionFlow())
-	}
-
 	rt := &roundTripper{
 		dialer:                      dialer[0],
 		certificatePinner:           pinner,
@@ -353,7 +347,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		insecureSkipVerify:          insecureSkipVerify,
 		forceHttp1:                  forceHttp1,
 		withRandomTlsExtensionOrder: withRandomTlsExtensionOrder,
-		connectionFlow:              uint32(connectionFlow),
+		connectionFlow:              clientProfile.GetConnectionFlow(),
 		clientHelloId:               clientProfile.GetClientHelloId(),
 		cachedTransports:            make(map[string]http.RoundTripper),
 		cachedConnections:           make(map[string]net.Conn),
