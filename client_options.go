@@ -9,6 +9,7 @@ import (
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/tls-client/profiles"
+	"golang.org/x/net/proxy"
 )
 
 type HttpClientOption func(config *httpClientConfig)
@@ -35,6 +36,7 @@ type TransportOptions struct {
 }
 
 type BadPinHandlerFunc func(req *http.Request)
+type ProxyDialerFactory func(proxyUrlStr string, timeout time.Duration, localAddr *net.TCPAddr, connectHeaders http.Header, logger Logger) (proxy.ContextDialer, error)
 
 type httpClientConfig struct {
 	cookieJar          http.CookieJar
@@ -46,7 +48,8 @@ type httpClientConfig struct {
 	transportOptions   *TransportOptions
 	localAddr          *net.TCPAddr
 
-	dialer net.Dialer
+	dialer             net.Dialer
+	proxyDialerFactory ProxyDialerFactory
 
 	proxyUrl                    string
 	serverNameOverwrite         string
@@ -118,6 +121,13 @@ func WithTimeoutMilliseconds(timeout int) HttpClientOption {
 func WithDialer(dialer net.Dialer) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.dialer = dialer
+	}
+}
+
+// WithProxyDialerFactory configures an HTTP client to use a custom proxyDialerFactory instead of newConnectDialer(). This allows to implement custom proxy dialer use cases
+func WithProxyDialerFactory(proxyDialerFactory ProxyDialerFactory) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.proxyDialerFactory = proxyDialerFactory
 	}
 }
 
