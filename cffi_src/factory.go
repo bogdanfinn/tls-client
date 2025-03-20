@@ -15,7 +15,7 @@ import (
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/cookiejar"
 	"github.com/bogdanfinn/fhttp/http2"
-	"github.com/bogdanfinn/tls-client"
+	tls_client "github.com/bogdanfinn/tls-client"
 	tls "github.com/bogdanfinn/utls"
 	"github.com/google/uuid"
 )
@@ -123,6 +123,10 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 		tlsReq, err = http.NewRequest(input.RequestMethod, input.RequestUrl, nil)
 	}
 
+	if input.RequestHostOverride != nil {
+		tlsReq.Host = *input.RequestHostOverride
+	}
+
 	if err != nil {
 		return nil, NewTLSClientError(fmt.Errorf("failed to create request object: %w", err))
 	}
@@ -143,12 +147,16 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]byte, error) {
 	var respBodyBytes []byte
 	var err error
-
+	var bodyLen = 0
 	f, err := os.OpenFile(*input.StreamOutputPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil {
+			fmt.Printf("failed to close file: %v\n", closeErr)
+		}
+	}()
 
 	blockSize := 1024 // 1 KB
 	if input.StreamOutputBlockSize != nil {
@@ -157,16 +165,11 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 	buf := make([]byte, blockSize)
 	// Read the response body
 	for {
-		n, err := respBody.Read(buf)
-		if err == io.EOF {
-			if input.StreamOutputEOFSymbol != nil {
-				f.Write([]byte(*input.StreamOutputEOFSymbol))
-			}
-
-			break
+		n, readErr := respBody.Read(buf)
+		bodyLen += n
+		if input.WithDebug {
+			fmt.Printf("Reading at: %d\n", bodyLen)
 		}
-
-		respBodyBytes = append(respBodyBytes, buf[:n]...)
 		if _, err = f.Write(buf[:n]); err != nil {
 			if input.WithDebug {
 				fmt.Printf("Append stream output error: %+v\n", err)
@@ -175,8 +178,18 @@ func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]
 			return nil, err
 		}
 
-		if input.WithDebug {
-			fmt.Printf("[stream decode result]==========\n%+v\n==========\n", string(buf[:n]))
+		if readErr == io.EOF {
+
+			if input.StreamOutputEOFSymbol != nil {
+				f.Write([]byte(*input.StreamOutputEOFSymbol))
+			}
+
+			break
+		} else if readErr != nil {
+			if input.WithDebug {
+				fmt.Printf("Reading Response Body error: %+v\n", readErr)
+			}
+			return nil, readErr
 		}
 	}
 
@@ -305,6 +318,10 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithDisableIPV6())
 	}
 
+	if requestInput.DisableIPV4 {
+		options = append(options, tls_client.WithDisableIPV4())
+	}
+
 	if requestInput.TransportOptions != nil {
 		transportOptions := &tls_client.TransportOptions{
 			DisableKeepAlives:      requestInput.TransportOptions.DisableKeepAlives,
@@ -316,7 +333,7 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 			WriteBufferSize:        requestInput.TransportOptions.WriteBufferSize,
 			ReadBufferSize:         requestInput.TransportOptions.ReadBufferSize,
 			IdleConnTimeout:        requestInput.TransportOptions.IdleConnTimeout,
-			// RootCAs:                requestInput.TransportOptions.RootCAs,
+			//RootCAs:                requestInput.TransportOptions.RootCAs,
 		}
 
 		options = append(options, tls_client.WithTransportOptions(transportOptions))
@@ -369,6 +386,10 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 	if requestInput.DefaultHeaders != nil && len(requestInput.DefaultHeaders) != 0 {
 		options = append(options, tls_client.WithDefaultHeaders(requestInput.DefaultHeaders))
+	}
+
+	if requestInput.ConnectHeaders != nil && len(requestInput.ConnectHeaders) != 0 {
+		options = append(options, tls_client.WithConnectHeaders(requestInput.ConnectHeaders))
 	}
 
 	if requestInput.ServerNameOverwrite != nil && *requestInput.ServerNameOverwrite != "" {

@@ -25,9 +25,71 @@ func main() {
 	postAsTlsClient()
 	requestWithFollowRedirectSwitch()
 	requestWithCustomClient()
+	requestWithJa3CustomClientWithTwoGreaseExtensions()
 	rotateProxiesOnClient()
 	downloadImageWithTlsClient()
 	testPskExtension()
+	testALPSExtension()
+}
+
+type TlsBrowserleaksResponse struct {
+	UserAgent  string `json:"user_agent"`
+	Ja3Hash    string `json:"ja3_hash"`
+	Ja3Text    string `json:"ja3_text"`
+	Ja3NHash   string `json:"ja3n_hash"`
+	Ja3NText   string `json:"ja3n_text"`
+	Ja4        string `json:"ja4"`
+	Ja4R       string `json:"ja4_r"`
+	Ja4O       string `json:"ja4_o"`
+	Ja4Ro      string `json:"ja4_ro"`
+	AkamaiHash string `json:"akamai_hash"`
+	AkamaiText string `json:"akamai_text"`
+	TLS        struct {
+		CipherSuite []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+		} `json:"cipher_suite"`
+		ConnectionVersion []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+		} `json:"connection_version"`
+		RecordVersion []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+		} `json:"record_version"`
+		HandshakeVersion []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+		} `json:"handshake_version"`
+		CipherSuites []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+		} `json:"cipher_suites"`
+		Extensions []struct {
+			Name  string `json:"name"`
+			Value int    `json:"value"`
+			Data  struct {
+				SupportedVersions []struct {
+					Name  string `json:"name"`
+					Value int    `json:"value"`
+				} `json:"supported_versions"`
+			} `json:"data,omitempty"`
+		} `json:"extensions"`
+	} `json:"tls"`
+	HTTP2 []struct {
+		Type                string   `json:"type"`
+		Length              int      `json:"length"`
+		Settings            []string `json:"settings,omitempty"`
+		WindowSizeIncrement int      `json:"window_size_increment,omitempty"`
+		StreamID            int      `json:"stream_id,omitempty"`
+		Headers             []string `json:"headers,omitempty"`
+		Flags               []string `json:"flags,omitempty"`
+		Priority            struct {
+			Weight    int `json:"weight"`
+			DepID     int `json:"dep_id"`
+			Exclusive int `json:"exclusive"`
+		} `json:"priority,omitempty"`
+	} `json:"http2"`
 }
 
 type TlsApiResponse struct {
@@ -35,45 +97,42 @@ type TlsApiResponse struct {
 	HTTPVersion string `json:"http_version"`
 	Method      string `json:"method"`
 	TLS         struct {
-		Ciphers    []string `json:"ciphers"`
-		Extensions []struct {
+		TLSVersionRecord     string   `json:"tls_version_record"`
+		TLSVersionNegotiated string   `json:"tls_version_negotiated"`
+		Ja3                  string   `json:"ja3"`
+		Ja3Hash              string   `json:"ja3_hash"`
+		ClientRandom         string   `json:"client_random"`
+		SessionID            string   `json:"session_id"`
+		Ciphers              []string `json:"ciphers"`
+		Extensions           []struct {
+			EllipticCurvesPointFormats interface{} `json:"elliptic_curves_point_formats,omitempty"`
 			Name                       string      `json:"name"`
 			ServerName                 string      `json:"server_name,omitempty"`
 			Data                       string      `json:"data,omitempty"`
+			PskKeyExchangeMode         string      `json:"PSK_Key_Exchange_Mode,omitempty"`
 			SupportedGroups            []string    `json:"supported_groups,omitempty"`
-			EllipticCurvesPointFormats interface{} `json:"elliptic_curves_point_formats,omitempty"`
 			Protocols                  []string    `json:"protocols,omitempty"`
-			StatusRequest              struct {
+			SignatureAlgorithms        []string    `json:"signature_algorithms,omitempty"`
+			SharedKeys                 []struct {
+				TLSGrease0X7A7A string `json:"TLS_GREASE (0x7a7a),omitempty"`
+				X2551929        string `json:"X25519 (29),omitempty"`
+			} `json:"shared_keys,omitempty"`
+			Versions      []string `json:"versions,omitempty"`
+			Algorithms    []string `json:"algorithms,omitempty"`
+			StatusRequest struct {
 				CertificateStatusType   string `json:"certificate_status_type"`
 				ResponderIDListLength   int    `json:"responder_id_list_length"`
 				RequestExtensionsLength int    `json:"request_extensions_length"`
 			} `json:"status_request,omitempty"`
-			SignatureAlgorithms []string `json:"signature_algorithms,omitempty"`
-			SharedKeys          []struct {
-				TLSGrease0X7A7A string `json:"TLS_GREASE (0x7a7a),omitempty"`
-				X2551929        string `json:"X25519 (29),omitempty"`
-			} `json:"shared_keys,omitempty"`
-			PskKeyExchangeMode string   `json:"PSK_Key_Exchange_Mode,omitempty"`
-			Versions           []string `json:"versions,omitempty"`
-			Algorithms         []string `json:"algorithms,omitempty"`
-			PaddingDataLength  int      `json:"padding_data_length,omitempty"`
+			PaddingDataLength int `json:"padding_data_length,omitempty"`
 		} `json:"extensions"`
-		TLSVersionRecord     string `json:"tls_version_record"`
-		TLSVersionNegotiated string `json:"tls_version_negotiated"`
-		Ja3                  string `json:"ja3"`
-		Ja3Hash              string `json:"ja3_hash"`
-		ClientRandom         string `json:"client_random"`
-		SessionID            string `json:"session_id"`
 	} `json:"tls"`
 	HTTP2 struct {
 		AkamaiFingerprint     string `json:"akamai_fingerprint"`
 		AkamaiFingerprintHash string `json:"akamai_fingerprint_hash"`
 		SentFrames            []struct {
 			FrameType string   `json:"frame_type"`
-			Length    int      `json:"length"`
 			Settings  []string `json:"settings,omitempty"`
-			Increment int      `json:"increment,omitempty"`
-			StreamID  int      `json:"stream_id,omitempty"`
 			Headers   []string `json:"headers,omitempty"`
 			Flags     []string `json:"flags,omitempty"`
 			Priority  struct {
@@ -81,6 +140,9 @@ type TlsApiResponse struct {
 				DependsOn int `json:"depends_on"`
 				Exclusive int `json:"exclusive"`
 			} `json:"priority,omitempty"`
+			Length    int `json:"length"`
+			Increment int `json:"increment,omitempty"`
+			StreamID  int `json:"stream_id,omitempty"`
 		} `json:"sent_frames"`
 	} `json:"http2"`
 	HTTP1 struct {
@@ -151,7 +213,7 @@ func sslPinning() {
 		return
 	}
 
-	resp.Body.Close()
+	err = resp.Body.Close()
 
 	if err != nil {
 		log.Println(err)
@@ -614,7 +676,10 @@ func requestWithCustomClient() {
 				&tls.UtlsCompressCertExtension{Algorithms: []tls.CertCompressionAlgo{
 					tls.CertCompressionBrotli,
 				}},
-				&tls.ApplicationSettingsExtension{SupportedProtocols: []string{"h2"}},
+				&tls.ApplicationSettingsExtension{
+					CodePoint:          tls.ExtensionALPSOld,
+					SupportedProtocols: []string{"h2"},
+				},
 				&tls.UtlsGREASEExtension{},
 				&tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
 			},
@@ -689,6 +754,103 @@ func requestWithCustomClient() {
 	log.Printf("requesting topps as customClient1 => status code: %d\n", resp.StatusCode)
 }
 
+func requestWithJa3CustomClientWithTwoGreaseExtensions() {
+	settings := map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:   65536,
+		http2.SettingEnablePush:        0,
+		http2.SettingInitialWindowSize: 6291456,
+		http2.SettingMaxHeaderListSize: 262144,
+	}
+	settingsOrder := []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingEnablePush,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	}
+
+	pseudoHeaderOrder := []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	}
+
+	connectionFlow := uint32(15663105)
+
+	ja3String := "771,2570-4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,2570-18-5-27-11-0-10-35-16-65037-51-13-23-43-17513-65281-45-2570,2570-25497-29-23-24,0"
+
+	supportedSignatureAlgorithms := []string{
+		"ECDSAWithP256AndSHA256",
+		"PSSWithSHA256",
+		"PKCS1WithSHA256",
+		"ECDSAWithP384AndSHA384",
+		"PSSWithSHA384",
+		"PKCS1WithSHA384",
+		"PSSWithSHA512",
+		"PKCS1WithSHA512",
+	}
+	var supportedDelegatedCredentialsAlgorithms []string
+	supportedVersions := []string{"GREASE", "1.3", "1.2"}
+	keyShareCurves := []string{"GREASE", "X25519Kyber768", "X25519"}
+	supportedProtocolsALPN := []string{"h2", "http/1.1"}
+	supportedProtocolsALPS := []string{"h2"}
+	echCandidateCipherSuites := []tls_client.CandidateCipherSuites{
+		{
+			KdfId:  "HKDF_SHA256",
+			AeadId: "AEAD_AES_128_GCM",
+		},
+		{
+			KdfId:  "HKDF_SHA256",
+			AeadId: "AEAD_CHACHA20_POLY1305",
+		},
+	}
+	candidatePayloads := []uint16{128, 160, 192, 224}
+	certCompressionAlgo := "brotli"
+
+	specFactory, err := tls_client.GetSpecFactoryFromJa3String(ja3String, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS, echCandidateCipherSuites, candidatePayloads, certCompressionAlgo)
+
+	customClientProfile := profiles.NewClientProfile(tls.ClientHelloID{
+		Client:      "MyCustomProfile",
+		Version:     "1",
+		Seed:        nil,
+		SpecFactory: specFactory,
+	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil)
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeoutSeconds(60),
+		tls_client.WithClientProfile(customClientProfile), // use custom profile here
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://tls.browserleaks.com/tls", nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	readBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Printf(string(readBytes))
+	log.Printf("status code: %d\n", resp.StatusCode)
+}
+
 func testPskExtension() {
 	settings := map[http2.SettingID]uint32{
 		http2.SettingHeaderTableSize:      65536,
@@ -746,7 +908,10 @@ func testPskExtension() {
 					{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
 					{Group: tls.X25519},
 				}},
-				&tls.ApplicationSettingsExtension{SupportedProtocols: []string{"h2"}},
+				&tls.ApplicationSettingsExtension{
+					CodePoint:          tls.ExtensionALPSOld,
+					SupportedProtocols: []string{"h2"},
+				},
 				&tls.SupportedVersionsExtension{[]uint16{
 					tls.GREASE_PLACEHOLDER,
 					tls.VersionTLS13,
@@ -887,5 +1052,59 @@ func testPskExtension() {
 		log.Println("profile includes PSK extension (41)")
 	} else {
 		log.Println("profile does not include PSK extension (41)")
+	}
+}
+
+func testALPSExtension() {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithTimeoutSeconds(60),
+		tls_client.WithClientProfile(profiles.Chrome_133),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://tls.browserleaks.com", nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	req.Header = http.Header{
+		"accept":     {"*/*"},
+		"user-agent": {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"},
+		http.HeaderOrderKey: {
+			"accept",
+			"user-agent",
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	readBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	tlsApiResponse := TlsBrowserleaksResponse{}
+	if err := json.Unmarshal(readBytes, &tlsApiResponse); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if strings.Contains(tlsApiResponse.Ja3Text, "17613") && !strings.Contains(tlsApiResponse.Ja3Text, "17513") {
+		log.Println("profile includes new ALPS extension (17613) and not old one (17513)")
+	} else {
+		log.Println("profile does not include new ALPS extension (17613)")
 	}
 }

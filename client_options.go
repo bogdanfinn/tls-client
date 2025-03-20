@@ -7,58 +7,67 @@ import (
 	"net"
 	"time"
 
-	"github.com/bogdanfinn/tls-client/profiles"
-
 	http "github.com/bogdanfinn/fhttp"
+	"github.com/bogdanfinn/tls-client/profiles"
+	"golang.org/x/net/proxy"
 )
 
 type HttpClientOption func(config *httpClientConfig)
 
 type TransportOptions struct {
-	DisableKeepAlives      bool
-	DisableCompression     bool
+	// KeyLogWriter is an io.Writer that the TLS client will use to write the
+	// TLS master secrets to. This can be used to decrypt TLS connections in
+	// Wireshark and other applications.
+	KeyLogWriter io.Writer
+	// IdleConnTimeout is the maximum amount of time an idle (keep-alive)
+	// connection will remain idle before closing itself. Zero means no limit.
+	IdleConnTimeout *time.Duration
+	// RootCAs is the set of root certificate authorities used to verify
+	// the remote server's certificate.
+	RootCAs                *x509.CertPool
 	MaxIdleConns           int
 	MaxIdleConnsPerHost    int
 	MaxConnsPerHost        int
 	MaxResponseHeaderBytes int64 // Zero means to use a default limit.
 	WriteBufferSize        int   // If zero, a default (currently 4KB) is used.
 	ReadBufferSize         int   // If zero, a default (currently 4KB) is used.
-	// IdleConnTimeout is the maximum amount of time an idle (keep-alive)
-	// connection will remain idle before closing itself. Zero means no limit.
-	IdleConnTimeout *time.Duration
-	// RootCAs is the set of root certificate authorities used to verify
-	// the remote server's certificate.
-	RootCAs *x509.CertPool
-	// KeyLogWriter is an io.Writer that the TLS client will use to write the
-	// TLS master secrets to. This can be used to decrypt TLS connections in
-	// Wireshark and other applications.
-	KeyLogWriter io.Writer
+	DisableKeepAlives      bool
+	DisableCompression     bool
 }
 
 type BadPinHandlerFunc func(req *http.Request)
+type ProxyDialerFactory func(proxyUrlStr string, timeout time.Duration, localAddr *net.TCPAddr, connectHeaders http.Header, logger Logger) (proxy.ContextDialer, error)
 
 type httpClientConfig struct {
+	cookieJar          http.CookieJar
+	customRedirectFunc func(req *http.Request, via []*http.Request) error
+	certificatePins    map[string][]string
+	defaultHeaders     http.Header
+	connectHeaders     http.Header
+	badPinHandler      BadPinHandlerFunc
+	transportOptions   *TransportOptions
+	localAddr          *net.TCPAddr
+
+	dialer             net.Dialer
+	proxyDialerFactory ProxyDialerFactory
+
+	proxyUrl                    string
+	serverNameOverwrite         string
+	clientProfile               profiles.ClientProfile
+	timeout                     time.Duration
 	catchPanics                 bool
 	debug                       bool
 	followRedirects             bool
-	customRedirectFunc          func(req *http.Request, via []*http.Request) error
 	insecureSkipVerify          bool
-	certificatePins             map[string][]string
-	defaultHeaders              http.Header
-	badPinHandler               BadPinHandlerFunc
-	proxyUrl                    string
-	serverNameOverwrite         string
-	transportOptions            *TransportOptions
-	cookieJar                   http.CookieJar
-	clientProfile               profiles.ClientProfile
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
-	timeout                     time.Duration
-	localAddr                   *net.TCPAddr
 
 	// Establish a connection to origin server via ipv4 only
 	disableIPV6 bool
-	dialer      net.Dialer
+	// Establish a connection to origin server via ipv6 only
+	disableIPV4 bool
+
+	enabledBandwidthTracker bool
 }
 
 // WithProxyUrl configures a HTTP client to use the specified proxy URL.
@@ -112,6 +121,13 @@ func WithTimeoutMilliseconds(timeout int) HttpClientOption {
 func WithDialer(dialer net.Dialer) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.dialer = dialer
+	}
+}
+
+// WithProxyDialerFactory configures an HTTP client to use a custom proxyDialerFactory instead of newConnectDialer(). This allows to implement custom proxy dialer use cases
+func WithProxyDialerFactory(proxyDialerFactory ProxyDialerFactory) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.proxyDialerFactory = proxyDialerFactory
 	}
 }
 
@@ -239,5 +255,26 @@ func WithServerNameOverwrite(serverName string) HttpClientOption {
 func WithDisableIPV6() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.disableIPV6 = true
+	}
+}
+
+// WithDisableIPV4 configures a dialer to use tcp6 network argument
+func WithDisableIPV4() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.disableIPV4 = true
+	}
+}
+
+// WithBandwidthTracker configures a client to track the bandwidth used by the client.
+func WithBandwidthTracker() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.enabledBandwidthTracker = true
+	}
+}
+
+// WithConnectHeaders configures a client to use the specified headers for the CONNECT request.
+func WithConnectHeaders(headers http.Header) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.connectHeaders = headers
 	}
 }
