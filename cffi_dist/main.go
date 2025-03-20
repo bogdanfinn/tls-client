@@ -234,8 +234,12 @@ func request(requestParams *C.char) *C.char {
 
 	cookies := buildCookies(requestInput.RequestCookies)
 
-	if len(cookies) > 0 {
+	if tlsClient.GetCookieJar() != nil && len(cookies) > 0 {
 		tlsClient.SetCookies(req.URL, cookies)
+	} else {
+		for _, cookie := range cookies {
+			req.AddCookie(cookie)
+		}
 	}
 
 	resp, reqErr := tlsClient.Do(req)
@@ -311,12 +315,14 @@ func buildCookies(cookies []tls_client_cffi_src.Cookie) []*http.Cookie {
 
 	for _, cookie := range cookies {
 		ret = append(ret, &http.Cookie{
-			Name:    cookie.Name,
-			Value:   cookie.Value,
-			Path:    cookie.Path,
-			Domain:  cookie.Domain,
-			Expires: cookie.Expires.Time,
-			MaxAge:  cookie.MaxAge,
+			Name:     cookie.Name,
+			Value:    cookie.Value,
+			Path:     cookie.Path,
+			Domain:   cookie.Domain,
+			Expires:  cookie.Expires.Time,
+			MaxAge:   cookie.MaxAge,
+			Secure:   cookie.Secure,
+			HttpOnly: cookie.HttpOnly,
 		})
 	}
 
@@ -328,11 +334,13 @@ func transformCookies(cookies []*http.Cookie) []tls_client_cffi_src.Cookie {
 
 	for _, cookie := range cookies {
 		ret = append(ret, tls_client_cffi_src.Cookie{
-			Name:   cookie.Name,
-			Value:  cookie.Value,
-			Path:   cookie.Path,
-			Domain: cookie.Domain,
-			MaxAge: cookie.MaxAge,
+			Name:     cookie.Name,
+			Value:    cookie.Value,
+			Path:     cookie.Path,
+			Domain:   cookie.Domain,
+			MaxAge:   cookie.MaxAge,
+			Secure:   cookie.Secure,
+			HttpOnly: cookie.HttpOnly,
 			Expires: tls_client_cffi_src.Timestamp{
 				Time: cookie.Expires,
 			},

@@ -1,9 +1,10 @@
 package profiles
 
 import (
+	"math"
+
 	"github.com/bogdanfinn/fhttp/http2"
 	tls "github.com/bogdanfinn/utls"
-	"math"
 )
 
 var ZalandoAndroidMobile = ClientProfile{
@@ -745,7 +746,10 @@ var MeshAndroid = ClientProfile{
 					&tls.UtlsCompressCertExtension{Algorithms: []tls.CertCompressionAlgo{
 						tls.CertCompressionBrotli,
 					}},
-					&tls.ApplicationSettingsExtension{SupportedProtocols: []string{}},
+					&tls.ApplicationSettingsExtension{
+						CodePoint:          tls.ExtensionALPSOld,
+						SupportedProtocols: []string{},
+					},
 					&tls.UtlsGREASEExtension{},
 					&tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
 				},

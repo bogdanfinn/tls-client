@@ -2,9 +2,10 @@ package tests
 
 import (
 	"encoding/json"
-	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"testing"
+
+	"github.com/bogdanfinn/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
