@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.24.1
 
 require (
-	github.com/bogdanfinn/fhttp v0.5.36
+	github.com/bogdanfinn/fhttp v0.5.34
 	github.com/bogdanfinn/utls v1.6.5
 	github.com/stretchr/testify v1.9.0
 	github.com/tam7t/hpkp v0.0.0-20160821193359-2b70b4024ed5
