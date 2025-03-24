@@ -141,7 +141,7 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, pro
 
 	clientProfile := config.clientProfile
 
-	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.certificatePins, config.badPinHandler, config.disableIPV6, dialer)
+	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.certificatePins, config.badPinHandler, config.disableIPV6, config.disableIPV4, dialer)
 	if err != nil {
 		return nil, clientProfile, err
 	}
@@ -233,7 +233,7 @@ func (c *httpClient) applyProxy() error {
 		dialer = proxyDialer
 	}
 
-	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.certificatePins, c.config.badPinHandler, c.config.disableIPV6, dialer)
+	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.certificatePins, c.config.badPinHandler, c.config.disableIPV6, c.config.disableIPV4, dialer)
 	if err != nil {
 		return err
 	}
@@ -305,23 +305,18 @@ func (c *httpClient) Do(req *http.Request) (*WebResp, error) {
 		}
 	}
 
-	// ctx, cancel := context.WithTimeout(context.Background(), c.config.timeout)
-	// defer cancel()
-
-	// req = req.WithContext(ctx)
 	resp, err := c.Client.Do(req)
 	if err != nil {
 		return &WebResp{StatusCode: -1}, err
 	}
 
 	webResp := &WebResp{
-		Status:     resp.Status,
-		StatusCode: resp.StatusCode,
-		Proto:      resp.Proto,
-		ProtoMajor: resp.ProtoMajor,
-		ProtoMinor: resp.ProtoMinor,
-		Header:     resp.Header,
-		// Body:          resp.Body,
+		Status:           resp.Status,
+		StatusCode:       resp.StatusCode,
+		Proto:            resp.Proto,
+		ProtoMajor:       resp.ProtoMajor,
+		ProtoMinor:       resp.ProtoMinor,
+		Header:           resp.Header,
 		ContentLength:    resp.ContentLength,
 		TransferEncoding: resp.TransferEncoding,
 		Close:            resp.Close,

@@ -58,7 +58,7 @@ type httpClientConfig struct {
 	timeout                     time.Duration
 	localAddr                   *net.TCPAddr
 
-	// Establish a connection to origin server via ipv4 only
+	disableIPV4 bool
 	disableIPV6 bool
 	dialer      net.Dialer
 }
@@ -246,6 +246,13 @@ func WithServerNameOverwrite(serverName string) HttpClientOption {
 func WithDisableIPV6() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.disableIPV6 = true
+	}
+}
+
+// WithDisableIPV4 configures a dialer to use tcp6 network argument
+func WithDisableIPV4() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.disableIPV4 = true
 	}
 }
 

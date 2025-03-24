@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/Enven-LLC/enven-tls/profiles"
-
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/http2"
 	tls "github.com/bogdanfinn/utls"
@@ -22,32 +21,35 @@ const defaultIdleConnectionTimeout = 90 * time.Second
 var errProtocolNegotiated = errors.New("protocol negotiated")
 
 type roundTripper struct {
-	sync.Mutex
+	clientHelloId     tls.ClientHelloID
+	certificatePinner CertificatePinner
+
+	dialer proxy.ContextDialer
+
+	clientSessionCache tls.ClientSessionCache
+
 	badPinHandlerFunc BadPinHandlerFunc
 	cachedConnections map[string]net.Conn
 	cachedTransports  map[string]http.RoundTripper
 
-	cachedTransportsLck sync.Mutex
-	certificatePinner   CertificatePinner
-	clientHelloId       tls.ClientHelloID
-	connectionFlow      uint32
+	headerPriority      *http2.PriorityParam
+	settings            map[http2.SettingID]uint32
+	transportOptions    *TransportOptions
+	serverNameOverwrite string
+	priorities          []http2.Priority
+	pseudoHeaderOrder   []string
+	settingsOrder       []http2.SettingID
+	sync.Mutex
 
-	dialer proxy.ContextDialer
+	cachedTransportsLck sync.Mutex
+	connectionFlow      uint32
 
 	forceHttp1 bool
 
-	headerPriority     *http2.PriorityParam
-	clientSessionCache tls.ClientSessionCache
-
 	insecureSkipVerify          bool
-	priorities                  []http2.Priority
-	pseudoHeaderOrder           []string
-	serverNameOverwrite         string
-	settings                    map[http2.SettingID]uint32
-	settingsOrder               []http2.SettingID
-	transportOptions            *TransportOptions
 	withRandomTlsExtensionOrder bool
 	disableIPV6                 bool
+	disableIPV4                 bool
 }
 
 func (rt *roundTripper) CloseIdleConnections() {
@@ -98,7 +100,7 @@ func (rt *roundTripper) getTransport(req *http.Request, addr string) error {
 		return fmt.Errorf("invalid URL scheme: [%v]", req.URL.Scheme)
 	}
 
-	_, err := rt.dialTLS(context.Background(), "tcp", addr)
+	_, err := rt.dialTLS(req.Context(), "tcp", addr)
 	switch err {
 	case errProtocolNegotiated:
 	case nil:
@@ -125,6 +127,10 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 
 	if network == "tcp" && rt.disableIPV6 {
 		network = "tcp4"
+	}
+
+	if network == "tcp" && rt.disableIPV4 {
+		network = "tcp6"
 	}
 
 	rawConn, err := rt.dialer.DialContext(ctx, network, addr)
@@ -307,7 +313,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -341,6 +347,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		cachedTransports:            make(map[string]http.RoundTripper),
 		cachedConnections:           make(map[string]net.Conn),
 		disableIPV6:                 disableIPV6,
+		disableIPV4:                 disableIPV4,
 	}
 
 	if len(dialer) > 0 {
