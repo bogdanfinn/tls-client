@@ -79,6 +79,7 @@ var curves = map[string]tls.CurveID{
 	"P256Kyber768":    tls.P256Kyber768Draft00,
 	"X25519Kyber512D": tls.X25519Kyber512Draft00,
 	"X25519Kyber768":  tls.X25519Kyber768Draft00,
+	"X25519MLKEM768":  tls.X25519MLKEM768,
 }
 
 var certCompression = map[string]tls.CertCompressionAlgo{
