@@ -90,7 +90,7 @@ type RequestInput struct {
 type CustomTlsClient struct {
 	H2Settings                              map[string]uint32     `json:"h2Settings"`
 	HeaderPriority                          *PriorityParam        `json:"headerPriority"`
-	CertCompressionAlgo                     string                `json:"certCompressionAlgo"`
+	CertCompressionAlgos                    []string              `json:"certCompressionAlgos"`
 	Ja3String                               string                `json:"ja3String"`
 	H2SettingsOrder                         []string              `json:"h2SettingsOrder"`
 	KeyShareCurves                          []string              `json:"keyShareCurves"`
@@ -104,6 +104,7 @@ type CustomTlsClient struct {
 	SupportedSignatureAlgorithms            []string              `json:"supportedSignatureAlgorithms"`
 	SupportedVersions                       []string              `json:"supportedVersions"`
 	ConnectionFlow                          uint32                `json:"connectionFlow"`
+	RecordSizeLimit                         uint16                `json:"recordSizeLimit"`
 }
 
 type CandidateCipherSuites []CandidateCipherSuite
