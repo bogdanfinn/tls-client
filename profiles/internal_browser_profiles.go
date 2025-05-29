@@ -1101,6 +1101,11 @@ var Safari_IOS_18_5 = ClientProfile{
 		":path",
 	},
 	connectionFlow: 10420225,
+	headerPriority: &http2.PriorityParam{
+		StreamDep: 0,
+		Exclusive: false,
+		Weight:    255,
+	},
 }
 
 var Safari_IOS_18_0 = ClientProfile{
