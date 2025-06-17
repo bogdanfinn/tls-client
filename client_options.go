@@ -35,8 +35,10 @@ type TransportOptions struct {
 	DisableCompression     bool
 }
 
-type BadPinHandlerFunc func(req *http.Request)
-type ProxyDialerFactory func(proxyUrlStr string, timeout time.Duration, localAddr *net.TCPAddr, connectHeaders http.Header, logger Logger) (proxy.ContextDialer, error)
+type (
+	BadPinHandlerFunc  func(req *http.Request)
+	ProxyDialerFactory func(proxyUrlStr string, timeout time.Duration, localAddr *net.TCPAddr, connectHeaders http.Header, logger Logger) (proxy.ContextDialer, error)
+)
 
 type httpClientConfig struct {
 	cookieJar          http.CookieJar

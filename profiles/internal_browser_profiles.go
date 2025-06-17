@@ -48,8 +48,7 @@ var Chrome_133_PSK = ClientProfile{
 						tls.PointFormatUncompressed,
 					}},
 					&tls.SessionTicketExtension{},
-					&tls.ApplicationSettingsExtension{
-						CodePoint:          tls.ExtensionALPS,
+					&tls.ApplicationSettingsExtensionNew{
 						SupportedProtocols: []string{"h2"},
 					},
 					&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
@@ -158,8 +157,7 @@ var Chrome_133 = ClientProfile{
 						tls.PSSWithSHA512,
 						tls.PKCS1WithSHA512,
 					}},
-					&tls.ApplicationSettingsExtension{
-						CodePoint:          tls.ExtensionALPS,
+					&tls.ApplicationSettingsExtensionNew{
 						SupportedProtocols: []string{"h2"},
 					},
 					&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
@@ -278,7 +276,6 @@ var Chrome_117 = ClientProfile{
 						tls.VersionTLS12,
 					}},
 					&tls.ApplicationSettingsExtension{
-						CodePoint:          tls.ExtensionALPSOld,
 						SupportedProtocols: []string{"h2"},
 					},
 					&tls.SupportedCurvesExtension{[]tls.CurveID{
@@ -366,7 +363,6 @@ var Chrome_124 = ClientProfile{
 					&tls.SCTExtension{},
 					&tls.ExtendedMasterSecretExtension{},
 					&tls.ApplicationSettingsExtension{
-						CodePoint:          tls.ExtensionALPSOld,
 						SupportedProtocols: []string{"h2"},
 					},
 					&tls.ALPNExtension{AlpnProtocols: []string{"h2", "http/1.1"}},
@@ -505,7 +501,6 @@ var Chrome_120 = ClientProfile{
 						tls.PointFormatUncompressed,
 					}},
 					&tls.ApplicationSettingsExtension{
-						CodePoint:          tls.ExtensionALPSOld,
 						SupportedProtocols: []string{"h2"},
 					},
 					&tls.UtlsCompressCertExtension{[]tls.CertCompressionAlgo{

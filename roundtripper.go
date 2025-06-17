@@ -367,7 +367,6 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 
 func supportsSessionResumption(id tls.ClientHelloID) bool {
 	spec, err := tls.UTLSIdToSpec(id)
-
 	if err != nil {
 		spec, err = id.ToSpec()
 

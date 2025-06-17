@@ -20,7 +20,7 @@ func TestClient_SkipExistingCookiesOnClientSetCookies(t *testing.T) {
 	jar := tls_client.NewCookieJar(jarOptions...)
 
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Chrome_105),
+		tls_client.WithClientProfile(profiles.Chrome_133),
 		tls_client.WithCookieJar(jar),
 	}
 
@@ -77,7 +77,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 	jar := tls_client.NewCookieJar(jarOptions...)
 
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Chrome_105),
+		tls_client.WithClientProfile(profiles.Chrome_133),
 		tls_client.WithCookieJar(jar),
 	}
 
@@ -90,7 +90,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	urlString := "https://de.topps.com/"
+	urlString := "https://eu.kith.com/"
 	req, err := http.NewRequest(http.MethodGet, urlString, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -100,7 +100,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 		"accept":          {"*/*"},
 		"accept-encoding": {"gzip"},
 		"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
-		"user-agent":      {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
+		"user-agent":      {"Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
 			"accept-encoding",
@@ -125,7 +125,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 
 	cookiesAfterFirstRequest := client.GetCookies(u)
 
-	assert.Equal(t, 2, len(cookiesAfterFirstRequest))
+	assert.Equal(t, 7, len(cookiesAfterFirstRequest))
 
 	cookie3 := &http.Cookie{
 		Name:   cookiesAfterFirstRequest[0].Name,
@@ -135,9 +135,9 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 	}
 	client.SetCookies(u, []*http.Cookie{cookie3})
 
-	assert.Equal(t, 2, len(client.GetCookies(u)))
+	assert.Equal(t, 7, len(client.GetCookies(u)))
 
-	req, err = http.NewRequest(http.MethodGet, "https://de.topps.com/", nil)
+	req, err = http.NewRequest(http.MethodGet, "https://eu.kith.com/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +146,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 		"accept":          {"*/*"},
 		"accept-encoding": {"gzip"},
 		"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
-		"user-agent":      {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) chrome/100.0.4896.75 safari/537.36"},
+		"user-agent":      {"Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
 			"accept-encoding",
@@ -169,14 +169,14 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 
 	cookiesAfterSecondRequest := client.GetCookies(u)
 
-	assert.Equal(t, 2, len(cookiesAfterSecondRequest))
+	assert.Equal(t, 7, len(cookiesAfterSecondRequest))
 }
 
 func TestClient_ExcludeExpiredCookiesFromRequest(t *testing.T) {
 	jar := tls_client.NewCookieJar()
 
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Chrome_105),
+		tls_client.WithClientProfile(profiles.Chrome_133),
 		tls_client.WithCookieJar(jar),
 	}
 

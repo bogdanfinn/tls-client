@@ -24,7 +24,6 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 				mappedSignatureAlgorithms = append(mappedSignatureAlgorithms, signatureAlgorithm)
 			} else {
 				supportedSignatureAlgorithmAsUint, err := strconv.ParseUint(supportedSignatureAlgorithm, 16, 16)
-
 				if err != nil {
 					return tls.ClientHelloSpec{}, fmt.Errorf("%s is not a valid supportedSignatureAlgorithm", supportedSignatureAlgorithm)
 				}
@@ -41,7 +40,6 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 				mappedDelegatedCredentialsAlgorithms = append(mappedDelegatedCredentialsAlgorithms, delegatedCredentialsAlgorithm)
 			} else {
 				supportedDelegatedCredentialsAlgorithmAsUint, err := strconv.ParseUint(supportedDelegatedCredentialsAlgorithm, 16, 16)
-
 				if err != nil {
 					return tls.ClientHelloSpec{}, fmt.Errorf("%s is not a valid supportedDelegatedCredentialsAlgorithm", supportedDelegatedCredentialsAlgorithm)
 				}
@@ -185,23 +183,20 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 	}
 
 	extMap[tls.ExtensionALPSOld] = &tls.ApplicationSettingsExtension{
-		CodePoint:          tls.ExtensionALPSOld,
 		SupportedProtocols: supportedProtocolsALPS,
 	}
 
-	extMap[tls.ExtensionALPS] = &tls.ApplicationSettingsExtension{
-		CodePoint:          tls.ExtensionALPS,
+	extMap[tls.ExtensionALPS] = &tls.ApplicationSettingsExtensionNew{
 		SupportedProtocols: supportedProtocolsALPS,
 	}
 
-    extMap[tls.ExtensionRecordSizeLimit] = &tls.FakeRecordSizeLimitExtension{
-        Limit: recordSizeLimit,
+	extMap[tls.ExtensionRecordSizeLimit] = &tls.FakeRecordSizeLimitExtension{
+		Limit: recordSizeLimit,
 	}
 
 	var exts []tls.TLSExtension
 	for _, e := range extensions {
 		eId, err := strconv.ParseUint(e, 10, 16)
-
 		if err != nil {
 			return tls.ClientHelloSpec{}, err
 		}
@@ -239,7 +234,7 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 	return map[uint16]tls.TLSExtension{
 		// This extension needs to be instantiated every time and not be reused if it occurs multiple times in the same ja3
-		//tls.GREASE_PLACEHOLDER:     &tls.UtlsGREASEExtension{},
+		// tls.GREASE_PLACEHOLDER:     &tls.UtlsGREASEExtension{},
 
 		tls.ExtensionServerName:    &tls.SNIExtension{},
 		tls.ExtensionStatusRequest: &tls.StatusRequestExtension{},
@@ -254,7 +249,7 @@ func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 		// tls.ExtensionDelegatedCredentials: &tls.DelegatedCredentialsExtension{},
 		// tls.ExtensionALPN: &tls.ALPNExtension{},
 		// tls.ExtensionALPS:         &tls.ApplicationSettingsExtension{},
-        // tls.ExtensionRecordSizeLimit:      &tls.FakeRecordSizeLimitExtension{},
+		// tls.ExtensionRecordSizeLimit:      &tls.FakeRecordSizeLimitExtension{},
 
 		tls.ExtensionSCT:                  &tls.SCTExtension{},
 		tls.ExtensionPadding:              &tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
@@ -266,7 +261,8 @@ func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 		tls.ExtensionPSKModes: &tls.PSKKeyExchangeModesExtension{
 			Modes: []uint8{
 				tls.PskModeDHE,
-			}},
+			},
+		},
 		tls.ExtensionNextProtoNeg: &tls.NPNExtension{},
 		tls.ExtensionRenegotiationInfo: &tls.RenegotiationInfoExtension{
 			Renegotiation: tls.RenegotiateOnceAsClient,
