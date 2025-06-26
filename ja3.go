@@ -14,7 +14,7 @@ type CandidateCipherSuites struct {
 	AeadId string
 }
 
-func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS []string, echCandidateCipherSuites []CandidateCipherSuites, candidatePayloads []uint16, certCompressionAlgo string) (func() (tls.ClientHelloSpec, error), error) {
+func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS []string, echCandidateCipherSuites []CandidateCipherSuites, candidatePayloads []uint16, certCompressionAlgorithms []string, recordSizeLimit uint16) (func() (tls.ClientHelloSpec, error), error) {
 	return func() (tls.ClientHelloSpec, error) {
 		var mappedSignatureAlgorithms []tls.SignatureScheme
 
@@ -24,7 +24,6 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 				mappedSignatureAlgorithms = append(mappedSignatureAlgorithms, signatureAlgorithm)
 			} else {
 				supportedSignatureAlgorithmAsUint, err := strconv.ParseUint(supportedSignatureAlgorithm, 16, 16)
-
 				if err != nil {
 					return tls.ClientHelloSpec{}, fmt.Errorf("%s is not a valid supportedSignatureAlgorithm", supportedSignatureAlgorithm)
 				}
@@ -41,7 +40,6 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 				mappedDelegatedCredentialsAlgorithms = append(mappedDelegatedCredentialsAlgorithms, delegatedCredentialsAlgorithm)
 			} else {
 				supportedDelegatedCredentialsAlgorithmAsUint, err := strconv.ParseUint(supportedDelegatedCredentialsAlgorithm, 16, 16)
-
 				if err != nil {
 					return tls.ClientHelloSpec{}, fmt.Errorf("%s is not a valid supportedDelegatedCredentialsAlgorithm", supportedDelegatedCredentialsAlgorithm)
 				}
@@ -106,17 +104,20 @@ func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms,
 			mappedKeyShares = append(mappedKeyShares, mappedKeyShare)
 		}
 
-		compressionAlgo, ok := certCompression[certCompressionAlgo]
+		var mappedCertCompressionAlgorithms []tls.CertCompressionAlgo
 
-		if !ok {
-			return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedDelegatedCredentialsAlgorithms, mappedTlsVersions, mappedKeyShares, mappedHpkeSymmetricCipherSuites, candidatePayloads, supportedProtocolsALPN, supportedProtocolsALPS, nil)
+		for _, certCompressionAlgorithm := range certCompressionAlgorithms {
+			compressionAlgo, ok := certCompression[certCompressionAlgorithm]
+			if ok {
+				mappedCertCompressionAlgorithms = append(mappedCertCompressionAlgorithms, compressionAlgo)
+			}
 		}
 
-		return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedDelegatedCredentialsAlgorithms, mappedTlsVersions, mappedKeyShares, mappedHpkeSymmetricCipherSuites, candidatePayloads, supportedProtocolsALPN, supportedProtocolsALPS, &compressionAlgo)
+		return stringToSpec(ja3String, mappedSignatureAlgorithms, mappedDelegatedCredentialsAlgorithms, mappedTlsVersions, mappedKeyShares, mappedHpkeSymmetricCipherSuites, candidatePayloads, supportedProtocolsALPN, supportedProtocolsALPS, mappedCertCompressionAlgorithms, recordSizeLimit)
 	}, nil
 }
 
-func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegatedCredentialsAlgorithms []tls.SignatureScheme, tlsVersions []uint16, keyShares []tls.KeyShare, hpkeSymmetricCipherSuites []tls.HPKESymmetricCipherSuite, candidatePayloads []uint16, supportedProtocolsALPN, supportedProtocolsALPS []string, certCompression *tls.CertCompressionAlgo) (tls.ClientHelloSpec, error) {
+func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegatedCredentialsAlgorithms []tls.SignatureScheme, tlsVersions []uint16, keyShares []tls.KeyShare, hpkeSymmetricCipherSuites []tls.HPKESymmetricCipherSuite, candidatePayloads []uint16, supportedProtocolsALPN, supportedProtocolsALPS []string, certCompressionAlgorithms []tls.CertCompressionAlgo, recordSizeLimit uint16) (tls.ClientHelloSpec, error) {
 	extMap := getExtensionBaseMap()
 	ja3StringParts := strings.Split(ja3, ",")
 
@@ -154,12 +155,12 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 		targetPointFormats = append(targetPointFormats, byte(pid))
 	}
 
-	if certCompression == nil && strings.Contains(ja3StringParts[2], fmt.Sprintf("%d", tls.ExtensionCompressCertificate)) {
+	if len(certCompressionAlgorithms) == 0 && strings.Contains(ja3StringParts[2], fmt.Sprintf("%d", tls.ExtensionCompressCertificate)) {
 		fmt.Println("attention our ja3 defines ExtensionCompressCertificate but you did not specify certCompression")
 	}
 
-	if certCompression != nil {
-		extMap[tls.ExtensionCompressCertificate] = &tls.UtlsCompressCertExtension{Algorithms: []tls.CertCompressionAlgo{*certCompression}}
+	if len(certCompressionAlgorithms) != 0 {
+		extMap[tls.ExtensionCompressCertificate] = &tls.UtlsCompressCertExtension{Algorithms: certCompressionAlgorithms}
 	}
 
 	extMap[tls.ExtensionKeyShare] = &tls.KeyShareExtension{KeyShares: keyShares}
@@ -182,19 +183,20 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 	}
 
 	extMap[tls.ExtensionALPSOld] = &tls.ApplicationSettingsExtension{
-		CodePoint:          tls.ExtensionALPSOld,
 		SupportedProtocols: supportedProtocolsALPS,
 	}
 
-	extMap[tls.ExtensionALPS] = &tls.ApplicationSettingsExtension{
-		CodePoint:          tls.ExtensionALPS,
+	extMap[tls.ExtensionALPS] = &tls.ApplicationSettingsExtensionNew{
 		SupportedProtocols: supportedProtocolsALPS,
+	}
+
+	extMap[tls.ExtensionRecordSizeLimit] = &tls.FakeRecordSizeLimitExtension{
+		Limit: recordSizeLimit,
 	}
 
 	var exts []tls.TLSExtension
 	for _, e := range extensions {
 		eId, err := strconv.ParseUint(e, 10, 16)
-
 		if err != nil {
 			return tls.ClientHelloSpec{}, err
 		}
@@ -232,7 +234,7 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 	return map[uint16]tls.TLSExtension{
 		// This extension needs to be instantiated every time and not be reused if it occurs multiple times in the same ja3
-		//tls.GREASE_PLACEHOLDER:     &tls.UtlsGREASEExtension{},
+		// tls.GREASE_PLACEHOLDER:     &tls.UtlsGREASEExtension{},
 
 		tls.ExtensionServerName:    &tls.SNIExtension{},
 		tls.ExtensionStatusRequest: &tls.StatusRequestExtension{},
@@ -247,11 +249,11 @@ func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 		// tls.ExtensionDelegatedCredentials: &tls.DelegatedCredentialsExtension{},
 		// tls.ExtensionALPN: &tls.ALPNExtension{},
 		// tls.ExtensionALPS:         &tls.ApplicationSettingsExtension{},
+		// tls.ExtensionRecordSizeLimit:      &tls.FakeRecordSizeLimitExtension{},
 
 		tls.ExtensionSCT:                  &tls.SCTExtension{},
 		tls.ExtensionPadding:              &tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
 		tls.ExtensionExtendedMasterSecret: &tls.ExtendedMasterSecretExtension{},
-		tls.ExtensionRecordSizeLimit:      &tls.FakeRecordSizeLimitExtension{},
 		tls.ExtensionSessionTicket:        &tls.SessionTicketExtension{},
 		tls.ExtensionPreSharedKey:         &tls.UtlsPreSharedKeyExtension{},
 		tls.ExtensionEarlyData:            &tls.GenericExtension{Id: tls.ExtensionEarlyData},
@@ -259,7 +261,8 @@ func getExtensionBaseMap() map[uint16]tls.TLSExtension {
 		tls.ExtensionPSKModes: &tls.PSKKeyExchangeModesExtension{
 			Modes: []uint8{
 				tls.PskModeDHE,
-			}},
+			},
+		},
 		tls.ExtensionNextProtoNeg: &tls.NPNExtension{},
 		tls.ExtensionRenegotiationInfo: &tls.RenegotiationInfoExtension{
 			Renegotiation: tls.RenegotiateOnceAsClient,
