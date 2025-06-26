@@ -9,8 +9,7 @@ type Logger interface {
 	Error(format string, args ...any)
 }
 
-type noopLogger struct {
-}
+type noopLogger struct{}
 
 func NewNoopLogger() Logger {
 	return &noopLogger{}
@@ -71,6 +70,8 @@ func (n logger) Error(format string, args ...any) {
 }
 
 // Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
-var _ Logger = (*logger)(nil)
-var _ Logger = (*debugLogger)(nil)
-var _ Logger = (*noopLogger)(nil)
+var (
+	_ Logger = (*logger)(nil)
+	_ Logger = (*debugLogger)(nil)
+	_ Logger = (*noopLogger)(nil)
+)

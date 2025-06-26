@@ -747,7 +747,6 @@ var MeshAndroid = ClientProfile{
 						tls.CertCompressionBrotli,
 					}},
 					&tls.ApplicationSettingsExtension{
-						CodePoint:          tls.ExtensionALPSOld,
 						SupportedProtocols: []string{},
 					},
 					&tls.UtlsGREASEExtension{},

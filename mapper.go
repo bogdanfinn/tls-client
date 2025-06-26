@@ -56,6 +56,8 @@ var delegatedCredentialsAlgorithms = map[string]tls.SignatureScheme{
 	"PKCS1WithSHA1":          tls.PKCS1WithSHA1,
 	"ECDSAWithSHA1":          tls.ECDSAWithSHA1,
 	"Ed25519":                tls.Ed25519,
+	"SHA224_RSA":             tls.SHA224_RSA,
+	"SHA224_ECDSA":           tls.SHA224_ECDSA,
 }
 
 var kdfIds = map[string]uint16{
@@ -71,14 +73,16 @@ var aeadIds = map[string]uint16{
 }
 
 var curves = map[string]tls.CurveID{
-	"GREASE":          tls.CurveID(tls.GREASE_PLACEHOLDER),
-	"P256":            tls.CurveP256,
-	"P384":            tls.CurveP384,
-	"P521":            tls.CurveP521,
-	"X25519":          tls.X25519,
-	"P256Kyber768":    tls.P256Kyber768Draft00,
-	"X25519Kyber512D": tls.X25519Kyber512Draft00,
-	"X25519Kyber768":  tls.X25519Kyber768Draft00,
+	"GREASE":            tls.CurveID(tls.GREASE_PLACEHOLDER),
+	"P256":              tls.CurveP256,
+	"P384":              tls.CurveP384,
+	"P521":              tls.CurveP521,
+	"X25519":            tls.X25519,
+	"P256Kyber768":      tls.P256Kyber768Draft00,
+	"X25519Kyber512D":   tls.X25519Kyber512Draft00,
+	"X25519Kyber768":    tls.X25519Kyber768Draft00,
+	"X25519Kyber768Old": tls.X25519Kyber768Draft00Old,
+	"X25519MLKEM768":    tls.X25519MLKEM768,
 }
 
 var certCompression = map[string]tls.CertCompressionAlgo{
