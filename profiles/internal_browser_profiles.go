@@ -49,7 +49,7 @@ var Chrome_133_PSK = ClientProfile{
 					}},
 					&tls.SessionTicketExtension{},
 					&tls.ApplicationSettingsExtensionNew{
-						SupportedProtocols: []string{"h2"},
+						SupportedProtocols: []string{"h3", "h2"},
 					},
 					&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
 						{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
@@ -74,6 +74,7 @@ var Chrome_133_PSK = ClientProfile{
 						tls.CurveP384,
 					}},
 					&tls.ALPNExtension{AlpnProtocols: []string{
+						"h3",
 						"h2",
 						"http/1.1",
 					}},
@@ -1355,7 +1356,8 @@ var Firefox_117 = ClientProfile{
 					}},
 					&tls.FakeRecordSizeLimitExtension{0x4001},
 					&tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
-				}}, nil
+				},
+			}, nil
 		},
 	},
 	settings: map[http2.SettingID]uint32{
