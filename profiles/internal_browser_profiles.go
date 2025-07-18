@@ -158,7 +158,7 @@ var Chrome_133 = ClientProfile{
 						tls.PKCS1WithSHA512,
 					}},
 					&tls.ApplicationSettingsExtensionNew{
-						SupportedProtocols: []string{"h2"},
+						SupportedProtocols: []string{"h3", "h2"},
 					},
 					&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
 						{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
@@ -176,6 +176,7 @@ var Chrome_133 = ClientProfile{
 					}},
 					&tls.StatusRequestExtension{},
 					&tls.ALPNExtension{AlpnProtocols: []string{
+						"h3",
 						"h2",
 						"http/1.1",
 					}},
