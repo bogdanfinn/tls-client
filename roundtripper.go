@@ -422,6 +422,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		disableIPV6:                 disableIPV6,
 		disableIPV4:                 disableIPV4,
 		bandwidthTracker:            bandwidthTracker,
+		resolveMap:                  resolveMap,
 	}
 
 	if len(dialer) > 0 {
