@@ -280,3 +280,13 @@ func WithConnectHeaders(headers http.Header) HttpClientOption {
 		config.connectHeaders = headers
 	}
 }
+
+// WithDynamicAddr configures an HTTP client with a pointer to a local address,
+// allowing the address to be modified between requests without client recreation.
+// Note: Requires DisableKeepAlives to be set to true to ensure address changes
+// take effect on subsequent requests.
+func WithDynamicAddr(localAddr *net.TCPAddr) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.localAddr = localAddr
+	}
+}
