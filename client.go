@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"net/url"
 	"strings"
 	"sync"
@@ -37,6 +38,8 @@ type HttpClient interface {
 	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
 
 	GetBandwidthTracker() bandwidth.BandwidthTracker
+
+	PreConnect(urlStr string) error
 }
 
 // Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
@@ -442,4 +445,59 @@ func allToLower(list []string) []string {
 	}
 
 	return lower
+}
+
+func (c *httpClient) PreConnect(urlStr string) error {
+	parsedURL, err := url.Parse(urlStr)
+	if err != nil {
+		c.logger.Error("failed to parse URL: %s", err.Error())
+		return err
+	}
+
+	if parsedURL.Scheme != "https" {
+		c.logger.Warn("PreConnect only supports https URLs")
+		return fmt.Errorf("PreConnect only supports https URLs")
+	}
+
+	// Create a dummy request object (but we won't send it)
+	req, err := http.NewRequest(http.MethodHead, urlStr, nil)
+	if err != nil {
+		c.logger.Error("failed to create request: %s", err.Error())
+		return err
+	}
+
+	// Apply default headers from the client config
+	if len(c.config.defaultHeaders) > 0 {
+		maps.Copy(req.Header, c.config.defaultHeaders)
+	}
+
+	// Get the underlying transport
+	rt, ok := c.Transport.(*roundTripper)
+	if !ok {
+		c.logger.Error("invalid transport type")
+		return fmt.Errorf("invalid transport type")
+	}
+
+	// Get the address using the same method as real requests
+	addr := rt.getDialTLSAddr(req)
+
+	// Lock the cache to prevent concurrent modifications
+	rt.cachedTransportsLck.Lock()
+	defer rt.cachedTransportsLck.Unlock()
+
+	// Check if we already have a transport for this address
+	if _, ok := rt.cachedTransports[addr]; ok {
+		c.logger.Debug("connection to %s already established", urlStr)
+		return nil
+	}
+
+	// use getTransport which properly sets up both cachedConnections and cachedTransports
+	err = rt.getTransport(req, addr)
+	if err != nil {
+		c.logger.Error("failed to establish TLS connection: %s", err.Error())
+		return err
+	}
+
+	c.logger.Debug("successfully preconnected to %s", urlStr)
+	return nil
 }
