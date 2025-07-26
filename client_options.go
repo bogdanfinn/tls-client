@@ -70,6 +70,8 @@ type httpClientConfig struct {
 	disableIPV4 bool
 
 	enabledBandwidthTracker bool
+
+	resolveMap map[string]string
 }
 
 // WithProxyUrl configures a HTTP client to use the specified proxy URL.
@@ -288,5 +290,13 @@ func WithConnectHeaders(headers http.Header) HttpClientOption {
 func WithDynamicAddr(localAddr *net.TCPAddr) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.localAddr = localAddr
+	}
+}
+
+// WithResolveMap configures a client to use the specified map for hostname->IP resolution.
+// Note: Not compatible with WithServerNameOverwrite()
+func WithResolveMap(resolveMap map[string]string) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.resolveMap = resolveMap
 	}
 }

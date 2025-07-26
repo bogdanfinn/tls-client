@@ -54,6 +54,7 @@ type roundTripper struct {
 	withRandomTlsExtensionOrder bool
 	disableIPV6                 bool
 	disableIPV4                 bool
+	resolveMap                  map[string]string
 }
 
 func (rt *roundTripper) CloseIdleConnections() {
@@ -137,14 +138,22 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		network = "tcp6"
 	}
 
+	var host, port string
+	var err error
+	if host, port, err = net.SplitHostPort(addr); err != nil {
+		host = addr
+		port = "443"
+	}
+
+	if rt.resolveMap != nil {
+		if ip, ok := rt.resolveMap[host]; ok {
+			addr = net.JoinHostPort(ip, port)
+		}
+	}
+
 	rawConn, err := rt.dialer.DialContext(ctx, network, addr)
 	if err != nil {
 		return nil, err
-	}
-
-	var host string
-	if host, _, err = net.SplitHostPort(addr); err != nil {
-		host = addr
 	}
 
 	if rt.serverNameOverwrite != "" {
@@ -367,10 +376,17 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 		return net.JoinHostPort(host, port)
 	}
 
-	return net.JoinHostPort(req.URL.Host, "443")
+	if rt.resolveMap != nil {
+		if ip, ok := rt.resolveMap[host]; ok {
+			rt.serverNameOverwrite = host
+			return net.JoinHostPort(ip, port)
+		}
+	}
+
+	return net.JoinHostPort(host, port)
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, resolveMap map[string]string, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
