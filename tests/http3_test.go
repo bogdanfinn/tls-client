@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	http "github.com/bogdanfinn/fhttp"
-	tls_client "github.com/bogdanfinn/tls-client"
-	"github.com/bogdanfinn/tls-client/profiles"
+	tls_client "github.com/burruplambert/tls-client"
+	"github.com/burruplambert/tls-client/profiles"
 )
 
 func TestHTTP3(t *testing.T) {

@@ -12,9 +12,9 @@ import (
 	"github.com/Dharmey747/quic-go-utls/http3"
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/http2"
-	"github.com/bogdanfinn/tls-client/bandwidth"
-	"github.com/bogdanfinn/tls-client/profiles"
 	tls "github.com/bogdanfinn/utls"
+	"github.com/burruplambert/tls-client/bandwidth"
+	"github.com/burruplambert/tls-client/profiles"
 	"golang.org/x/net/proxy"
 )
 

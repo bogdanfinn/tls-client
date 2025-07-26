@@ -3,13 +3,14 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bogdanfinn/tls-client/profiles"
 	"io"
 	"strings"
 	"testing"
 
+	"github.com/burruplambert/tls-client/profiles"
+
 	http "github.com/bogdanfinn/fhttp"
-	tls_client "github.com/bogdanfinn/tls-client"
+	tls_client "github.com/burruplambert/tls-client"
 	"github.com/stretchr/testify/assert"
 )
 
