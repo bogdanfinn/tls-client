@@ -372,8 +372,9 @@ func (rt *roundTripper) dialTLSHTTP2(network, addr string, _ *tls.Config) (net.C
 
 func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	host, port, err := net.SplitHostPort(req.URL.Host)
-	if err == nil {
-		return net.JoinHostPort(host, port)
+	if err != nil {
+		host = req.URL.Host
+		port = "443"
 	}
 
 	if rt.resolveMap != nil {
