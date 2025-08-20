@@ -380,6 +380,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	if rt.resolveMap != nil {
 		if ip, ok := rt.resolveMap[host]; ok {
 			rt.serverNameOverwrite = host
+			rt.cachedConnections[net.JoinHostPort(host, port)] = rt.cachedConnections[net.JoinHostPort(ip, port)]
 			return net.JoinHostPort(ip, port)
 		}
 	}
