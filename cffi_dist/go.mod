@@ -9,7 +9,7 @@ require (
 )
 
 require (
-	github.com/Dharmey747/quic-go-utls v1.0.3-utls // indirect
+	github.com/bogdanfinn/quic-go-utls v1.0.3-utls // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/bogdanfinn/utls v1.7.3-barnius // indirect
 	github.com/cloudflare/circl v1.5.0 // indirect

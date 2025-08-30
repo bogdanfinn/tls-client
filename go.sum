@@ -1,9 +1,9 @@
-github.com/Dharmey747/quic-go-utls v1.0.3-utls h1:wqvk69LgFwT6AtTW14ASpRIJkvCaH21dX/U5ov5STr0=
-github.com/Dharmey747/quic-go-utls v1.0.3-utls/go.mod h1:lgQoyZzST8vJJQ84eF9Xi2xJJnujoiNk0FGFEyQonG8=
 github.com/andybalholm/brotli v1.1.1 h1:PR2pgnyFznKEugtsUo0xLdDop5SKXd5Qf5ysW+7XdTA=
 github.com/andybalholm/brotli v1.1.1/go.mod h1:05ib4cKhjx3OQYUY22hTVd34Bc8upXjOLL2rKwwZBoA=
 github.com/bogdanfinn/fhttp v0.6.2 h1:qmFu9fxKmSRR+tcKfgxthmiu365tYspz3Mi404ytZPE=
 github.com/bogdanfinn/fhttp v0.6.2/go.mod h1:0irhEtS+wJ4m8SGhWO0wmbXMjCbH3WZpU6UcymRYKuk=
+github.com/bogdanfinn/quic-go-utls v1.0.4-utls h1:zPjusVVNeJFA2ORMAP0rjnrZrBkV4Dnia4e6ToOfUDA=
+github.com/bogdanfinn/quic-go-utls v1.0.4-utls/go.mod h1:UONJOaHGWho08kZtkkgH7GjktEPjMemGxjTcNpVPZVA=
 github.com/bogdanfinn/utls v1.7.4-barnius h1:1ldNJEpKdkrx7b8hEc6MRkjnZIF8f2lDcTtRVxqY9zw=
 github.com/bogdanfinn/utls v1.7.4-barnius/go.mod h1:SUn0CoHGVp/akGNuaqh99yvovu64PCP2LbWd3Z/Laic=
 github.com/cloudflare/circl v1.5.0 h1:hxIWksrX6XN5a1L2TI/h53AGPhNHoUBo+TD1ms9+pys=
