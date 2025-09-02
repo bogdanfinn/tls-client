@@ -4,7 +4,6 @@ go 1.24.1
 
 require (
 	github.com/bogdanfinn/fhttp v0.6.0
-	github.com/glowww/tls-client v1.11.0
 	github.com/google/uuid v1.6.0
 )
 
@@ -13,6 +12,7 @@ require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/bogdanfinn/utls v1.7.3-barnius // indirect
 	github.com/cloudflare/circl v1.5.0 // indirect
+	github.com/glowww/tls-client v1.6.2-0.20250902112959-2e286cb875df // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/tam7t/hpkp v0.0.0-20160821193359-2b70b4024ed5 // indirect
@@ -25,5 +25,7 @@ require (
 	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
 )
+
+replace github.com/bogdanfinn/tls-client => github.com/glowww/tls-client v1.6.1
 
 // replace github.com/glowww/tls-client => ../
