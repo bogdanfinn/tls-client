@@ -10,13 +10,13 @@ import (
 	"os"
 	"sync"
 
-	"github.com/bogdanfinn/tls-client/profiles"
+	"github.com/glowww/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/cookiejar"
 	"github.com/bogdanfinn/fhttp/http2"
-	tls_client "github.com/bogdanfinn/tls-client"
 	tls "github.com/bogdanfinn/utls"
+	tls_client "github.com/glowww/tls-client"
 	"github.com/google/uuid"
 )
 
@@ -40,6 +40,7 @@ func RemoveSession(sessionId string) {
 
 // ClearSessionCache empties the client session storage.
 func ClearSessionCache() {
+	fmt.Println("test")
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
 
