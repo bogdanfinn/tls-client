@@ -10,6 +10,8 @@ github.com/bogdanfinn/quic-go-utls v1.0.7-utls h1:opxU/wt2C6FcD3rkGSOwfpQgfGSFx9
 github.com/bogdanfinn/quic-go-utls v1.0.7-utls/go.mod h1:bk8QMY2KypO8A6LzHJ7C4+bdB0ksLOd6NZt600wXYe8=
 github.com/bogdanfinn/utls v1.7.7-barnius h1:OuJ497cc7F3yKNVHRsYPQdGggmk5x6+V5ZlrCR7fOLU=
 github.com/bogdanfinn/utls v1.7.7-barnius/go.mod h1:aAK1VZQlpKZClF1WEQeq6kyclbkPq4hz6xTbB5xSlmg=
+github.com/bogdanfinn/websocket v1.5.4-barnius h1:qn3DU/KMHMNPNnwDCtA/IN3QqmzV98DVsvQkQkxruKw=
+github.com/bogdanfinn/websocket v1.5.4-barnius/go.mod h1:IWHoWLZd+5/o9340A/m/ApAOBmWDSTUXuL7zSVmRHQk=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

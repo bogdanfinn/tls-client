@@ -37,19 +37,19 @@ type HttpClient interface {
 	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
 
 	GetBandwidthTracker() bandwidth.BandwidthTracker
+	GetDialer() proxy.ContextDialer
 }
 
 // Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
 var _ HttpClient = (*httpClient)(nil)
 
 type httpClient struct {
-	logger Logger
-
+	http.Client
+	logger           Logger
 	bandwidthTracker bandwidth.BandwidthTracker
 	config           *httpClientConfig
-
-	http.Client
-	headerLck sync.Mutex
+	headerLck        sync.Mutex
+	dialer           proxy.ContextDialer
 }
 
 var DefaultTimeoutSeconds = 30
@@ -87,7 +87,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		return nil, err
 	}
 
-	client, bandwidthTracker, clientProfile, err := buildFromConfig(logger, config)
+	client, dialer, bandwidthTracker, clientProfile, err := buildFromConfig(logger, config)
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +112,7 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		config:           config,
 		headerLck:        sync.Mutex{},
 		bandwidthTracker: bandwidthTracker,
+		dialer:           dialer,
 	}, nil
 }
 
@@ -143,14 +144,14 @@ func validateConfig(config *httpClientConfig) error {
 	return nil
 }
 
-func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, bandwidth.BandwidthTracker, profiles.ClientProfile, error) {
+func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, proxy.ContextDialer, bandwidth.BandwidthTracker, profiles.ClientProfile, error) {
 	var dialer proxy.ContextDialer
 	dialer = newDirectDialer(config.timeout, config.localAddr, config.dialer)
 
 	if config.proxyUrl != "" && config.proxyDialerFactory == nil {
 		proxyDialer, err := newConnectDialer(config.proxyUrl, config.timeout, config.localAddr, config.dialer, config.connectHeaders, logger)
 		if err != nil {
-			return nil, nil, profiles.ClientProfile{}, err
+			return nil, nil, nil, profiles.ClientProfile{}, err
 		}
 
 		dialer = proxyDialer
@@ -159,7 +160,7 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, ban
 	if config.proxyDialerFactory != nil {
 		proxyDialer, err := config.proxyDialerFactory(config.proxyUrl, config.timeout, config.localAddr, config.connectHeaders, logger)
 		if err != nil {
-			return nil, nil, profiles.ClientProfile{}, err
+			return nil, nil, nil, profiles.ClientProfile{}, err
 		}
 
 		dialer = proxyDialer
@@ -187,7 +188,7 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, ban
 
 	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.disableHttp3, config.enableProtocolRacing, config.certificatePins, config.badPinHandler, config.disableIPV6, config.disableIPV4, bandwidthTracker, dialer)
 	if err != nil {
-		return nil, nil, clientProfile, err
+		return nil, nil, nil, clientProfile, err
 	}
 
 	client := &http.Client{
@@ -200,12 +201,17 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, ban
 		client.Jar = config.cookieJar
 	}
 
-	return client, bandwidthTracker, clientProfile, nil
+	return client, dialer, bandwidthTracker, clientProfile, nil
 }
 
 // CloseIdleConnections closes all idle connections of the underlying http client.
 func (c *httpClient) CloseIdleConnections() {
 	c.Client.CloseIdleConnections()
+}
+
+// GetDialer() returns the underlying Dialer
+func (c *httpClient) GetDialer() proxy.ContextDialer {
+	return c.dialer
 }
 
 // SetFollowRedirect configures the client's HTTP redirect following policy.
