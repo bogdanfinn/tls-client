@@ -3,8 +3,8 @@ module github.com/bogdanfinn/tls-client
 go 1.24.1
 
 require (
-	github.com/Dharmey747/quic-go-utls v1.0.3-utls
 	github.com/bogdanfinn/fhttp v0.6.2
+	github.com/bogdanfinn/quic-go-utls v1.0.4-utls
 	github.com/bogdanfinn/utls v1.7.4-barnius
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.9.0
@@ -30,5 +30,7 @@ require (
 )
 
 // replace github.com/bogdanfinn/utls => ../utls
+
+// replace github.com/bogdanfinn/quic-go-utls => ../quic-go-utls
 
 // replace github.com/bogdanfinn/fhttp => ../fhttp
