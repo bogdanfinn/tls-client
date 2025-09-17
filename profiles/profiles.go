@@ -37,6 +37,7 @@ var MappedTLSClients = map[string]ClientProfile{
 	"safari_ios_17_0":        Safari_IOS_17_0,
 	"safari_ios_18_0":        Safari_IOS_18_0,
 	"safari_ios_18_5":        Safari_IOS_18_5,
+	"safari_ios_26":          Safari_IOS_26,
 	"firefox_102":            Firefox_102,
 	"firefox_104":            Firefox_104,
 	"firefox_105":            Firefox_105,
