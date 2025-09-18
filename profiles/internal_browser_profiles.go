@@ -995,11 +995,11 @@ var Safari_IOS_17_0 = ClientProfile{
 	connectionFlow: 10485760,
 }
 
-var Safari_IOS_26 = ClientProfile{
+var Safari_IOS_26_0 = ClientProfile{
 	clientHelloId: tls.ClientHelloID{
 		Client:               "iOS",
 		RandomExtensionOrder: false,
-		Version:              "26",
+		Version:              "26.0",
 		Seed:                 nil,
 		SpecFactory: func() (tls.ClientHelloSpec, error) {
 			return tls.ClientHelloSpec{
