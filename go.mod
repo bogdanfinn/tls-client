@@ -3,6 +3,7 @@ module github.com/bogdanfinn/tls-client
 go 1.24.1
 
 require (
+	github.com/bdandy/go-socks4 v1.2.3
 	github.com/bogdanfinn/fhttp v0.6.2
 	github.com/bogdanfinn/quic-go-utls v1.0.4-utls
 	github.com/bogdanfinn/utls v1.7.4-barnius
@@ -14,6 +15,7 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
+	github.com/bdandy/go-errors v1.2.2 // indirect
 	github.com/cloudflare/circl v1.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
