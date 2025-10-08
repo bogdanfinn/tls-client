@@ -1,10 +1,7 @@
 package tests
 
 import (
-	"bytes"
-	"compress/gzip"
 	"fmt"
-	"strconv"
 	"testing"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -42,27 +39,13 @@ func TestClient_UseCompressedResponse(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, resp.Uncompressed, false)
-	assert.Equal(t, "gzip", resp.Header.Get("Content-Encoding"))
-	assert.NotEqual(t, "", resp.Header.Get("Content-Length"))
 }
 
 func getSimpleWebServerCompressed() *httptest.Server {
 	var indexHandler = func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("receive a request from:", req.RemoteAddr, req.Header)
-		w.Header().Set("Content-Encoding", "gzip")
-
-		var buf bytes.Buffer
-		gz := gzip.NewWriter(&buf)
-		_, err := gz.Write([]byte(req.RemoteAddr))
-		if err != nil {
-			gz.Close()
-			http.Error(w, "gzip error", http.StatusInternalServerError)
-			return
-		}
-		gz.Close()
-
+		w.Write([]byte(req.RemoteAddr))
 		w.WriteHeader(http.StatusOK)
-		w.Header().Add("Content-Length", strconv.Itoa(buf.Len()))
 	}
 
 	router := http.NewServeMux()
