@@ -4,8 +4,8 @@ github.com/bdandy/go-errors v1.2.2 h1:WdFv/oukjTJCLa79UfkGmwX7ZxONAihKu4V0mLIs11
 github.com/bdandy/go-errors v1.2.2/go.mod h1:NkYHl4Fey9oRRdbB1CoC6e84tuqQHiqrOcZpqFEkBxM=
 github.com/bdandy/go-socks4 v1.2.3 h1:Q6Y2heY1GRjCtHbmlKfnwrKVU/k81LS8mRGLRlmDlic=
 github.com/bdandy/go-socks4 v1.2.3/go.mod h1:98kiVFgpdogR8aIGLWLvjDVZ8XcKPsSI/ypGrO+bqHI=
-github.com/bogdanfinn/fhttp v0.6.2 h1:qmFu9fxKmSRR+tcKfgxthmiu365tYspz3Mi404ytZPE=
-github.com/bogdanfinn/fhttp v0.6.2/go.mod h1:0irhEtS+wJ4m8SGhWO0wmbXMjCbH3WZpU6UcymRYKuk=
+github.com/bogdanfinn/fhttp v0.6.3 h1:WtWurH0jbc1X2hOhWckVDiSQPonaU/WwjInB+OwnaCI=
+github.com/bogdanfinn/fhttp v0.6.3/go.mod h1:0irhEtS+wJ4m8SGhWO0wmbXMjCbH3WZpU6UcymRYKuk=
 github.com/bogdanfinn/quic-go-utls v1.0.4-utls h1:zPjusVVNeJFA2ORMAP0rjnrZrBkV4Dnia4e6ToOfUDA=
 github.com/bogdanfinn/quic-go-utls v1.0.4-utls/go.mod h1:UONJOaHGWho08kZtkkgH7GjktEPjMemGxjTcNpVPZVA=
 github.com/bogdanfinn/utls v1.7.4-barnius h1:1ldNJEpKdkrx7b8hEc6MRkjnZIF8f2lDcTtRVxqY9zw=
