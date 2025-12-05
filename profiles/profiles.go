@@ -86,9 +86,12 @@ type ClientProfile struct {
 	pseudoHeaderOrder []string
 	settingsOrder     []http2.SettingID
 	connectionFlow    uint32
+	// [ADD THESE FIELDS]
+    streamID          uint32
+    allowHTTP         bool
 }
 
-func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, pseudoHeaderOrder []string, connectionFlow uint32, priorities []http2.Priority, headerPriority *http2.PriorityParam) ClientProfile {
+func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, pseudoHeaderOrder []string, connectionFlow uint32, priorities []http2.Priority, headerPriority *http2.PriorityParam, streamID uint32, allowHTTP bool) ClientProfile {
 	return ClientProfile{
 		clientHelloId:     clientHelloId,
 		settings:          settings,
@@ -97,6 +100,9 @@ func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.Settin
 		connectionFlow:    connectionFlow,
 		priorities:        priorities,
 		headerPriority:    headerPriority,
+		// [ASSIGN THEM]
+        streamID:          streamID,
+        allowHTTP:         allowHTTP,
 	}
 }
 
@@ -134,4 +140,12 @@ func (c ClientProfile) GetClientHelloId() tls.ClientHelloID {
 
 func (c ClientProfile) GetPriorities() []http2.Priority {
 	return c.priorities
+}
+
+func (c ClientProfile) GetStreamID() uint32 {
+	return c.streamID
+}
+
+func (c ClientProfile) GetAllowHTTP() bool {
+	return c.allowHTTP
 }
