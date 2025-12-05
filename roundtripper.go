@@ -23,6 +23,8 @@ const defaultIdleConnectionTimeout = 90 * time.Second
 var errProtocolNegotiated = errors.New("protocol negotiated")
 
 type roundTripper struct {
+	initialStreamID     uint32
+	allowHTTP           bool
 	clientHelloId     tls.ClientHelloID
 	certificatePinner CertificatePinner
 
@@ -203,6 +205,8 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 			ConnectionFlow:  rt.connectionFlow,
 			HeaderPriority:  rt.headerPriority,
 			IdleConnTimeout: idleConnectionTimeout,
+			InitialStreamID: rt.initialStreamID,
+			AllowHTTP:       rt.allowHTTP,
 		}
 
 		if rt.transportOptions != nil {
@@ -371,7 +375,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, disableHttp3 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, disableHttp3 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, initialStreamID uint32, allowHTTP bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -408,6 +412,8 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		disableIPV6:                 disableIPV6,
 		disableIPV4:                 disableIPV4,
 		bandwidthTracker:            bandwidthTracker,
+		initialStreamID:    clientProfile.GetStreamID(),
+        allowHTTP:          clientProfile.GetAllowHTTP(),
 	}
 
 	if len(dialer) > 0 {
