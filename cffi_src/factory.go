@@ -147,7 +147,7 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]byte, error) {
 	var respBodyBytes []byte
 	var err error
-	var bodyLen = 0
+	bodyLen := 0
 	f, err := os.OpenFile(*input.StreamOutputPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		return nil, err
@@ -337,7 +337,7 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 			WriteBufferSize:        requestInput.TransportOptions.WriteBufferSize,
 			ReadBufferSize:         requestInput.TransportOptions.ReadBufferSize,
 			IdleConnTimeout:        requestInput.TransportOptions.IdleConnTimeout,
-			//RootCAs:                requestInput.TransportOptions.RootCAs,
+			// RootCAs:                requestInput.TransportOptions.RootCAs,
 		}
 
 		options = append(options, tls_client.WithTransportOptions(transportOptions))
@@ -370,10 +370,9 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 			jarOptions = append(jarOptions, tls_client.WithDebugLogger())
 		}
 
-		jar := tls_client.NewCookieJar(jarOptions...)
-
-		if requestInput.WithDefaultCookieJar {
-			jar, _ := cookiejar.New(nil)
+		jar, _ := cookiejar.New(nil)
+		if requestInput.WithCustomCookieJar {
+			jar := tls_client.NewCookieJar(jarOptions...)
 			options = append(options, tls_client.WithCookieJar(jar))
 		} else {
 			options = append(options, tls_client.WithCookieJar(jar))

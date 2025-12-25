@@ -82,7 +82,7 @@ type RequestInput struct {
 	DisableIPV6                 bool                `json:"disableIPV6"`
 	DisableIPV4                 bool                `json:"disableIPV4"`
 	WithDebug                   bool                `json:"withDebug"`
-	WithDefaultCookieJar        bool                `json:"withDefaultCookieJar"`
+	WithCustomCookieJar         bool                `json:"withCustomCookieJar"`
 	WithoutCookieJar            bool                `json:"withoutCookieJar"`
 	WithRandomTLSExtensionOrder bool                `json:"withRandomTLSExtensionOrder"`
 }

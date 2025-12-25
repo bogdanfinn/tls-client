@@ -32,7 +32,7 @@ requestPayload = {
     "followRedirects": False,
     "insecureSkipVerify": False,
     "withoutCookieJar": False,
-    "withDefaultCookieJar": False,
+    "withCustomCookieJar": False,
     "isByteRequest": False,
     "forceHttp1": False,
     "withDebug": False,
