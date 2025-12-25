@@ -304,7 +304,13 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 
 		if rt.transportOptions != nil {
 			t3.DisableCompression = rt.transportOptions.DisableCompression
-			t3.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
+
+			maxResponseHeaderBytes, convErr := Int64ToInt(rt.transportOptions.MaxResponseHeaderBytes)
+			if convErr != nil {
+				return nil, fmt.Errorf("error converting MaxResponseHeaderBytes to int: %w", convErr)
+			}
+
+			t3.MaxResponseHeaderBytes = maxResponseHeaderBytes
 		}
 
 		rt.cachedTransports[addr] = &t3
