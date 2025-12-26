@@ -236,8 +236,6 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 		finalResponse = base64Encoding
 	}
 
-	fmt.Println(EuckrResponse)
-	fmt.Println("res")
 	if EuckrResponse {
 		var bufs bytes.Buffer
 		wr := transform.NewWriter(&bufs, korean.EUCKR.NewDecoder())
@@ -412,7 +410,6 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithServerNameOverwrite(*requestInput.ServerNameOverwrite))
 	}
 
-	fmt.Println(requestInput.EuckrResponse)
 	if requestInput.EuckrResponse {
 		options = append(options, tls_client.WithEnableEuckrResponse())
 	}
