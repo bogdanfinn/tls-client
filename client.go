@@ -15,6 +15,8 @@ import (
 	"github.com/bogdanfinn/tls-client/bandwidth"
 	"github.com/bogdanfinn/tls-client/profiles"
 	"golang.org/x/net/proxy"
+	"golang.org/x/text/encoding/korean"
+	"golang.org/x/text/transform"
 )
 
 var defaultRedirectFunc = func(req *http.Request, via []*http.Request) error {
@@ -393,7 +395,17 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 			responseBody := io.NopCloser(bytes.NewBuffer(buf))
 
-			c.logger.Debug("response body payload: %s", string(buf))
+			finalResponse := string(buf)
+
+			if c.config.euckrResponse {
+				var bufs bytes.Buffer
+				wr := transform.NewWriter(&bufs, korean.EUCKR.NewDecoder())
+				wr.Write(buf)
+				wr.Close()
+				finalResponse = bufs.String()
+			}
+
+			c.logger.Debug("response body payload: %s", finalResponse)
 
 			resp.Body = responseBody
 		}

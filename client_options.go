@@ -71,6 +71,7 @@ type httpClientConfig struct {
 	disableIPV4 bool
 
 	enabledBandwidthTracker bool
+	euckrResponse           bool
 }
 
 // WithProxyUrl configures a HTTP client to use the specified proxy URL.
@@ -286,5 +287,11 @@ func WithBandwidthTracker() HttpClientOption {
 func WithConnectHeaders(headers http.Header) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.connectHeaders = headers
+	}
+}
+
+func WithEnableEuckrResponse() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.euckrResponse = true
 	}
 }
