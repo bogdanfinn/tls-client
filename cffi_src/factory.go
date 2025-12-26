@@ -11,6 +11,8 @@ import (
 	"sync"
 
 	"github.com/bogdanfinn/tls-client/profiles"
+	"golang.org/x/text/encoding/korean"
+	"golang.org/x/text/transform"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/cookiejar"
@@ -201,6 +203,7 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	defer resp.Body.Close()
 
 	isByteResponse := input.IsByteResponse
+	EuckrResponse := input.EuckrResponse
 
 	ce := resp.Header.Get("Content-Encoding")
 
@@ -231,6 +234,16 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 		base64Encoding += base64.StdEncoding.EncodeToString(respBodyBytes)
 
 		finalResponse = base64Encoding
+	}
+
+	fmt.Println(EuckrResponse)
+	fmt.Println("res")
+	if EuckrResponse {
+		var bufs bytes.Buffer
+		wr := transform.NewWriter(&bufs, korean.EUCKR.NewDecoder())
+		wr.Write(respBodyBytes)
+		wr.Close()
+		finalResponse = bufs.String()
 	}
 
 	response := Response{
@@ -397,6 +410,11 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 	if requestInput.ServerNameOverwrite != nil && *requestInput.ServerNameOverwrite != "" {
 		options = append(options, tls_client.WithServerNameOverwrite(*requestInput.ServerNameOverwrite))
+	}
+
+	fmt.Println(requestInput.EuckrResponse)
+	if requestInput.EuckrResponse {
+		options = append(options, tls_client.WithEnableEuckrResponse())
 	}
 
 	proxy := proxyUrl
