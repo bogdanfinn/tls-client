@@ -161,7 +161,7 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, ban
 
 	clientProfile := config.clientProfile
 
-	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.disableHttp3, config.certificatePins, config.badPinHandler, config.disableIPV6, config.disableIPV4, config.initialStreamID, config.allowHTTP, bandwidthTracker, dialer)
+	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.disableHttp3, config.certificatePins, config.badPinHandler, config.disableIPV6, config.disableIPV4, bandwidthTracker, dialer)
 	if err != nil {
 		return nil, nil, clientProfile, err
 	}
