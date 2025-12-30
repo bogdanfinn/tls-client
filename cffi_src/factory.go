@@ -203,7 +203,7 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	defer resp.Body.Close()
 
 	isByteResponse := input.IsByteResponse
-	EuckrResponse := input.EuckrResponse
+	euckrResponse := input.EuckrResponse
 
 	ce := resp.Header.Get("Content-Encoding")
 
@@ -236,7 +236,7 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 		finalResponse = base64Encoding
 	}
 
-	if EuckrResponse {
+	if euckrResponse {
 		var bufs bytes.Buffer
 		wr := transform.NewWriter(&bufs, korean.EUCKR.NewDecoder())
 		wr.Write(respBodyBytes)
