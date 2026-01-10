@@ -115,7 +115,31 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 	}, nil
 }
 
-func validateConfig(_ *httpClientConfig) error {
+func validateConfig(config *httpClientConfig) error {
+	if config.enableProtocolRacing && config.disableHttp3 {
+		return fmt.Errorf("invalid config: HTTP/3 racing cannot be enabled when HTTP/3 is disabled")
+	}
+
+	if config.enableProtocolRacing && config.forceHttp1 {
+		return fmt.Errorf("invalid config: HTTP/3 racing cannot be enabled when HTTP/1 is forced")
+	}
+
+	if config.disableIPV4 && config.disableIPV6 {
+		return fmt.Errorf("invalid config: cannot disable both IPv4 and IPv6")
+	}
+
+	if config.serverNameOverwrite != "" && !config.insecureSkipVerify {
+		return fmt.Errorf("invalid config: server name overwrite requires insecure skip verify to be enabled")
+	}
+
+	if len(config.certificatePins) > 0 && config.insecureSkipVerify {
+		return fmt.Errorf("invalid config: certificate pinning cannot be used with insecure skip verify")
+	}
+
+	if config.proxyUrl != "" && config.proxyDialerFactory != nil {
+		return fmt.Errorf("invalid config: cannot set both proxy URL and custom proxy dialer factory (only one will be used)")
+	}
+
 	return nil
 }
 
@@ -161,7 +185,7 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, ban
 
 	clientProfile := config.clientProfile
 
-	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.disableHttp3, config.certificatePins, config.badPinHandler, config.disableIPV6, config.disableIPV4, bandwidthTracker, dialer)
+	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.disableHttp3, config.enableProtocolRacing, config.certificatePins, config.badPinHandler, config.disableIPV6, config.disableIPV4, bandwidthTracker, dialer)
 	if err != nil {
 		return nil, nil, clientProfile, err
 	}
@@ -264,7 +288,7 @@ func (c *httpClient) applyProxy() error {
 		dialer = proxyDialer
 	}
 
-	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.disableHttp3, c.config.certificatePins, c.config.badPinHandler, c.config.disableIPV6, c.config.disableIPV4, c.bandwidthTracker, dialer)
+	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.disableHttp3, c.config.enableProtocolRacing, c.config.certificatePins, c.config.badPinHandler, c.config.disableIPV6, c.config.disableIPV4, c.bandwidthTracker, dialer)
 	if err != nil {
 		return err
 	}

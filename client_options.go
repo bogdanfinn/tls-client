@@ -64,6 +64,7 @@ type httpClientConfig struct {
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
 	disableHttp3                bool
+	enableProtocolRacing        bool
 
 	// Establish a connection to origin server via ipv4 only
 	disableIPV6 bool
@@ -73,7 +74,7 @@ type httpClientConfig struct {
 	enabledBandwidthTracker bool
 }
 
-// WithProxyUrl configures a HTTP client to use the specified proxy URL.
+// WithProxyUrl configures an HTTP client to use the specified proxy URL.
 //
 // proxyUrl should be formatted as:
 //
@@ -236,6 +237,17 @@ func WithForceHttp1() HttpClientOption {
 func WithDisableHttp3() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.disableHttp3 = true
+	}
+}
+
+// WithProtocolRacing configures a client to race HTTP/3 (QUIC) and HTTP/2 (TCP) connections in parallel.
+// Similar to Chrome's "Happy Eyeballs" approach, this starts both connection types simultaneously
+// and uses whichever connects first.
+// The client will remember which protocol worked for each host and use it directly on subsequent requests.
+// This option is ignored if WithForceHttp1 or WithDisableHttp3 is set.
+func WithProtocolRacing() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.enableProtocolRacing = true
 	}
 }
 

@@ -318,6 +318,10 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithDisableHttp3())
 	}
 
+	if requestInput.WithProtocolRacing {
+		options = append(options, tls_client.WithProtocolRacing())
+	}
+
 	if requestInput.DisableIPV6 {
 		options = append(options, tls_client.WithDisableIPV6())
 	}

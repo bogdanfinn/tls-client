@@ -53,6 +53,9 @@ type roundTripper struct {
 	forceHttp1   bool
 	disableHttp3 bool
 
+	// racer handles HTTP/3 racing (nil if racing is disabled)
+	racer *protocolRacer
+
 	insecureSkipVerify          bool
 	withRandomTlsExtensionOrder bool
 	disableIPV6                 bool
@@ -77,8 +80,12 @@ func (rt *roundTripper) CloseIdleConnections() {
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	addr := rt.getDialTLSAddr(req)
 
-	rt.cachedTransportsLck.Lock()
+	if rt.racer != nil && !rt.forceHttp1 && !rt.disableHttp3 && strings.ToLower(req.URL.Scheme) == "https" {
+		// TODO: think of how to overall design the transport building better, in order to have that not spread across multiple places and duplicated
+		return rt.racer.race(req, addr, rt.getTransport)
+	}
 
+	rt.cachedTransportsLck.Lock()
 	if _, ok := rt.cachedTransports[addr]; !ok {
 		if err := rt.getTransport(req, addr); err != nil {
 			rt.cachedTransportsLck.Unlock()
@@ -275,35 +282,8 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 			utlsConfig.ServerName = rt.serverNameOverwrite
 		}
 
-		if rt.transportOptions != nil {
-			utlsConfig.RootCAs = rt.transportOptions.RootCAs
-		}
-
-		if rt.serverNameOverwrite != "" {
-			utlsConfig.ServerName = rt.serverNameOverwrite
-		}
-
 		t3 := http3.Transport{
 			TLSClientConfig: utlsConfig,
-		}
-
-		if rt.settings == nil {
-			// when we not provide a map of custom http2 settings
-			t3.AdditionalSettings = map[uint64]uint64{
-				uint64(http2.SettingMaxConcurrentStreams): 1000,
-				uint64(http2.SettingMaxFrameSize):         16384,
-				uint64(http2.SettingInitialWindowSize):    6291456,
-				uint64(http2.SettingHeaderTableSize):      65536,
-			}
-		} else {
-			// convert settings map from uint32 to uint64
-			convertedSettings := map[uint64]uint64{}
-			for key, value := range rt.settings {
-				convertedSettings[uint64(key)] = uint64(value)
-			}
-
-			// use custom settings
-			t3.AdditionalSettings = convertedSettings
 		}
 
 		if rt.transportOptions != nil {
@@ -381,7 +361,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, disableHttp3 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, disableHttp3 bool, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -420,6 +400,22 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		bandwidthTracker:            bandwidthTracker,
 		initialStreamID:    clientProfile.GetStreamID(),
         allowHTTP:          clientProfile.GetAllowHTTP(),
+	}
+
+	// Create protocol racer if HTTP/3 racing is enabled
+	if enableH3Racing {
+		rt.racer = newProtocolRacer(
+			clientSessionCache,
+			insecureSkipVerify,
+			serverNameOverwrite,
+			transportOptions,
+			clientProfile.GetSettings(),
+			rt.cachedTransports,
+			&rt.cachedTransportsLck,
+			pinner,
+			badPinHandlerFunc,
+			bandwidthTracker,
+		)
 	}
 
 	if len(dialer) > 0 {
