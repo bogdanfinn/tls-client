@@ -23,6 +23,8 @@ const defaultIdleConnectionTimeout = 90 * time.Second
 var errProtocolNegotiated = errors.New("protocol negotiated")
 
 type roundTripper struct {
+	initialStreamID     uint32
+	allowHTTP           bool
 	clientHelloId     tls.ClientHelloID
 	certificatePinner CertificatePinner
 
@@ -203,6 +205,8 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 			ConnectionFlow:  rt.connectionFlow,
 			HeaderPriority:  rt.headerPriority,
 			IdleConnTimeout: idleConnectionTimeout,
+			InitialStreamID: rt.initialStreamID,
+			AllowHTTP:       rt.allowHTTP,
 		}
 
 		if rt.transportOptions != nil {
@@ -414,6 +418,8 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		disableIPV6:                 disableIPV6,
 		disableIPV4:                 disableIPV4,
 		bandwidthTracker:            bandwidthTracker,
+		initialStreamID:    clientProfile.GetStreamID(),
+        allowHTTP:          clientProfile.GetAllowHTTP(),
 	}
 
 	if len(dialer) > 0 {
