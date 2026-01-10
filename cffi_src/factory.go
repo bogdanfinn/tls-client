@@ -279,12 +279,12 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 	clientProfile := profiles.DefaultClientProfile
 
 	if requestInput.CustomTlsClient != nil {
-		clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, err := getCustomTlsClientProfile(requestInput.CustomTlsClient)
+		clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, streamId, allowHttp, err := getCustomTlsClientProfile(requestInput.CustomTlsClient)
 		if err != nil {
 			return nil, fmt.Errorf("can not build http client out of custom tls client information: %w", err)
 		}
 
-		clientProfile = profiles.NewClientProfile(clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority)
+		clientProfile = profiles.NewClientProfile(clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, streamId, allowHttp)
 	}
 
 	if tlsClientIdentifier != "" {
@@ -418,10 +418,10 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 	return tlsClient, err
 }
 
-func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.ClientHelloID, map[http2.SettingID]uint32, []http2.SettingID, []string, uint32, []http2.Priority, *http2.PriorityParam, error) {
+func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.ClientHelloID, map[http2.SettingID]uint32, []http2.SettingID, []string, uint32, []http2.Priority, *http2.PriorityParam, uint32, bool, error) {
 	specFactory, err := tls_client.GetSpecFactoryFromJa3String(customClientDefinition.Ja3String, customClientDefinition.SupportedSignatureAlgorithms, customClientDefinition.SupportedDelegatedCredentialsAlgorithms, customClientDefinition.SupportedVersions, customClientDefinition.KeyShareCurves, customClientDefinition.ALPNProtocols, customClientDefinition.ALPSProtocols, customClientDefinition.ECHCandidateCipherSuites.Translate(), customClientDefinition.ECHCandidatePayloads, customClientDefinition.CertCompressionAlgos, customClientDefinition.RecordSizeLimit)
 	if err != nil {
-		return tls.ClientHelloID{}, nil, nil, nil, 0, nil, nil, err
+		return tls.ClientHelloID{}, nil, nil, nil, 0, nil, nil, 0, false, err
 	}
 
 	resolvedH2Settings := make(map[http2.SettingID]uint32)
@@ -476,7 +476,7 @@ func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.Cli
 		SpecFactory: specFactory,
 	}
 
-	return clientHelloId, resolvedH2Settings, resolvedH2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, nil
+	return clientHelloId, resolvedH2Settings, resolvedH2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, customClientDefinition.StreamId, customClientDefinition.AllowHttp, nil
 }
 
 func getTlsClientProfile(tlsClientIdentifier string) profiles.ClientProfile {

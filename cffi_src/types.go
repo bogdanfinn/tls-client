@@ -107,6 +107,8 @@ type CustomTlsClient struct {
 	SupportedVersions                       []string              `json:"supportedVersions"`
 	ConnectionFlow                          uint32                `json:"connectionFlow"`
 	RecordSizeLimit                         uint16                `json:"recordSizeLimit"`
+	StreamId                                uint32                `json:"streamId"`
+	AllowHttp                               bool                  `json:"allowHttp"`
 }
 
 type CandidateCipherSuites []CandidateCipherSuite
