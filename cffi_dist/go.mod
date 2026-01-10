@@ -4,7 +4,7 @@ go 1.24.1
 
 require (
 	github.com/bogdanfinn/fhttp v0.6.6
-	github.com/bogdanfinn/tls-client v1.13.0
+	github.com/bogdanfinn/tls-client v1.13.1
 	github.com/google/uuid v1.6.0
 )
 
