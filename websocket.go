@@ -12,7 +12,7 @@ type Websocket struct {
 	dialer *websocket.Dialer
 }
 
-// New creates a new WebSocket wrapper that uses tls-client for connections.
+// NewWebsocket creates a new WebSocket wrapper that uses tls-client for connections.
 // This allows WebSocket connections to use the same TLS fingerprinting and
 // configuration as regular HTTP requests.
 //
@@ -38,7 +38,7 @@ type Websocket struct {
 //
 //	conn, _ := ws.Connect(context.Background())
 //	defer conn.Close()
-func New(logger Logger, options ...WebsocketOption) (*Websocket, error) {
+func NewWebsocket(logger Logger, options ...WebsocketOption) (*Websocket, error) {
 	config := &websocketConfig{}
 
 	for _, opt := range options {

@@ -57,7 +57,7 @@ func TestWebSocketEcho(t *testing.T) {
 		tls_client.WithHandshakeTimeoutMilliseconds(1000),
 	}
 
-	ws, err := tls_client.New(nil, websocketOptions...)
+	ws, err := tls_client.NewWebsocket(nil, websocketOptions...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +116,7 @@ func TestWebSocketWithHeaderOrder(t *testing.T) {
 		tls_client.WithHandshakeTimeoutMilliseconds(1000),
 	}
 
-	ws, err := tls_client.New(nil, websocketOptions...)
+	ws, err := tls_client.NewWebsocket(nil, websocketOptions...)
 	require.NoError(t, err)
 
 	wsConnection, err := ws.Connect(context.Background())
@@ -155,7 +155,7 @@ func TestWebSocketWithoutHeaderOrder(t *testing.T) {
 		tls_client.WithHandshakeTimeoutMilliseconds(1000),
 	}
 
-	ws, err := tls_client.New(nil, websocketOptions...)
+	ws, err := tls_client.NewWebsocket(nil, websocketOptions...)
 	require.NoError(t, err)
 
 	wsConnection, err := ws.Connect(context.Background())
