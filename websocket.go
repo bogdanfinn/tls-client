@@ -54,7 +54,7 @@ func NewWebsocket(logger Logger, options ...WebsocketOption) (*Websocket, error)
 		Jar:               config.cookieJar,
 		ReadBufferSize:    config.readBufferSize,
 		WriteBufferSize:   config.writeBufferSize,
-		NetDialTLSContext: config.tlsClient.GetDialer().DialContext,
+		NetDialTLSContext: config.tlsClient.GetTLSDialer(),
 		NetDialContext:    config.tlsClient.GetDialer().DialContext,
 	}
 

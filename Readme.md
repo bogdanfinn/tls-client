@@ -57,6 +57,7 @@ type HttpClient interface {
 
     GetBandwidthTracker() bandwidth.BandwidthTracker
     GetDialer() proxy.ContextDialer
+    GetTLSDialer() TLSDialerFunc
 }
 ```
 
@@ -83,7 +84,7 @@ func main() {
 	jar := tls_client.NewCookieJar()
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(30),
-		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithClientProfile(profiles.Chrome_144),
 		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
 	}
