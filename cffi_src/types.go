@@ -92,10 +92,13 @@ type RequestInput struct {
 // CustomTlsClient contains custom TLS specifications to construct a client from.
 type CustomTlsClient struct {
 	H2Settings                              map[string]uint32     `json:"h2Settings"`
+	H2SettingsOrder                         []string              `json:"h2SettingsOrder"`
+	H3Settings                              map[string]uint64     `json:"h3Settings"`
+	H3SettingsOrder                         []string              `json:"h3SettingsOrder"`
+	H3PseudoHeaderOrder                     []string              `json:"h3PseudoHeaderOrder"`
 	HeaderPriority                          *PriorityParam        `json:"headerPriority"`
 	CertCompressionAlgos                    []string              `json:"certCompressionAlgos"`
 	Ja3String                               string                `json:"ja3String"`
-	H2SettingsOrder                         []string              `json:"h2SettingsOrder"`
 	KeyShareCurves                          []string              `json:"keyShareCurves"`
 	ALPNProtocols                           []string              `json:"alpnProtocols"`
 	ALPSProtocols                           []string              `json:"alpsProtocols"`
@@ -109,6 +112,8 @@ type CustomTlsClient struct {
 	ConnectionFlow                          uint32                `json:"connectionFlow"`
 	RecordSizeLimit                         uint16                `json:"recordSizeLimit"`
 	StreamId                                uint32                `json:"streamId"`
+	H3PriorityParam                         uint32                `json:"h3PriorityParam"`
+	H3SendGreaseFrames                      bool                  `json:"h3SendGreaseFrames"`
 	AllowHttp                               bool                  `json:"allowHttp"`
 }
 

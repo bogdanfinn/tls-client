@@ -19,12 +19,13 @@ import (
 )
 
 const defaultIdleConnectionTimeout = 90 * time.Second
+const CHROME_MAX_FIELD_SECTION_SIZE = 262144
 
 var errProtocolNegotiated = errors.New("protocol negotiated")
 
 type roundTripper struct {
-	initialStreamID     uint32
-	allowHTTP           bool
+	initialStreamID   uint32
+	allowHTTP         bool
 	clientHelloId     tls.ClientHelloID
 	certificatePinner CertificatePinner
 
@@ -56,10 +57,30 @@ type roundTripper struct {
 	// racer handles HTTP/3 racing (nil if racing is disabled)
 	racer *protocolRacer
 
+	// HTTP/3 specific settings
+	http3Settings          map[uint64]uint64
+	http3SettingsOrder     []uint64
+	http3PriorityParam     uint32
+	http3PseudoHeaderOrder []string
+	http3SendGreaseFrames  bool
+
 	insecureSkipVerify          bool
 	withRandomTlsExtensionOrder bool
 	disableIPV6                 bool
 	disableIPV4                 bool
+}
+
+// http3Config contains all parameters needed to build an HTTP/3 transport
+type http3Config struct {
+	clientSessionCache     tls.ClientSessionCache
+	insecureSkipVerify     bool
+	serverNameOverwrite    string
+	transportOptions       *TransportOptions
+	http3Settings          map[uint64]uint64
+	http3SettingsOrder     []uint64
+	http3PriorityParam     uint32
+	http3PseudoHeaderOrder []string
+	http3SendGreaseFrames  bool
 }
 
 func (rt *roundTripper) CloseIdleConnections() {
@@ -77,11 +98,120 @@ func (rt *roundTripper) CloseIdleConnections() {
 	}
 }
 
+func (rt *roundTripper) getHttp3Settings() map[uint64]uint64 {
+	if rt.http3Settings == nil || len(rt.http3Settings) == 0 {
+		return nil
+	}
+
+	// Build settings in the correct order
+	orderedSettings := make(map[uint64]uint64)
+	if rt.http3SettingsOrder != nil && len(rt.http3SettingsOrder) > 0 {
+		for _, id := range rt.http3SettingsOrder {
+			if val, ok := rt.http3Settings[id]; ok {
+				orderedSettings[id] = val
+			}
+		}
+		return orderedSettings
+	}
+
+	return rt.http3Settings
+}
+
+func buildHTTP3Transport(cfg *http3Config) (http.RoundTripper, error) {
+	utlsConfig := &tls.Config{
+		ClientSessionCache: cfg.clientSessionCache,
+		InsecureSkipVerify: cfg.insecureSkipVerify,
+		OmitEmptyPsk:       true,
+	}
+	if cfg.transportOptions != nil {
+		utlsConfig.RootCAs = cfg.transportOptions.RootCAs
+	}
+
+	if cfg.serverNameOverwrite != "" {
+		utlsConfig.ServerName = cfg.serverNameOverwrite
+	}
+
+	t3 := &http3.Transport{
+		TLSClientConfig: utlsConfig,
+		EnableDatagrams: true, // Chrome enables H3_DATAGRAM (setting 0x33)
+	}
+
+	http3Settings := cfg.http3Settings
+
+	if http3Settings != nil {
+		settingsCopy := make(map[uint64]uint64, len(http3Settings))
+		for k, v := range http3Settings {
+			settingsCopy[k] = v
+		}
+		http3Settings = settingsCopy
+	}
+
+	// Add random GREASE setting only for browsers that send it (Chrome)
+	// Firefox sends GREASE frames but not random GREASE settings
+	// Use priority parameter as identification: Chrome has it, Firefox doesn't
+	if cfg.http3PriorityParam > 0 {
+		greaseID := generateGREASESettingID()
+		greaseValue := generateGREASESettingValue()
+
+		if http3Settings == nil {
+			http3Settings = make(map[uint64]uint64)
+		}
+		http3Settings[greaseID] = greaseValue
+
+		// Set the order if available, and append GREASE at the end
+		if cfg.http3SettingsOrder != nil && len(cfg.http3SettingsOrder) > 0 {
+			orderWithGrease := make([]uint64, len(cfg.http3SettingsOrder)+1)
+			copy(orderWithGrease, cfg.http3SettingsOrder)
+			orderWithGrease[len(cfg.http3SettingsOrder)] = greaseID
+			t3.AdditionalSettingsOrder = orderWithGrease
+		}
+	} else {
+		// Just use the settings order as-is without random GREASE
+		if cfg.http3SettingsOrder != nil && len(cfg.http3SettingsOrder) > 0 {
+			t3.AdditionalSettingsOrder = cfg.http3SettingsOrder
+		}
+	}
+
+	t3.AdditionalSettings = http3Settings
+
+	if cfg.http3PseudoHeaderOrder != nil && len(cfg.http3PseudoHeaderOrder) > 0 {
+		t3.PseudoHeaderOrder = cfg.http3PseudoHeaderOrder
+	}
+
+	// Enable GREASE frames based on profile (Chrome sends GREASE frames, Firefox doesn't)
+	t3.SendGreaseFrames = cfg.http3SendGreaseFrames
+
+	t3.PriorityParam = cfg.http3PriorityParam
+
+	if cfg.transportOptions != nil {
+		t3.DisableCompression = cfg.transportOptions.DisableCompression
+
+		maxResponseHeaderBytes, convErr := Int64ToInt(cfg.transportOptions.MaxResponseHeaderBytes)
+		if convErr != nil {
+			return nil, fmt.Errorf("error converting MaxResponseHeaderBytes to int: %w", convErr)
+		}
+
+		if maxResponseHeaderBytes > 0 {
+			t3.MaxResponseHeaderBytes = maxResponseHeaderBytes
+		} else if maxResponseHeaderBytes == 0 {
+			// Chrome's default MAX_FIELD_SECTION_SIZE
+			t3.MaxResponseHeaderBytes = CHROME_MAX_FIELD_SECTION_SIZE
+		} else {
+			// -1 means don't send SETTINGS_MAX_FIELD_SECTION_SIZE (Firefox behavior)
+			t3.MaxResponseHeaderBytes = -1
+		}
+	} else {
+		// Chrome's default MAX_FIELD_SECTION_SIZE
+		t3.MaxResponseHeaderBytes = CHROME_MAX_FIELD_SECTION_SIZE
+	}
+
+	return t3, nil
+}
+
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	addr := rt.getDialTLSAddr(req)
 
 	if rt.racer != nil && !rt.forceHttp1 && !rt.disableHttp3 && strings.ToLower(req.URL.Scheme) == "https" {
-		// TODO: think of how to overall design the transport building better, in order to have that not spread across multiple places and duplicated
 		return rt.racer.race(req, addr, rt.getTransport)
 	}
 
@@ -226,7 +356,10 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 				t1.MaxIdleConns = rt.transportOptions.MaxIdleConns
 				t1.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
 				t1.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
-				t1.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
+				// Only set MaxResponseHeaderBytes if > 0 (HTTP/1.1 transport doesn't understand -1)
+				if rt.transportOptions.MaxResponseHeaderBytes > 0 {
+					t1.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
+				}
 				t1.WriteBufferSize = rt.transportOptions.WriteBufferSize
 				t1.ReadBufferSize = rt.transportOptions.ReadBufferSize
 				t1.IdleConnTimeout = idleConnectionTimeout
@@ -269,35 +402,21 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		t2.PushHandler = &http2.DefaultPushHandler{}
 		rt.cachedTransports[addr] = &t2
 	case http3.NextProtoH3:
-		utlsConfig := &tls.Config{
-			ClientSessionCache: rt.clientSessionCache,
-			InsecureSkipVerify: rt.insecureSkipVerify,
-			OmitEmptyPsk:       true,
+		t3, err := buildHTTP3Transport(&http3Config{
+			clientSessionCache:     rt.clientSessionCache,
+			insecureSkipVerify:     rt.insecureSkipVerify,
+			serverNameOverwrite:    rt.serverNameOverwrite,
+			transportOptions:       rt.transportOptions,
+			http3Settings:          rt.getHttp3Settings(),
+			http3SettingsOrder:     rt.http3SettingsOrder,
+			http3PriorityParam:     rt.http3PriorityParam,
+			http3PseudoHeaderOrder: rt.http3PseudoHeaderOrder,
+			http3SendGreaseFrames:  rt.http3SendGreaseFrames,
+		})
+		if err != nil {
+			return nil, err
 		}
-		if rt.transportOptions != nil {
-			utlsConfig.RootCAs = rt.transportOptions.RootCAs
-		}
-
-		if rt.serverNameOverwrite != "" {
-			utlsConfig.ServerName = rt.serverNameOverwrite
-		}
-
-		t3 := http3.Transport{
-			TLSClientConfig: utlsConfig,
-		}
-
-		if rt.transportOptions != nil {
-			t3.DisableCompression = rt.transportOptions.DisableCompression
-
-			maxResponseHeaderBytes, convErr := Int64ToInt(rt.transportOptions.MaxResponseHeaderBytes)
-			if convErr != nil {
-				return nil, fmt.Errorf("error converting MaxResponseHeaderBytes to int: %w", convErr)
-			}
-
-			t3.MaxResponseHeaderBytes = maxResponseHeaderBytes
-		}
-
-		rt.cachedTransports[addr] = &t3
+		rt.cachedTransports[addr] = t3
 	default:
 		rt.cachedTransports[addr] = rt.buildHttp1Transport()
 	}
@@ -340,7 +459,10 @@ func (rt *roundTripper) buildHttp1Transport() *http.Transport {
 		t.MaxIdleConns = rt.transportOptions.MaxIdleConns
 		t.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
 		t.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
-		t.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
+		// Only set MaxResponseHeaderBytes if > 0 (HTTP/1.1 transport doesn't understand -1)
+		if rt.transportOptions.MaxResponseHeaderBytes > 0 {
+			t.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
+		}
 		t.WriteBufferSize = rt.transportOptions.WriteBufferSize
 		t.ReadBufferSize = rt.transportOptions.ReadBufferSize
 	}
@@ -398,8 +520,13 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		disableIPV6:                 disableIPV6,
 		disableIPV4:                 disableIPV4,
 		bandwidthTracker:            bandwidthTracker,
-		initialStreamID:    clientProfile.GetStreamID(),
-        allowHTTP:          clientProfile.GetAllowHTTP(),
+		initialStreamID:             clientProfile.GetStreamID(),
+		allowHTTP:                   clientProfile.GetAllowHTTP(),
+		http3Settings:               clientProfile.GetHttp3Settings(),
+		http3SettingsOrder:          clientProfile.GetHttp3SettingsOrder(),
+		http3PriorityParam:          clientProfile.GetHttp3PriorityParam(),
+		http3PseudoHeaderOrder:      clientProfile.GetHttp3PseudoHeaderOrder(),
+		http3SendGreaseFrames:       clientProfile.GetHttp3SendGreaseFrames(),
 	}
 
 	// Create protocol racer if HTTP/3 racing is enabled
@@ -415,6 +542,11 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 			pinner,
 			badPinHandlerFunc,
 			bandwidthTracker,
+			clientProfile.GetHttp3Settings(),
+			clientProfile.GetHttp3SettingsOrder(),
+			clientProfile.GetHttp3PriorityParam(),
+			clientProfile.GetHttp3PseudoHeaderOrder(),
+			clientProfile.GetHttp3SendGreaseFrames(),
 		)
 	}
 

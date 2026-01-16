@@ -84,30 +84,38 @@ var MappedTLSClients = map[string]ClientProfile{
 }
 
 type ClientProfile struct {
-	clientHelloId     tls.ClientHelloID
-	headerPriority    *http2.PriorityParam
-	settings          map[http2.SettingID]uint32
-	priorities        []http2.Priority
-	pseudoHeaderOrder []string
-	settingsOrder     []http2.SettingID
-	connectionFlow    uint32
-	// [ADD THESE FIELDS]
-	streamID  uint32
-	allowHTTP bool
+	clientHelloId          tls.ClientHelloID
+	headerPriority         *http2.PriorityParam
+	settings               map[http2.SettingID]uint32
+	settingsOrder          []http2.SettingID
+	priorities             []http2.Priority
+	pseudoHeaderOrder      []string
+	connectionFlow         uint32
+	streamID               uint32
+	allowHTTP              bool
+	http3Settings          map[uint64]uint64
+	http3SettingsOrder     []uint64
+	http3PriorityParam     uint32
+	http3PseudoHeaderOrder []string
+	http3SendGreaseFrames  bool
 }
 
-func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, pseudoHeaderOrder []string, connectionFlow uint32, priorities []http2.Priority, headerPriority *http2.PriorityParam, streamID uint32, allowHTTP bool) ClientProfile {
+func NewClientProfile(clientHelloId tls.ClientHelloID, settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, pseudoHeaderOrder []string, connectionFlow uint32, priorities []http2.Priority, headerPriority *http2.PriorityParam, streamID uint32, allowHTTP bool, http3Settings map[uint64]uint64, http3SettingsOrder []uint64, http3PriorityParam uint32, http3PseudoHeaderOrder []string, http3SendGreaseFrames bool) ClientProfile {
 	return ClientProfile{
-		clientHelloId:     clientHelloId,
-		settings:          settings,
-		settingsOrder:     settingsOrder,
-		pseudoHeaderOrder: pseudoHeaderOrder,
-		connectionFlow:    connectionFlow,
-		priorities:        priorities,
-		headerPriority:    headerPriority,
-		// [ASSIGN THEM]
-		streamID:  streamID,
-		allowHTTP: allowHTTP,
+		clientHelloId:          clientHelloId,
+		settings:               settings,
+		settingsOrder:          settingsOrder,
+		pseudoHeaderOrder:      pseudoHeaderOrder,
+		connectionFlow:         connectionFlow,
+		priorities:             priorities,
+		headerPriority:         headerPriority,
+		streamID:               streamID,
+		allowHTTP:              allowHTTP,
+		http3Settings:          http3Settings,
+		http3SettingsOrder:     http3SettingsOrder,
+		http3PriorityParam:     http3PriorityParam,
+		http3PseudoHeaderOrder: http3PseudoHeaderOrder,
+		http3SendGreaseFrames:  http3SendGreaseFrames,
 	}
 }
 
@@ -153,4 +161,24 @@ func (c ClientProfile) GetStreamID() uint32 {
 
 func (c ClientProfile) GetAllowHTTP() bool {
 	return c.allowHTTP
+}
+
+func (c ClientProfile) GetHttp3Settings() map[uint64]uint64 {
+	return c.http3Settings
+}
+
+func (c ClientProfile) GetHttp3SettingsOrder() []uint64 {
+	return c.http3SettingsOrder
+}
+
+func (c ClientProfile) GetHttp3PriorityParam() uint32 {
+	return c.http3PriorityParam
+}
+
+func (c ClientProfile) GetHttp3PseudoHeaderOrder() []string {
+	return c.http3PseudoHeaderOrder
+}
+
+func (c ClientProfile) GetHttp3SendGreaseFrames() bool {
+	return c.http3SendGreaseFrames
 }

@@ -144,6 +144,30 @@ var Firefox_147 = ClientProfile{
 		Exclusive: false,
 		Weight:    41,
 	},
+	http3Settings: map[uint64]uint64{
+		1:         65536, // QPACK_MAX_TABLE_CAPACITY
+		7:         20,    // QPACK_BLOCKED_STREAMS
+		727725890: 0,     // Reserved/GREASE setting
+		16765559:  1,     // Reserved/GREASE setting
+		0x33:      1,     // H3_DATAGRAM (51)
+		8:         1,     // Unknown setting (possibly ENABLE_CONNECT_PROTOCOL)
+	},
+	http3SettingsOrder: []uint64{
+		1,         // QPACK_MAX_TABLE_CAPACITY
+		7,         // QPACK_BLOCKED_STREAMS
+		727725890, // Reserved/GREASE setting
+		16765559,  // Reserved/GREASE setting
+		0x33,      // H3_DATAGRAM
+		8,         // Unknown setting
+	},
+	http3PseudoHeaderOrder: []string{
+		":method",
+		":scheme",
+		":authority",
+		":path",
+	},
+	http3PriorityParam:    0,
+	http3SendGreaseFrames: true,
 }
 
 var Firefox_147_PSK = ClientProfile{
@@ -279,6 +303,30 @@ var Firefox_147_PSK = ClientProfile{
 		Exclusive: false,
 		Weight:    41,
 	},
+	http3Settings: map[uint64]uint64{
+		1:         65536, // QPACK_MAX_TABLE_CAPACITY
+		7:         20,    // QPACK_BLOCKED_STREAMS
+		727725890: 0,     // Reserved/GREASE setting
+		16765559:  1,     // Reserved/GREASE setting
+		0x33:      1,     // H3_DATAGRAM (51)
+		8:         1,     // Unknown setting (possibly ENABLE_CONNECT_PROTOCOL)
+	},
+	http3SettingsOrder: []uint64{
+		1,         // QPACK_MAX_TABLE_CAPACITY
+		7,         // QPACK_BLOCKED_STREAMS
+		727725890, // Reserved/GREASE setting
+		16765559,  // Reserved/GREASE setting
+		0x33,      // H3_DATAGRAM
+		8,         // Unknown setting
+	},
+	http3PseudoHeaderOrder: []string{
+		":method",
+		":scheme",
+		":authority",
+		":path",
+	},
+	http3PriorityParam:    0,
+	http3SendGreaseFrames: true,
 }
 
 var Firefox_146_PSK = ClientProfile{

@@ -12,8 +12,9 @@ import (
 
 func TestHTTP3(t *testing.T) {
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithClientProfile(profiles.Chrome_144),
 		tls_client.WithTimeoutSeconds(30),
+		tls_client.WithProtocolRacing(),
 		tls_client.WithDebug(),
 	}
 
@@ -46,7 +47,7 @@ func TestHTTP3(t *testing.T) {
 
 func TestDisableHTTP3(t *testing.T) {
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithClientProfile(profiles.Chrome_144),
 		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithDisableHttp3(),
 		tls_client.WithDebug(),
