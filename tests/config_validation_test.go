@@ -140,26 +140,6 @@ func TestConfigValidation_ValidConfigs(t *testing.T) {
 	}
 }
 
-func TestConfigValidation_ServerNameOverwriteWithoutInsecure(t *testing.T) {
-	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Chrome_133),
-		tls_client.WithServerNameOverwrite("example.com"),
-		// Missing WithInsecureSkipVerify()
-	}
-
-	_, err := tls_client.NewHttpClient(nil, options...)
-	if err == nil {
-		t.Fatal("Expected error when using server name overwrite without insecure skip verify, but got nil")
-	}
-
-	expectedMsg := "server name overwrite requires insecure skip verify"
-	if !strings.Contains(err.Error(), expectedMsg) {
-		t.Fatalf("Expected error message to contain '%s', got: %v", expectedMsg, err)
-	}
-
-	t.Logf("✓ Correctly rejected config with error: %v", err)
-}
-
 func TestConfigValidation_CertificatePinningWithInsecureSkipVerify(t *testing.T) {
 	pins := map[string][]string{
 		"example.com": {"pin1", "pin2"},

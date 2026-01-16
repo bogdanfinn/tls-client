@@ -131,10 +131,6 @@ func validateConfig(config *httpClientConfig) error {
 		return fmt.Errorf("invalid config: cannot disable both IPv4 and IPv6")
 	}
 
-	if config.serverNameOverwrite != "" && !config.insecureSkipVerify {
-		return fmt.Errorf("invalid config: server name overwrite requires insecure skip verify to be enabled")
-	}
-
 	if len(config.certificatePins) > 0 && config.insecureSkipVerify {
 		return fmt.Errorf("invalid config: certificate pinning cannot be used with insecure skip verify")
 	}
