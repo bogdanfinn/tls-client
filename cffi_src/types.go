@@ -74,6 +74,8 @@ type RequestInput struct {
 	CatchPanics                 bool                `json:"catchPanics"`
 	FollowRedirects             bool                `json:"followRedirects"`
 	ForceHttp1                  bool                `json:"forceHttp1"`
+	DisableHttp3                bool                `json:"disableHttp3"`
+	WithProtocolRacing          bool                `json:"withProtocolRacing"`
 	InsecureSkipVerify          bool                `json:"insecureSkipVerify"`
 	IsByteRequest               bool                `json:"isByteRequest"`
 	IsByteResponse              bool                `json:"isByteResponse"`
@@ -81,9 +83,10 @@ type RequestInput struct {
 	DisableIPV6                 bool                `json:"disableIPV6"`
 	DisableIPV4                 bool                `json:"disableIPV4"`
 	WithDebug                   bool                `json:"withDebug"`
-	WithDefaultCookieJar        bool                `json:"withDefaultCookieJar"`
+	WithCustomCookieJar         bool                `json:"withCustomCookieJar"`
 	WithoutCookieJar            bool                `json:"withoutCookieJar"`
 	WithRandomTLSExtensionOrder bool                `json:"withRandomTLSExtensionOrder"`
+	EuckrResponse               bool                `json:"euckrResponse"`
 }
 
 // CustomTlsClient contains custom TLS specifications to construct a client from.
@@ -105,6 +108,8 @@ type CustomTlsClient struct {
 	SupportedVersions                       []string              `json:"supportedVersions"`
 	ConnectionFlow                          uint32                `json:"connectionFlow"`
 	RecordSizeLimit                         uint16                `json:"recordSizeLimit"`
+	StreamId                                uint32                `json:"streamId"`
+	AllowHttp                               bool                  `json:"allowHttp"`
 }
 
 type CandidateCipherSuites []CandidateCipherSuite

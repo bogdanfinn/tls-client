@@ -82,6 +82,12 @@ const (
 
 var clientFingerprints = map[string]map[string]map[string]string{
 	chrome: {
+		profiles.Chrome_144.GetClientHelloStr(): map[string]string{
+			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,51-0-17613-65281-10-27-35-5-23-43-13-18-11-65037-16-45,4588-29-23-24,0",
+			ja3Hash:               "f984bd5bc7358922cde86ed4471a2e89",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+		},
 		profiles.Chrome_133.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,35-13-17613-51-18-11-43-5-16-0-65037-27-10-45-23-65281,4588-29-23-24,0",
 			ja3Hash:               "74e530e488a43fddd78be75918be78c7",
@@ -227,6 +233,12 @@ var clientFingerprints = map[string]map[string]map[string]string{
 			ja3Hash:               "a767f8ae9115cc5752e5cff59612e74f",
 			akamaiFingerprint:     "1:65536;2:0;4:131072;5:16384;9:1|12517377|0|m,p,a,s",
 			akamaiFingerprintHash: "a80d4d15d0c3bdd7b34b39d61cdaf0f7",
+		},
+		profiles.Firefox_147.GetClientHelloStr(): map[string]string{
+			ja3String:             "771,4865-4867-4866-49195-49199-52393-52392-49196-49200-49162-49161-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-34-18-51-43-13-45-28-27-65037,4588-29-23-24-25-256-257,0",
+			ja3Hash:               "6f7889b9fb1a62a9577e685c1fcfa919",
+			akamaiFingerprint:     "1:65536;2:0;4:131072;5:16384|12517377|0|m,p,a,s",
+			akamaiFingerprintHash: "6ea73faa8fc5aac76bded7bd238f6433",
 		},
 	},
 	opera: {

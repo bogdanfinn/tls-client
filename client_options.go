@@ -63,6 +63,8 @@ type httpClientConfig struct {
 	insecureSkipVerify          bool
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
+	disableHttp3                bool
+	enableProtocolRacing        bool
 
 	// Establish a connection to origin server via ipv4 only
 	disableIPV6 bool
@@ -70,9 +72,10 @@ type httpClientConfig struct {
 	disableIPV4 bool
 
 	enabledBandwidthTracker bool
+	euckrResponse           bool
 }
 
-// WithProxyUrl configures a HTTP client to use the specified proxy URL.
+// WithProxyUrl configures an HTTP client to use the specified proxy URL.
 //
 // proxyUrl should be formatted as:
 //
@@ -231,6 +234,24 @@ func WithForceHttp1() HttpClientOption {
 	}
 }
 
+// WithDisableHttp3 configures a client to disable HTTP 3 as the used protocol. Will most likely fall back to HTTP 2
+func WithDisableHttp3() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.disableHttp3 = true
+	}
+}
+
+// WithProtocolRacing configures a client to race HTTP/3 (QUIC) and HTTP/2 (TCP) connections in parallel.
+// Similar to Chrome's "Happy Eyeballs" approach, this starts both connection types simultaneously
+// and uses whichever connects first.
+// The client will remember which protocol worked for each host and use it directly on subsequent requests.
+// This option is ignored if WithForceHttp1 or WithDisableHttp3 is set.
+func WithProtocolRacing() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.enableProtocolRacing = true
+	}
+}
+
 // WithClientProfile configures a TLS client to use the specified client profile.
 func WithClientProfile(clientProfile profiles.ClientProfile) HttpClientOption {
 	return func(config *httpClientConfig) {
@@ -278,5 +299,11 @@ func WithBandwidthTracker() HttpClientOption {
 func WithConnectHeaders(headers http.Header) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.connectHeaders = headers
+	}
+}
+
+func WithEnableEuckrResponse() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.euckrResponse = true
 	}
 }

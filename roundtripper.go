@@ -11,6 +11,7 @@ import (
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/http2"
+	"github.com/bogdanfinn/quic-go-utls/http3"
 	"github.com/bogdanfinn/tls-client/bandwidth"
 	"github.com/bogdanfinn/tls-client/profiles"
 	tls "github.com/bogdanfinn/utls"
@@ -22,6 +23,8 @@ const defaultIdleConnectionTimeout = 90 * time.Second
 var errProtocolNegotiated = errors.New("protocol negotiated")
 
 type roundTripper struct {
+	initialStreamID     uint32
+	allowHTTP           bool
 	clientHelloId     tls.ClientHelloID
 	certificatePinner CertificatePinner
 
@@ -47,7 +50,11 @@ type roundTripper struct {
 	cachedTransportsLck sync.Mutex
 	connectionFlow      uint32
 
-	forceHttp1 bool
+	forceHttp1   bool
+	disableHttp3 bool
+
+	// racer handles HTTP/3 racing (nil if racing is disabled)
+	racer *protocolRacer
 
 	insecureSkipVerify          bool
 	withRandomTlsExtensionOrder bool
@@ -73,8 +80,12 @@ func (rt *roundTripper) CloseIdleConnections() {
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	addr := rt.getDialTLSAddr(req)
 
-	rt.cachedTransportsLck.Lock()
+	if rt.racer != nil && !rt.forceHttp1 && !rt.disableHttp3 && strings.ToLower(req.URL.Scheme) == "https" {
+		// TODO: think of how to overall design the transport building better, in order to have that not spread across multiple places and duplicated
+		return rt.racer.race(req, addr, rt.getTransport)
+	}
 
+	rt.cachedTransportsLck.Lock()
 	if _, ok := rt.cachedTransports[addr]; !ok {
 		if err := rt.getTransport(req, addr); err != nil {
 			rt.cachedTransportsLck.Unlock()
@@ -158,7 +169,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 
 	rawConn = rt.bandwidthTracker.TrackConnection(ctx, rawConn)
 
-	conn := tls.UClient(rawConn, tlsConfig, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1)
+	conn := tls.UClient(rawConn, tlsConfig, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1, rt.disableHttp3)
 	if err = conn.HandshakeContext(ctx); err != nil {
 		_ = conn.Close()
 
@@ -201,6 +212,8 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 			ConnectionFlow:  rt.connectionFlow,
 			HeaderPriority:  rt.headerPriority,
 			IdleConnTimeout: idleConnectionTimeout,
+			InitialStreamID: rt.initialStreamID,
+			AllowHTTP:       rt.allowHTTP,
 		}
 
 		if rt.transportOptions != nil {
@@ -255,6 +268,36 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 
 		t2.PushHandler = &http2.DefaultPushHandler{}
 		rt.cachedTransports[addr] = &t2
+	case http3.NextProtoH3:
+		utlsConfig := &tls.Config{
+			ClientSessionCache: rt.clientSessionCache,
+			InsecureSkipVerify: rt.insecureSkipVerify,
+			OmitEmptyPsk:       true,
+		}
+		if rt.transportOptions != nil {
+			utlsConfig.RootCAs = rt.transportOptions.RootCAs
+		}
+
+		if rt.serverNameOverwrite != "" {
+			utlsConfig.ServerName = rt.serverNameOverwrite
+		}
+
+		t3 := http3.Transport{
+			TLSClientConfig: utlsConfig,
+		}
+
+		if rt.transportOptions != nil {
+			t3.DisableCompression = rt.transportOptions.DisableCompression
+
+			maxResponseHeaderBytes, convErr := Int64ToInt(rt.transportOptions.MaxResponseHeaderBytes)
+			if convErr != nil {
+				return nil, fmt.Errorf("error converting MaxResponseHeaderBytes to int: %w", convErr)
+			}
+
+			t3.MaxResponseHeaderBytes = maxResponseHeaderBytes
+		}
+
+		rt.cachedTransports[addr] = &t3
 	default:
 		rt.cachedTransports[addr] = rt.buildHttp1Transport()
 	}
@@ -318,7 +361,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(req.URL.Host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, disableHttp3 bool, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -346,6 +389,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		pseudoHeaderOrder:           clientProfile.GetPseudoHeaderOrder(),
 		insecureSkipVerify:          insecureSkipVerify,
 		forceHttp1:                  forceHttp1,
+		disableHttp3:                disableHttp3,
 		withRandomTlsExtensionOrder: withRandomTlsExtensionOrder,
 		connectionFlow:              clientProfile.GetConnectionFlow(),
 		clientHelloId:               clientProfile.GetClientHelloId(),
@@ -354,6 +398,24 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		disableIPV6:                 disableIPV6,
 		disableIPV4:                 disableIPV4,
 		bandwidthTracker:            bandwidthTracker,
+		initialStreamID:    clientProfile.GetStreamID(),
+        allowHTTP:          clientProfile.GetAllowHTTP(),
+	}
+
+	// Create protocol racer if HTTP/3 racing is enabled
+	if enableH3Racing {
+		rt.racer = newProtocolRacer(
+			clientSessionCache,
+			insecureSkipVerify,
+			serverNameOverwrite,
+			transportOptions,
+			clientProfile.GetSettings(),
+			rt.cachedTransports,
+			&rt.cachedTransportsLck,
+			pinner,
+			badPinHandlerFunc,
+			bandwidthTracker,
+		)
 	}
 
 	if len(dialer) > 0 {
@@ -366,10 +428,9 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 }
 
 func supportsSessionResumption(id tls.ClientHelloID) bool {
-	spec, err := tls.UTLSIdToSpec(id)
+	spec, err := id.ToSpec()
 	if err != nil {
-		spec, err = id.ToSpec()
-
+		spec, err = tls.UTLSIdToSpec(id)
 		if err != nil {
 			return false
 		}

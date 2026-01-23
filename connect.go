@@ -7,15 +7,15 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	_ "github.com/bdandy/go-socks4" // due to that proxy.FromURL() does support socks4
+	http "github.com/bogdanfinn/fhttp"
+	"golang.org/x/net/proxy"
 	"io"
 	"net"
 	"net/url"
 	"os"
 	"sync"
 	"time"
-
-	http "github.com/bogdanfinn/fhttp"
-	"golang.org/x/net/proxy"
 
 	"github.com/bogdanfinn/fhttp/http2"
 )
@@ -121,6 +121,8 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 		if proxyUrl.Port() == "" {
 			proxyUrl.Host = net.JoinHostPort(proxyUrl.Host, "443")
 		}
+	case "socks4", "socks4a":
+		return handleSocks4ProxyDialer(proxyUrl, _dialer)
 	case "socks5", "socks5h":
 		return handleSocks5ProxyDialer(proxyUrl, _dialer)
 	case "":
@@ -169,6 +171,16 @@ func handleSocks5ProxyDialer(proxyUrl *url.URL, dialer net.Dialer) (proxy.Contex
 
 	scd := newSocksContextDialer(socksDialer)
 
+	return &scd, nil
+}
+
+func handleSocks4ProxyDialer(proxyUrl *url.URL, dialer net.Dialer) (proxy.ContextDialer, error) {
+	socks4Dialer, err := proxy.FromURL(proxyUrl, &dialer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create socks4 proxy dialer: %w", err)
+	}
+
+	scd := newSocksContextDialer(socks4Dialer)
 	return &scd, nil
 }
 
