@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/url"
 	"strings"
 	"sync"
@@ -23,6 +24,11 @@ var defaultRedirectFunc = func(req *http.Request, via []*http.Request) error {
 	return http.ErrUseLastResponse
 }
 
+// TLSDialerFunc is a function that dials a TLS connection to the given address.
+// It's used for WebSocket connections to ensure they use the same TLS fingerprinting
+// as regular HTTP requests.
+type TLSDialerFunc func(ctx context.Context, network, addr string) (net.Conn, error)
+
 type HttpClient interface {
 	GetCookies(u *url.URL) []*http.Cookie
 	SetCookies(u *url.URL, cookies []*http.Cookie)
@@ -40,6 +46,7 @@ type HttpClient interface {
 
 	GetBandwidthTracker() bandwidth.BandwidthTracker
 	GetDialer() proxy.ContextDialer
+	GetTLSDialer() TLSDialerFunc
 }
 
 // Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
@@ -210,6 +217,25 @@ func (c *httpClient) CloseIdleConnections() {
 // GetDialer() returns the underlying Dialer
 func (c *httpClient) GetDialer() proxy.ContextDialer {
 	return c.dialer
+}
+
+// GetTLSDialer returns a TLS dialer function that uses the same TLS fingerprinting
+// as regular HTTP requests. This is essential for WebSocket connections to maintain
+// consistent fingerprinting.
+func (c *httpClient) GetTLSDialer() TLSDialerFunc {
+	// Get the roundTripper from the client's transport
+	rt, ok := c.Transport.(*roundTripper)
+	if !ok {
+		// Fallback to a simple TLS dialer if the transport is not a roundTripper
+		return func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return c.dialer.DialContext(ctx, network, addr)
+		}
+	}
+
+	// Return a function that uses the roundTripper's dialTLSForWebsocket method
+	return func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return rt.dialTLSForWebsocket(ctx, network, addr)
+	}
 }
 
 // SetFollowRedirect configures the client's HTTP redirect following policy.
