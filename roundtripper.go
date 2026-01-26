@@ -475,12 +475,12 @@ func (rt *roundTripper) dialTLSHTTP2(network, addr string, _ *tls.Config) (net.C
 }
 
 func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
-	host, port, err := net.SplitHostPort(req.URL.Host)
-	if err == nil {
-		return net.JoinHostPort(host, port)
-	}
-
-	return net.JoinHostPort(req.URL.Host, "443")
+	host := req.URL.Hostname()
+    port := req.URL.Port()
+    if port != "" {
+        return net.JoinHostPort(host, port)
+    }
+    return net.JoinHostPort(host, "443")
 }
 
 func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, disableHttp3 bool, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
