@@ -6,8 +6,8 @@ github.com/bdandy/go-socks4 v1.2.3 h1:Q6Y2heY1GRjCtHbmlKfnwrKVU/k81LS8mRGLRlmDli
 github.com/bdandy/go-socks4 v1.2.3/go.mod h1:98kiVFgpdogR8aIGLWLvjDVZ8XcKPsSI/ypGrO+bqHI=
 github.com/bogdanfinn/fhttp v0.6.7 h1:yTDywa9INbRqePBE5gHhpxlMjvAQ0bdX77pvOTPJoPI=
 github.com/bogdanfinn/fhttp v0.6.7/go.mod h1:A+EKDzMx2hb4IUbMx4TlkoHnaJEiLl8r/1Ss1Y+5e5M=
-github.com/bogdanfinn/quic-go-utls v1.0.7-utls h1:opxU/wt2C6FcD3rkGSOwfpQgfGSFx9eAKYQrFwYBzuo=
-github.com/bogdanfinn/quic-go-utls v1.0.7-utls/go.mod h1:bk8QMY2KypO8A6LzHJ7C4+bdB0ksLOd6NZt600wXYe8=
+github.com/bogdanfinn/quic-go-utls v1.0.8-utls h1:IejU2fffVdZZcs23SfGH1b2wzm2G4iNIsYdCBKAbNbI=
+github.com/bogdanfinn/quic-go-utls v1.0.8-utls/go.mod h1:iTKq9gZgFv5YBGmdjuo8Gy0fMzDoqEixu6T5V8fVxZg=
 github.com/bogdanfinn/utls v1.7.7-barnius h1:OuJ497cc7F3yKNVHRsYPQdGggmk5x6+V5ZlrCR7fOLU=
 github.com/bogdanfinn/utls v1.7.7-barnius/go.mod h1:aAK1VZQlpKZClF1WEQeq6kyclbkPq4hz6xTbB5xSlmg=
 github.com/bogdanfinn/websocket v1.5.4-barnius h1:qn3DU/KMHMNPNnwDCtA/IN3QqmzV98DVsvQkQkxruKw=

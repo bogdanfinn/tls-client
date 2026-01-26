@@ -12,7 +12,7 @@ import (
 
 func TestHTTP3WithChromeOnCloudflare(t *testing.T) {
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithClientProfile(profiles.Chrome_144),
 		tls_client.WithProtocolRacing(),
 	}
 
@@ -45,7 +45,7 @@ func TestHTTP3WithChromeOnCloudflare(t *testing.T) {
 
 func TestHTTP2WithChromeOnCloudflare(t *testing.T) {
 	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithClientProfile(profiles.Chrome_144),
 		// tls_client.WithProtocolRacing(), // we explicitly disable racing and stick to the "old" behavior
 	}
 

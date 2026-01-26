@@ -18,6 +18,13 @@ var H2SettingsMap = map[string]http2.SettingID{
 	"UNKNOWN_SETTING_9":      0x9,
 }
 
+var H3SettingsMap = map[string]uint64{
+	"QPACK_MAX_TABLE_CAPACITY": 0x1,
+	"MAX_FIELD_SECTION_SIZE":   0x6,
+	"QPACK_BLOCKED_STREAMS":    0x7,
+	"H3_DATAGRAM":              0x33,
+}
+
 var tlsVersions = map[string]uint16{
 	"GREASE": tls.GREASE_PLACEHOLDER,
 	"1.3":    tls.VersionTLS13,

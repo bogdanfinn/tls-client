@@ -9,7 +9,6 @@ import (
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/http2"
-	"github.com/bogdanfinn/quic-go-utls/http3"
 	"github.com/bogdanfinn/tls-client/bandwidth"
 	tls "github.com/bogdanfinn/utls"
 )
@@ -28,6 +27,13 @@ type protocolRacer struct {
 	certificatePinner   CertificatePinner
 	badPinHandlerFunc   BadPinHandlerFunc
 	bandwidthTracker    bandwidth.BandwidthTracker
+
+	// HTTP/3 specific settings
+	http3Settings          map[uint64]uint64
+	http3SettingsOrder     []uint64
+	http3PriorityParam     uint32
+	http3PseudoHeaderOrder []string
+	http3SendGreaseFrames  bool
 }
 
 func newProtocolRacer(
@@ -41,19 +47,29 @@ func newProtocolRacer(
 	certificatePinner CertificatePinner,
 	badPinHandlerFunc BadPinHandlerFunc,
 	bandwidthTracker bandwidth.BandwidthTracker,
+	http3Settings map[uint64]uint64,
+	http3SettingsOrder []uint64,
+	http3PriorityParam uint32,
+	http3PseudoHeaderOrder []string,
+	http3SendGreaseFrames bool,
 ) *protocolRacer {
 	return &protocolRacer{
-		protocolCache:       make(map[string]string),
-		clientSessionCache:  clientSessionCache,
-		insecureSkipVerify:  insecureSkipVerify,
-		serverNameOverwrite: serverNameOverwrite,
-		transportOptions:    transportOptions,
-		settings:            settings,
-		cachedTransports:    cachedTransports,
-		cachedTransportsLck: cachedTransportsLck,
-		certificatePinner:   certificatePinner,
-		badPinHandlerFunc:   badPinHandlerFunc,
-		bandwidthTracker:    bandwidthTracker,
+		protocolCache:          make(map[string]string),
+		clientSessionCache:     clientSessionCache,
+		insecureSkipVerify:     insecureSkipVerify,
+		serverNameOverwrite:    serverNameOverwrite,
+		transportOptions:       transportOptions,
+		settings:               settings,
+		cachedTransports:       cachedTransports,
+		cachedTransportsLck:    cachedTransportsLck,
+		certificatePinner:      certificatePinner,
+		badPinHandlerFunc:      badPinHandlerFunc,
+		bandwidthTracker:       bandwidthTracker,
+		http3Settings:          http3Settings,
+		http3SettingsOrder:     http3SettingsOrder,
+		http3PriorityParam:     http3PriorityParam,
+		http3PseudoHeaderOrder: http3PseudoHeaderOrder,
+		http3SendGreaseFrames:  http3SendGreaseFrames,
 	}
 }
 
@@ -114,7 +130,7 @@ func (pr *protocolRacer) getOrCreateTransport(protocol, addr string, req *http.R
 
 func (pr *protocolRacer) createTransportForProtocol(protocol, addr string, req *http.Request, getTransportFunc func(*http.Request, string) error) (http.RoundTripper, error) {
 	if protocol == "h3" {
-		return pr.buildHTTP3Transport()
+		return buildHTTP3Transport(pr.getHTTP3Config())
 	}
 
 	// For HTTP/2, use the standard transport creation
@@ -138,7 +154,7 @@ func (pr *protocolRacer) startRace(req *http.Request, addr string, getTransportF
 }
 
 func (pr *protocolRacer) attemptHTTP3(req *http.Request, resultCh chan<- racingResult) {
-	h3Transport, err := pr.buildHTTP3Transport()
+	h3Transport, err := buildHTTP3Transport(pr.getHTTP3Config())
 	if err != nil {
 		resultCh <- racingResult{protocol: "h3", err: fmt.Errorf("failed to build HTTP/3 transport: %w", err)}
 		return
@@ -219,7 +235,7 @@ func (pr *protocolRacer) cacheWinningProtocol(addr, protocol string) {
 
 	if protocol == "h3" {
 		pr.cachedTransportsLck.Lock()
-		h3Transport, _ := pr.buildHTTP3Transport()
+		h3Transport, _ := buildHTTP3Transport(pr.getHTTP3Config())
 		pr.cachedTransports[addr+":h3"] = h3Transport
 		pr.cachedTransportsLck.Unlock()
 	}
@@ -232,47 +248,22 @@ func (pr *protocolRacer) handleCachedProtocolError(err error, addr string, req *
 	pr.clearProtocolCache(addr)
 }
 
+func (pr *protocolRacer) getHTTP3Config() *http3Config {
+	return &http3Config{
+		clientSessionCache:     pr.clientSessionCache,
+		insecureSkipVerify:     pr.insecureSkipVerify,
+		serverNameOverwrite:    pr.serverNameOverwrite,
+		transportOptions:       pr.transportOptions,
+		http3Settings:          pr.http3Settings,
+		http3SettingsOrder:     pr.http3SettingsOrder,
+		http3PriorityParam:     pr.http3PriorityParam,
+		http3PseudoHeaderOrder: pr.http3PseudoHeaderOrder,
+		http3SendGreaseFrames:  pr.http3SendGreaseFrames,
+	}
+}
+
 type racingResult struct {
 	protocol string
 	response *http.Response
 	err      error
-}
-
-func (pr *protocolRacer) buildHTTP3Transport() (http.RoundTripper, error) {
-	utlsConfig := &tls.Config{
-		ClientSessionCache: pr.clientSessionCache,
-		InsecureSkipVerify: pr.insecureSkipVerify,
-		OmitEmptyPsk:       true,
-	}
-	if pr.transportOptions != nil {
-		utlsConfig.RootCAs = pr.transportOptions.RootCAs
-	}
-
-	if pr.serverNameOverwrite != "" {
-		utlsConfig.ServerName = pr.serverNameOverwrite
-	}
-
-	t3 := &http3.Transport{
-		TLSClientConfig: utlsConfig,
-	}
-
-	// Note: Do NOT set AdditionalSettings unless absolutely necessary.
-	// HTTP/3 uses different setting IDs than HTTP/2:
-	// - HTTP/3: 0x6 (MAX_FIELD_SECTION_SIZE), 0x8 (EXTENDED_CONNECT), 0x33 (DATAGRAM)
-	// - HTTP/2: 0x1 (HEADER_TABLE_SIZE), 0x3 (MAX_CONCURRENT_STREAMS), etc.
-	// Sending HTTP/2 settings to HTTP/3 will cause H3_SETTINGS_ERROR.
-	// The quic-go-utls library has good defaults - use them.
-
-	if pr.transportOptions != nil {
-		t3.DisableCompression = pr.transportOptions.DisableCompression
-
-		maxResponseHeaderBytes, convErr := Int64ToInt(pr.transportOptions.MaxResponseHeaderBytes)
-		if convErr != nil {
-			return nil, fmt.Errorf("error converting MaxResponseHeaderBytes to int: %w", convErr)
-		}
-
-		t3.MaxResponseHeaderBytes = maxResponseHeaderBytes
-	}
-
-	return t3, nil
 }

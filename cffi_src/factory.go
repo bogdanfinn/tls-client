@@ -290,12 +290,12 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 	clientProfile := profiles.DefaultClientProfile
 
 	if requestInput.CustomTlsClient != nil {
-		clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, streamId, allowHttp, err := getCustomTlsClientProfile(requestInput.CustomTlsClient)
+		clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, streamId, allowHttp, h3Settings, h3SettingsOrder, h3PriorityParam, h3PseudoHeaderOrder, http3SendGreaseFrames, err := getCustomTlsClientProfile(requestInput.CustomTlsClient)
 		if err != nil {
 			return nil, fmt.Errorf("can not build http client out of custom tls client information: %w", err)
 		}
 
-		clientProfile = profiles.NewClientProfile(clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, streamId, allowHttp)
+		clientProfile = profiles.NewClientProfile(clientHelloId, h2Settings, h2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, streamId, allowHttp, h3Settings, h3SettingsOrder, h3PriorityParam, h3PseudoHeaderOrder, http3SendGreaseFrames)
 	}
 
 	if tlsClientIdentifier != "" {
@@ -433,10 +433,10 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 	return tlsClient, err
 }
 
-func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.ClientHelloID, map[http2.SettingID]uint32, []http2.SettingID, []string, uint32, []http2.Priority, *http2.PriorityParam, uint32, bool, error) {
+func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.ClientHelloID, map[http2.SettingID]uint32, []http2.SettingID, []string, uint32, []http2.Priority, *http2.PriorityParam, uint32, bool, map[uint64]uint64, []uint64, uint32, []string, bool, error) {
 	specFactory, err := tls_client.GetSpecFactoryFromJa3String(customClientDefinition.Ja3String, customClientDefinition.SupportedSignatureAlgorithms, customClientDefinition.SupportedDelegatedCredentialsAlgorithms, customClientDefinition.SupportedVersions, customClientDefinition.KeyShareCurves, customClientDefinition.ALPNProtocols, customClientDefinition.ALPSProtocols, customClientDefinition.ECHCandidateCipherSuites.Translate(), customClientDefinition.ECHCandidatePayloads, customClientDefinition.CertCompressionAlgos, customClientDefinition.RecordSizeLimit)
 	if err != nil {
-		return tls.ClientHelloID{}, nil, nil, nil, 0, nil, nil, 0, false, err
+		return tls.ClientHelloID{}, nil, nil, nil, 0, nil, nil, 0, false, nil, nil, 0, nil, false, err
 	}
 
 	resolvedH2Settings := make(map[http2.SettingID]uint32)
@@ -491,7 +491,32 @@ func getCustomTlsClientProfile(customClientDefinition *CustomTlsClient) (tls.Cli
 		SpecFactory: specFactory,
 	}
 
-	return clientHelloId, resolvedH2Settings, resolvedH2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, customClientDefinition.StreamId, customClientDefinition.AllowHttp, nil
+	// Process HTTP/3 settings
+	resolvedH3Settings := make(map[uint64]uint64)
+	for key, value := range customClientDefinition.H3Settings {
+		resolvedKey, ok := tls_client.H3SettingsMap[key]
+		if !ok {
+			continue
+		}
+
+		resolvedH3Settings[resolvedKey] = value
+	}
+
+	var resolvedH3SettingsOrder []uint64
+	for _, order := range customClientDefinition.H3SettingsOrder {
+		resolvedKey, ok := tls_client.H3SettingsMap[order]
+		if !ok {
+			continue
+		}
+
+		resolvedH3SettingsOrder = append(resolvedH3SettingsOrder, resolvedKey)
+	}
+
+	h3PseudoHeaderOrder := customClientDefinition.H3PseudoHeaderOrder
+	h3PriorityParam := customClientDefinition.H3PriorityParam
+	http3SendGreaseFrames := customClientDefinition.H3SendGreaseFrames
+
+	return clientHelloId, resolvedH2Settings, resolvedH2SettingsOrder, pseudoHeaderOrder, connectionFlow, priorityFrames, headerPriority, customClientDefinition.StreamId, customClientDefinition.AllowHttp, resolvedH3Settings, resolvedH3SettingsOrder, h3PriorityParam, h3PseudoHeaderOrder, http3SendGreaseFrames, nil
 }
 
 func getTlsClientProfile(tlsClientIdentifier string) profiles.ClientProfile {
