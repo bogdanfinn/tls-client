@@ -538,7 +538,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
     return net.JoinHostPort(host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, disableHttp3 bool, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, disableHttp3 bool, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, initialStreamID uint32, allowHTTP bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -575,8 +575,8 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		disableIPV6:                 disableIPV6,
 		disableIPV4:                 disableIPV4,
 		bandwidthTracker:            bandwidthTracker,
-		initialStreamID:             clientProfile.GetStreamID(),
-		allowHTTP:                   clientProfile.GetAllowHTTP(),
+		initialStreamID:             initialStreamID,
+		allowHTTP:                   allowHTTP,
 		http3Settings:               clientProfile.GetHttp3Settings(),
 		http3SettingsOrder:          clientProfile.GetHttp3SettingsOrder(),
 		http3PriorityParam:          clientProfile.GetHttp3PriorityParam(),
@@ -604,6 +604,10 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 			clientProfile.GetHttp3SendGreaseFrames(),
 		)
 	}
+
+	if initialStreamID == 0 {
+        rt.initialStreamID = clientProfile.GetStreamID()
+    }
 
 	if len(dialer) > 0 {
 		rt.dialer = dialer[0]
