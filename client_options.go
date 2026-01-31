@@ -1,6 +1,7 @@
 package tls_client
 
 import (
+	"context"
 	"crypto/x509"
 	"fmt"
 	"io"
@@ -51,6 +52,7 @@ type httpClientConfig struct {
 	localAddr          *net.TCPAddr
 
 	dialer             net.Dialer
+	dialContext func(ctx context.Context, network, addr string) (net.Conn, error)
 	proxyDialerFactory ProxyDialerFactory
 
 	proxyUrl                    string
@@ -70,6 +72,9 @@ type httpClientConfig struct {
 	disableIPV6 bool
 	// Establish a connection to origin server via ipv6 only
 	disableIPV4 bool
+
+	initialStreamID        uint32
+	allowHTTP              bool
 
 	enabledBandwidthTracker bool
 	euckrResponse           bool
@@ -113,9 +118,14 @@ func WithCookieJar(jar http.CookieJar) HttpClientOption {
 	}
 }
 
-// WithTimeoutMilliseconds configures an HTTP client to use the specified request timeout.
+// WithTimeoutMilliseconds configures a hard deadline for the entire request lifecycle.
 //
-// timeout is the request timeout in milliseconds.
+// This includes connection time, redirects, and reading the response body.
+// WARNING: If the timer expires, the connection is forcibly closed, even if you are
+// actively downloading data.
+//
+// - Use 0 to disable the deadline (Unlimited) for large downloads or long-polling.
+// - Default is 30000 milliseconds (30 seconds).
 func WithTimeoutMilliseconds(timeout int) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.timeout = time.Millisecond * time.Duration(timeout)
@@ -136,9 +146,14 @@ func WithProxyDialerFactory(proxyDialerFactory ProxyDialerFactory) HttpClientOpt
 	}
 }
 
-// WithTimeoutSeconds configures an HTTP client to use the specified request timeout.
+// WithTimeoutSeconds configures a hard deadline for the entire request lifecycle.
 //
-// timeout is the request timeout in seconds.
+// This includes connection time, redirects, and reading the response body.
+// WARNING: If the timer expires, the connection is forcibly closed, even if you are
+// actively downloading data.
+//
+// - Use 0 to disable the deadline (Unlimited) for large downloads or long-polling.
+// - Default is 30 seconds.
 func WithTimeoutSeconds(timeout int) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.timeout = time.Second * time.Duration(timeout)
@@ -305,5 +320,34 @@ func WithConnectHeaders(headers http.Header) HttpClientOption {
 func WithEnableEuckrResponse() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.euckrResponse = true
+	}
+}
+
+// WithInitialStreamID configures the starting HTTP/2 stream ID.
+//
+// This is critical for mimicking specific browser fingerprints.
+// For example, Firefox usually starts streams at ID 3, while others might start at 1.
+func WithInitialStreamID(streamID uint32) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.initialStreamID = streamID
+	}
+}
+
+func WithAllowHTTP(allow bool) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.allowHTTP = allow
+	}
+}
+
+// WithDialContext configures a custom dialer function for TCP connection establishment.
+//
+// This allows for advanced use cases such as:
+// - Zero-DNS (resolving IPs externally and dialing directly)
+// - Socket Tagging (for VPN/Routing rules)
+// - Custom Connect Timeouts (separate from the global request deadline)
+// - DPI Bypass techniques (socket manipulation)
+func WithDialContext(dialContext func(ctx context.Context, network, addr string) (net.Conn, error)) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.dialContext = dialContext
 	}
 }

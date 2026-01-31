@@ -185,3 +185,13 @@ func (c ClientProfile) GetHttp3PseudoHeaderOrder() []string {
 func (c ClientProfile) GetHttp3SendGreaseFrames() bool {
 	return c.http3SendGreaseFrames
 }
+
+func (c ClientProfile) WithStreamID(streamID uint32) ClientProfile {
+	c.streamID = streamID
+	return c
+}
+
+func (c ClientProfile) WithAllowHTTP(allowHTTP bool) ClientProfile {
+	c.allowHTTP = allowHTTP
+	return c
+}
