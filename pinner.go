@@ -83,17 +83,19 @@ func (cp *certificatePinner) Pin(conn *tls.UConn, host string) error {
 		return nil
 	}
 
+	var actualPins []string
+
 	for _, peerCert := range conn.ConnectionState().PeerCertificates {
 		peerPin := hpkp.Fingerprint(peerCert)
+		actualPins = append(actualPins, peerPin)
 
 		if pinnedHost.Matches(peerPin) {
 			validPin = true
-			break
 		}
 	}
 
 	if !validPin {
-		return ErrBadPinDetected
+		return fmt.Errorf("%w, found pins: %v", ErrBadPinDetected, actualPins)
 	}
 
 	return nil
