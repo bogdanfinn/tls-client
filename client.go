@@ -211,15 +211,6 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, pro
 
 	clientProfile := config.clientProfile
 
-	if config.initialStreamID > 0 {
-		clientProfile = clientProfile.WithStreamID(config.initialStreamID)
-	}
-
-	if config.allowHTTP {
-		clientProfile = clientProfile.WithAllowHTTP(true)
-	}
-
-
 	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.disableHttp3, config.enableProtocolRacing, config.certificatePins, config.badPinHandler, config.disableIPV6, config.disableIPV4, bandwidthTracker, dialer)
 	if err != nil {
 		return nil, nil, nil, clientProfile, err
