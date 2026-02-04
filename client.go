@@ -47,6 +47,9 @@ type HttpClient interface {
 	GetBandwidthTracker() bandwidth.BandwidthTracker
 	GetDialer() proxy.ContextDialer
 	GetTLSDialer() TLSDialerFunc
+
+	OnPreRequest(hook PreRequestHookFunc)
+	OnPostResponse(hook PostResponseHookFunc)
 }
 
 // Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
@@ -59,6 +62,10 @@ type httpClient struct {
 	config           *httpClientConfig
 	headerLck        sync.Mutex
 	dialer           proxy.ContextDialer
+
+	hookLck   sync.RWMutex
+	preHooks  []PreRequestHookFunc
+	postHooks []PostResponseHookFunc
 }
 
 var DefaultTimeoutSeconds = 30
@@ -122,6 +129,9 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		headerLck:        sync.Mutex{},
 		bandwidthTracker: bandwidthTracker,
 		dialer:           dialer,
+		hookLck:          sync.RWMutex{},
+		preHooks:         append([]PreRequestHookFunc{}, config.preHooks...),
+		postHooks:        append([]PostResponseHookFunc{}, config.postHooks...),
 	}, nil
 }
 
@@ -366,6 +376,71 @@ func (c *httpClient) GetBandwidthTracker() bandwidth.BandwidthTracker {
 	return c.bandwidthTracker
 }
 
+// OnPreRequest adds a pre-request hook that is called before each request is sent.
+// Multiple hooks can be added and they will be executed in the order they were added.
+// If any hook returns an error, the request is aborted and subsequent hooks are not called.
+// This method is thread-safe.
+func (c *httpClient) OnPreRequest(hook PreRequestHookFunc) {
+	c.hookLck.Lock()
+	defer c.hookLck.Unlock()
+	c.preHooks = append(c.preHooks, hook)
+}
+
+// OnPostResponse adds a post-response hook that is called after each request completes.
+// Multiple hooks can be added and they will be executed in the order they were added.
+// All hooks are always executed, even if the request failed or a previous hook panicked.
+// This method is thread-safe.
+func (c *httpClient) OnPostResponse(hook PostResponseHookFunc) {
+	c.hookLck.Lock()
+	defer c.hookLck.Unlock()
+	c.postHooks = append(c.postHooks, hook)
+}
+
+// executePreHooks runs all registered pre-request hooks in order.
+// Returns an error if any hook returns an error, aborting subsequent hooks.
+func (c *httpClient) executePreHooks(req *http.Request) error {
+	c.hookLck.RLock()
+	hooks := c.preHooks
+	c.hookLck.RUnlock()
+
+	for _, hook := range hooks {
+		if err := hook(req); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// executePostHooks runs all registered post-response hooks in order.
+// All hooks are always executed; panics in individual hooks are recovered
+// to prevent one hook from breaking others.
+func (c *httpClient) executePostHooks(originalReq *http.Request, resp *http.Response, requestErr error) {
+	c.hookLck.RLock()
+	hooks := c.postHooks
+	c.hookLck.RUnlock()
+
+	if len(hooks) == 0 {
+		return
+	}
+
+	ctx := &PostResponseContext{
+		Request:  originalReq,
+		Response: resp,
+		Error:    requestErr,
+	}
+
+	for _, hook := range hooks {
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					c.logger.Error("panic in post-response hook: %v", r)
+				}
+			}()
+			hook(ctx)
+		}()
+	}
+}
+
 // Do issues a given HTTP request and returns the corresponding response.
 //
 // If the returned error is nil, the response contains a non-nil body, which the user is expected to close.
@@ -384,6 +459,12 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		}()
 	}
 
+	// Execute pre-request hooks before any request processing
+	if err := c.executePreHooks(req); err != nil {
+		c.executePostHooks(req, nil, err)
+		return nil, err
+	}
+
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
 	c.headerLck.Lock()
 
@@ -400,6 +481,7 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		if req.Body != nil {
 			buf, err := io.ReadAll(req.Body)
 			if err != nil {
+				c.executePostHooks(req, nil, err)
 				return nil, err
 			}
 
@@ -414,6 +496,7 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 		requestBytes, err := httputil.DumpRequestOut(debugReq, debugReq.ContentLength > 0)
 		if err != nil {
+			c.executePostHooks(req, nil, err)
 			return nil, err
 		}
 
@@ -423,6 +506,7 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	resp, err := c.Client.Do(req)
 	if err != nil {
 		c.logger.Debug("failed to do request: %s", err.Error())
+		c.executePostHooks(req, nil, err)
 		return nil, err
 	}
 
@@ -435,12 +519,14 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	if c.config.debug {
 		responseBytes, err := httputil.DumpResponse(resp, resp.ContentLength > 0)
 		if err != nil {
+			c.executePostHooks(req, resp, err)
 			return nil, err
 		}
 
 		if resp.Body != nil {
 			buf, err := io.ReadAll(resp.Body)
 			if err != nil {
+				c.executePostHooks(req, resp, err)
 				return nil, err
 			}
 			defer resp.Body.Close()
@@ -464,6 +550,9 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 		c.logger.Debug("raw response bytes received over wire: %d (%d kb)", len(responseBytes), len(responseBytes)/1024)
 	}
+
+	// Execute post-response hooks after successful request
+	c.executePostHooks(req, resp, nil)
 
 	return resp, nil
 }

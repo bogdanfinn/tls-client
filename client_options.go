@@ -40,6 +40,20 @@ type (
 	ProxyDialerFactory func(proxyUrlStr string, timeout time.Duration, localAddr *net.TCPAddr, connectHeaders http.Header, logger Logger) (proxy.ContextDialer, error)
 )
 
+// PreRequestHookFunc is called before each request is sent.
+// Return an error to abort the request.
+type PreRequestHookFunc func(req *http.Request) error
+
+// PostResponseContext contains response metadata for PostHook handlers.
+type PostResponseContext struct {
+	Request  *http.Request
+	Response *http.Response
+	Error    error // Non-nil if request failed
+}
+
+// PostResponseHookFunc is called after each request completes.
+type PostResponseHookFunc func(ctx *PostResponseContext)
+
 type httpClientConfig struct {
 	cookieJar          http.CookieJar
 	customRedirectFunc func(req *http.Request, via []*http.Request) error
@@ -73,6 +87,9 @@ type httpClientConfig struct {
 
 	enabledBandwidthTracker bool
 	euckrResponse           bool
+
+	preHooks  []PreRequestHookFunc
+	postHooks []PostResponseHookFunc
 }
 
 // WithProxyUrl configures an HTTP client to use the specified proxy URL.
@@ -305,5 +322,23 @@ func WithConnectHeaders(headers http.Header) HttpClientOption {
 func WithEnableEuckrResponse() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.euckrResponse = true
+	}
+}
+
+// WithPreHook adds a pre-request hook that is called before each request is sent.
+// Multiple hooks can be added and they will be executed in the order they were added.
+// If any hook returns an error, the request is aborted and subsequent hooks are not called.
+func WithPreHook(hook PreRequestHookFunc) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.preHooks = append(config.preHooks, hook)
+	}
+}
+
+// WithPostHook adds a post-response hook that is called after each request completes.
+// Multiple hooks can be added and they will be executed in the order they were added.
+// All hooks are always executed, even if the request failed or a previous hook panicked.
+func WithPostHook(hook PostResponseHookFunc) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.postHooks = append(config.postHooks, hook)
 	}
 }
