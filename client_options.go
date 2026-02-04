@@ -52,7 +52,7 @@ type httpClientConfig struct {
 	localAddr          *net.TCPAddr
 
 	dialer             net.Dialer
-	dialContext func(ctx context.Context, network, addr string) (net.Conn, error)
+	dialContext        func(ctx context.Context, network, addr string) (net.Conn, error)
 	proxyDialerFactory ProxyDialerFactory
 
 	proxyUrl                    string
@@ -72,9 +72,6 @@ type httpClientConfig struct {
 	disableIPV6 bool
 	// Establish a connection to origin server via ipv6 only
 	disableIPV4 bool
-
-	initialStreamID        uint32
-	allowHTTP              bool
 
 	enabledBandwidthTracker bool
 	euckrResponse           bool
@@ -320,22 +317,6 @@ func WithConnectHeaders(headers http.Header) HttpClientOption {
 func WithEnableEuckrResponse() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.euckrResponse = true
-	}
-}
-
-// WithInitialStreamID configures the starting HTTP/2 stream ID.
-//
-// This is critical for mimicking specific browser fingerprints.
-// For example, Firefox usually starts streams at ID 3, while others might start at 1.
-func WithInitialStreamID(streamID uint32) HttpClientOption {
-	return func(config *httpClientConfig) {
-		config.initialStreamID = streamID
-	}
-}
-
-func WithAllowHTTP(allow bool) HttpClientOption {
-	return func(config *httpClientConfig) {
-		config.allowHTTP = allow
 	}
 }
 
