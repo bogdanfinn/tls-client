@@ -63,7 +63,7 @@ type httpClientConfig struct {
 	insecureSkipVerify          bool
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
-	disableHttp3                bool
+	enableHttp3                 bool
 	enableProtocolRacing        bool
 
 	// Establish a connection to origin server via ipv4 only
@@ -234,10 +234,10 @@ func WithForceHttp1() HttpClientOption {
 	}
 }
 
-// WithDisableHttp3 configures a client to disable HTTP 3 as the used protocol. Will most likely fall back to HTTP 2
-func WithDisableHttp3() HttpClientOption {
+// WithEnableHttp3 configures a client to enable HTTP 3 as the used protocol.
+func WithEnableHttp3() HttpClientOption {
 	return func(config *httpClientConfig) {
-		config.disableHttp3 = true
+		config.enableHttp3 = true
 	}
 }
 

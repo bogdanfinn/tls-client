@@ -15,6 +15,7 @@ func TestHTTP3(t *testing.T) {
 		tls_client.WithClientProfile(profiles.Chrome_144),
 		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithProtocolRacing(),
+		tls_client.WithEnableHttp3(),
 		tls_client.WithDebug(),
 	}
 
@@ -49,7 +50,6 @@ func TestDisableHTTP3(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(profiles.Chrome_144),
 		tls_client.WithTimeoutSeconds(30),
-		tls_client.WithDisableHttp3(),
 		tls_client.WithDebug(),
 	}
 

@@ -51,8 +51,8 @@ type roundTripper struct {
 	cachedTransportsLck sync.Mutex
 	connectionFlow      uint32
 
-	forceHttp1   bool
-	disableHttp3 bool
+	forceHttp1  bool
+	enableHttp3 bool
 
 	// racer handles HTTP/3 racing (nil if racing is disabled)
 	racer *protocolRacer
@@ -211,7 +211,7 @@ func buildHTTP3Transport(cfg *http3Config) (http.RoundTripper, error) {
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	addr := rt.getDialTLSAddr(req)
 
-	if rt.racer != nil && !rt.forceHttp1 && !rt.disableHttp3 && strings.ToLower(req.URL.Scheme) == "https" {
+	if rt.racer != nil && !rt.forceHttp1 && rt.enableHttp3 && strings.ToLower(req.URL.Scheme) == "https" {
 		return rt.racer.race(req, addr, rt.getTransport)
 	}
 
@@ -299,7 +299,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 
 	rawConn = rt.bandwidthTracker.TrackConnection(ctx, rawConn)
 
-	conn := tls.UClient(rawConn, tlsConfig, rt.clientHelloId, rt.withRandomTlsExtensionOrder, rt.forceHttp1, rt.disableHttp3)
+	conn := tls.UClient(rawConn, tlsConfig, rt.clientHelloId, rt.withRandomTlsExtensionOrder, false, true)
 	if err = conn.HandshakeContext(ctx); err != nil {
 		_ = conn.Close()
 
@@ -316,8 +316,14 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		return conn, nil
 	}
 
-	// No http.Transport constructed yet, create one based on the results
-	// of ALPN if no http1 is enforced.
+	// No http.Transport constructed yet, create one based on configuration
+	// and the results of ALPN.
+	// If HTTP/1.1 is forced, always use HTTP/1.1 transport regardless of negotiated protocol
+	if rt.forceHttp1 {
+		rt.cachedTransports[addr] = rt.buildHttp1Transport()
+		rt.cachedConnections[addr] = conn
+		return nil, errProtocolNegotiated
+	}
 
 	switch conn.ConnectionState().NegotiatedProtocol {
 	case http2.NextProtoTLS:
@@ -401,22 +407,6 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 
 		t2.PushHandler = &http2.DefaultPushHandler{}
 		rt.cachedTransports[addr] = &t2
-	case http3.NextProtoH3:
-		t3, err := buildHTTP3Transport(&http3Config{
-			clientSessionCache:     rt.clientSessionCache,
-			insecureSkipVerify:     rt.insecureSkipVerify,
-			serverNameOverwrite:    rt.serverNameOverwrite,
-			transportOptions:       rt.transportOptions,
-			http3Settings:          rt.getHttp3Settings(),
-			http3SettingsOrder:     rt.http3SettingsOrder,
-			http3PriorityParam:     rt.http3PriorityParam,
-			http3PseudoHeaderOrder: rt.http3PseudoHeaderOrder,
-			http3SendGreaseFrames:  rt.http3SendGreaseFrames,
-		})
-		if err != nil {
-			return nil, err
-		}
-		rt.cachedTransports[addr] = t3
 	default:
 		rt.cachedTransports[addr] = rt.buildHttp1Transport()
 	}
@@ -531,14 +521,14 @@ func (rt *roundTripper) dialTLSForWebsocket(ctx context.Context, network, addr s
 
 func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	host := req.URL.Hostname()
-    port := req.URL.Port()
-    if port != "" {
-        return net.JoinHostPort(host, port)
-    }
-    return net.JoinHostPort(host, "443")
+	port := req.URL.Port()
+	if port != "" {
+		return net.JoinHostPort(host, port)
+	}
+	return net.JoinHostPort(host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, disableHttp3 bool, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, enableHttp3 bool, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -566,7 +556,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		pseudoHeaderOrder:           clientProfile.GetPseudoHeaderOrder(),
 		insecureSkipVerify:          insecureSkipVerify,
 		forceHttp1:                  forceHttp1,
-		disableHttp3:                disableHttp3,
+		enableHttp3:                 enableHttp3,
 		withRandomTlsExtensionOrder: withRandomTlsExtensionOrder,
 		connectionFlow:              clientProfile.GetConnectionFlow(),
 		clientHelloId:               clientProfile.GetClientHelloId(),

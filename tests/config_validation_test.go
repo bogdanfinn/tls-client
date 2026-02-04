@@ -16,7 +16,6 @@ func TestConfigValidation_HTTP3RacingWithDisableHTTP3(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(profiles.Chrome_133),
 		tls_client.WithProtocolRacing(),
-		tls_client.WithDisableHttp3(),
 	}
 
 	_, err := tls_client.NewHttpClient(nil, options...)
@@ -36,6 +35,7 @@ func TestConfigValidation_HTTP3RacingWithForceHTTP1(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(profiles.Chrome_133),
 		tls_client.WithProtocolRacing(),
+		tls_client.WithEnableHttp3(),
 		tls_client.WithForceHttp1(),
 	}
 
@@ -82,6 +82,7 @@ func TestConfigValidation_ValidConfigs(t *testing.T) {
 			options: []tls_client.HttpClientOption{
 				tls_client.WithClientProfile(profiles.Chrome_133),
 				tls_client.WithProtocolRacing(),
+				tls_client.WithEnableHttp3(),
 			},
 		},
 		{
@@ -89,6 +90,7 @@ func TestConfigValidation_ValidConfigs(t *testing.T) {
 			options: []tls_client.HttpClientOption{
 				tls_client.WithClientProfile(profiles.Chrome_133),
 				tls_client.WithProtocolRacing(),
+				tls_client.WithEnableHttp3(),
 				tls_client.WithDisableIPV6(),
 			},
 		},
@@ -97,6 +99,7 @@ func TestConfigValidation_ValidConfigs(t *testing.T) {
 			options: []tls_client.HttpClientOption{
 				tls_client.WithClientProfile(profiles.Chrome_133),
 				tls_client.WithProtocolRacing(),
+				tls_client.WithEnableHttp3(),
 				tls_client.WithDisableIPV4(),
 			},
 		},
@@ -105,14 +108,13 @@ func TestConfigValidation_ValidConfigs(t *testing.T) {
 			options: []tls_client.HttpClientOption{
 				tls_client.WithClientProfile(profiles.Chrome_133),
 				tls_client.WithForceHttp1(),
-				tls_client.WithDisableHttp3(),
+				tls_client.WithEnableHttp3(),
 			},
 		},
 		{
 			name: "Disable HTTP/3 without racing",
 			options: []tls_client.HttpClientOption{
 				tls_client.WithClientProfile(profiles.Chrome_133),
-				tls_client.WithDisableHttp3(),
 			},
 		},
 		{
@@ -233,7 +235,6 @@ func TestConfigValidation_OrderIndependent(t *testing.T) {
 	t.Run("Racing first, then disable HTTP/3", func(t *testing.T) {
 		options := []tls_client.HttpClientOption{
 			tls_client.WithProtocolRacing(),
-			tls_client.WithDisableHttp3(),
 			tls_client.WithClientProfile(profiles.Chrome_133),
 		}
 
@@ -245,7 +246,6 @@ func TestConfigValidation_OrderIndependent(t *testing.T) {
 
 	t.Run("Disable HTTP/3 first, then racing", func(t *testing.T) {
 		options := []tls_client.HttpClientOption{
-			tls_client.WithDisableHttp3(),
 			tls_client.WithProtocolRacing(),
 			tls_client.WithClientProfile(profiles.Chrome_133),
 		}

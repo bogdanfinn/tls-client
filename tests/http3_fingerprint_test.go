@@ -20,6 +20,7 @@ func TestHTTP3FingerprintChrome443(t *testing.T) {
 		tls_client.WithClientProfile(profiles.Chrome_144),
 		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithProtocolRacing(),
+		tls_client.WithEnableHttp3(),
 	}
 
 	client, err := tls_client.NewHttpClient(nil, options...)
@@ -80,6 +81,7 @@ func TestHTTP3FingerprintFirefox135(t *testing.T) {
 		tls_client.WithClientProfile(profiles.Firefox_147),
 		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithProtocolRacing(),
+		tls_client.WithEnableHttp3(),
 		tls_client.WithTransportOptions(&tls_client.TransportOptions{
 			MaxResponseHeaderBytes: -1, // Firefox doesn't send SETTINGS_MAX_FIELD_SECTION_SIZE
 		}),
@@ -142,6 +144,7 @@ func TestHTTP3FingerprintWithDefaultValuesForChrome(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(profiles.Chrome_133),
 		tls_client.WithTimeoutSeconds(30),
+		tls_client.WithEnableHttp3(),
 		tls_client.WithProtocolRacing(),
 	}
 

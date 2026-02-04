@@ -14,6 +14,7 @@ func TestHTTP3WithChromeOnCloudflare(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(profiles.Chrome_144),
 		tls_client.WithProtocolRacing(),
+		tls_client.WithEnableHttp3(),
 	}
 
 	client, err := tls_client.NewHttpClient(nil, options...)
