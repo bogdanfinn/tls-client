@@ -447,6 +447,18 @@ func (c *httpClient) executePostHooks(originalReq *http.Request, resp *http.Resp
 //
 // If the returned error is nil, the response contains a non-nil body, which the user is expected to close.
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
+	if err := c.executePreHooks(req); err != nil {
+		return nil, err
+	}
+
+	resp, err := c.do(req)
+
+	c.executePostHooks(req, resp, err)
+
+	return resp, err
+}
+
+func (c *httpClient) do(req *http.Request) (*http.Response, error) {
 	if c.config.catchPanics {
 		defer func() {
 			err := recover()
@@ -459,11 +471,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 				c.logger.Info("critical error during request handling")
 			}
 		}()
-	}
-
-	// Execute pre-request hooks before any request processing
-	if err := c.executePreHooks(req); err != nil {
-		return nil, err
 	}
 
 	// Header order must be defined in all lowercase. On HTTP 1 people sometimes define them also in uppercase and then ordering does not work.
@@ -482,7 +489,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		if req.Body != nil {
 			buf, err := io.ReadAll(req.Body)
 			if err != nil {
-				c.executePostHooks(req, nil, err)
 				return nil, err
 			}
 
@@ -497,7 +503,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 		requestBytes, err := httputil.DumpRequestOut(debugReq, debugReq.ContentLength > 0)
 		if err != nil {
-			c.executePostHooks(req, nil, err)
 			return nil, err
 		}
 
@@ -507,7 +512,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	resp, err := c.Client.Do(req)
 	if err != nil {
 		c.logger.Debug("failed to do request: %s", err.Error())
-		c.executePostHooks(req, nil, err)
 		return nil, err
 	}
 
@@ -520,14 +524,12 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	if c.config.debug {
 		responseBytes, err := httputil.DumpResponse(resp, resp.ContentLength > 0)
 		if err != nil {
-			c.executePostHooks(req, resp, err)
 			return nil, err
 		}
 
 		if resp.Body != nil {
 			buf, err := io.ReadAll(resp.Body)
 			if err != nil {
-				c.executePostHooks(req, resp, err)
 				return nil, err
 			}
 			defer resp.Body.Close()
@@ -551,9 +553,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 		c.logger.Debug("raw response bytes received over wire: %d (%d kb)", len(responseBytes), len(responseBytes)/1024)
 	}
-
-	// Execute post-response hooks after successful request
-	c.executePostHooks(req, resp, nil)
 
 	return resp, nil
 }
