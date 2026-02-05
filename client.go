@@ -399,23 +399,32 @@ func (c *httpClient) AddPostResponseHook(hook PostResponseHookFunc) {
 }
 
 // executePreHooks runs all registered pre-request hooks in order.
-// Returns an error if any hook returns an error, aborting subsequent hooks.
+// Returns an error if any hook returns an error or panics, aborting subsequent hooks.
 func (c *httpClient) executePreHooks(req *http.Request) error {
 	c.preHooksLck.RLock()
 	hooks := c.preHooks
 	c.preHooksLck.RUnlock()
 
 	for _, hook := range hooks {
-		if err := hook(req); err != nil {
+		if err := c.runPreHook(hook, req); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
+func (c *httpClient) runPreHook(hook PreRequestHookFunc, req *http.Request) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			c.logger.Error("panic in pre-request hook: %v", r)
+			err = fmt.Errorf("panic in pre-request hook: %v", r)
+		}
+	}()
+	return hook(req)
+}
+
 // executePostHooks runs all registered post-response hooks in order.
-// All hooks are always executed; panics in individual hooks are recovered
-// to prevent one hook from breaking others.
+// If any hook panics, it is recovered and subsequent hooks are not called.
 func (c *httpClient) executePostHooks(originalReq *http.Request, resp *http.Response, requestErr error) {
 	c.postHooksLck.RLock()
 	hooks := c.postHooks
@@ -432,15 +441,21 @@ func (c *httpClient) executePostHooks(originalReq *http.Request, resp *http.Resp
 	}
 
 	for _, hook := range hooks {
-		func() {
-			defer func() {
-				if r := recover(); r != nil {
-					c.logger.Error("panic in post-response hook: %v", r)
-				}
-			}()
-			hook(ctx)
-		}()
+		if err := c.runPostHook(hook, ctx); err != nil {
+			return
+		}
 	}
+}
+
+func (c *httpClient) runPostHook(hook PostResponseHookFunc, ctx *PostResponseContext) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			c.logger.Error("panic in post-response hook: %v", r)
+			err = fmt.Errorf("panic in post-response hook: %v", r)
+		}
+	}()
+	hook(ctx)
+	return nil
 }
 
 // Do issues a given HTTP request and returns the corresponding response.

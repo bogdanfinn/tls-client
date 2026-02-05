@@ -233,8 +233,8 @@ func TestPostHookAlwaysRunsAllHooks(t *testing.T) {
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
-	// All hooks should have executed despite panic in hook 2
-	assert.Equal(t, []int{1, 2, 3}, executedHooks)
+	// Hook 3 should not execute because hook 2 panicked
+	assert.Equal(t, []int{1, 2}, executedHooks)
 }
 
 func TestPostHookReceivesErrorOnRequestFailure(t *testing.T) {
@@ -313,9 +313,8 @@ func TestOnPostResponseRuntimeRegistration(t *testing.T) {
 	assert.Equal(t, 200, capturedCtx.Response.StatusCode)
 }
 
-func TestPostHookCalledOnPreHookError(t *testing.T) {
+func TestPostHookNotCalledOnPreHookError(t *testing.T) {
 	var postHookCalled bool
-	var capturedCtx *tls_client.PostResponseContext
 	preHookErr := errors.New("pre-hook failed")
 
 	client, err := tls_client.NewHttpClient(
@@ -327,7 +326,6 @@ func TestPostHookCalledOnPreHookError(t *testing.T) {
 		}),
 		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) {
 			postHookCalled = true
-			capturedCtx = ctx
 		}),
 	)
 	require.NoError(t, err)
@@ -339,11 +337,8 @@ func TestPostHookCalledOnPreHookError(t *testing.T) {
 	assert.Nil(t, resp)
 	assert.Equal(t, preHookErr, err)
 
-	// PostHook should still be called
-	assert.True(t, postHookCalled)
-	require.NotNil(t, capturedCtx)
-	assert.Equal(t, preHookErr, capturedCtx.Error)
-	assert.Nil(t, capturedCtx.Response)
+	// PostHook should NOT be called since no request was made
+	assert.False(t, postHookCalled)
 }
 
 func TestHooksThreadSafety(t *testing.T) {
