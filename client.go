@@ -463,7 +463,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 
 	// Execute pre-request hooks before any request processing
 	if err := c.executePreHooks(req); err != nil {
-		c.executePostHooks(req, nil, err)
 		return nil, err
 	}
 
