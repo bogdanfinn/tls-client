@@ -272,7 +272,7 @@ func TestOnPreRequestRuntimeRegistration(t *testing.T) {
 	require.NoError(t, err)
 
 	var hookCalled bool
-	client.OnPreRequest(func(req *http.Request) error {
+	client.AddPreRequestHook(func(req *http.Request) error {
 		hookCalled = true
 		req.Header.Set("X-Runtime-Hook", "added")
 		return nil
@@ -298,7 +298,7 @@ func TestOnPostResponseRuntimeRegistration(t *testing.T) {
 	require.NoError(t, err)
 
 	var capturedCtx *tls_client.PostResponseContext
-	client.OnPostResponse(func(ctx *tls_client.PostResponseContext) {
+	client.AddPostResponseHook(func(ctx *tls_client.PostResponseContext) {
 		capturedCtx = ctx
 	})
 
@@ -363,11 +363,11 @@ func TestHooksThreadSafety(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			client.OnPreRequest(func(req *http.Request) error {
+			client.AddPreRequestHook(func(req *http.Request) error {
 				atomic.AddInt64(&preHookCount, 1)
 				return nil
 			})
-			client.OnPostResponse(func(ctx *tls_client.PostResponseContext) {
+			client.AddPostResponseHook(func(ctx *tls_client.PostResponseContext) {
 				atomic.AddInt64(&postHookCount, 1)
 			})
 		}()
@@ -409,13 +409,13 @@ func TestCombinedConstructorAndRuntimeHooks(t *testing.T) {
 	require.NoError(t, err)
 
 	// Add runtime hooks
-	client.OnPreRequest(func(req *http.Request) error {
+	client.AddPreRequestHook(func(req *http.Request) error {
 		mu.Lock()
 		order = append(order, 2)
 		mu.Unlock()
 		return nil
 	})
-	client.OnPostResponse(func(ctx *tls_client.PostResponseContext) {
+	client.AddPostResponseHook(func(ctx *tls_client.PostResponseContext) {
 		mu.Lock()
 		order = append(order, 4)
 		mu.Unlock()
