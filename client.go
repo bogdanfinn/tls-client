@@ -50,6 +50,8 @@ type HttpClient interface {
 
 	AddPreRequestHook(hook PreRequestHookFunc)
 	AddPostResponseHook(hook PostResponseHookFunc)
+	ResetPreHooks()
+	ResetPostHooks()
 }
 
 // Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
@@ -396,6 +398,18 @@ func (c *httpClient) AddPostResponseHook(hook PostResponseHookFunc) {
 	c.postHooksLck.Lock()
 	defer c.postHooksLck.Unlock()
 	c.postHooks = append(c.postHooks, hook)
+}
+
+func (c *httpClient) ResetPreHooks() {
+	c.preHooksLck.Lock()
+	defer c.preHooksLck.Unlock()
+	c.preHooks = []PreRequestHookFunc{}
+}
+
+func (c *httpClient) ResetPostHooks() {
+	c.postHooksLck.Lock()
+	defer c.postHooksLck.Unlock()
+	c.postHooks = []PostResponseHookFunc{}
 }
 
 // executePreHooks runs all registered pre-request hooks in order.
