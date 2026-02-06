@@ -320,13 +320,11 @@ func WithEnableEuckrResponse() HttpClientOption {
 	}
 }
 
-// WithDialContext configures a custom dialer function for TCP connection establishment.
+// WithDialContext sets a custom dialer for TCP connections, allowing advanced networking
+// (Zero-DNS, socket tagging, DPI bypass).
 //
-// This allows for advanced use cases such as:
-// - Zero-DNS (resolving IPs externally and dialing directly)
-// - Socket Tagging (for VPN/Routing rules)
-// - Custom Connect Timeouts (separate from the global request deadline)
-// - DPI Bypass techniques (socket manipulation)
+// WARNING: This overrides built-in proxy settings. If you need a proxy, you must handle the CONNECT handshake manually.
+// CHECK: https://github.com/bogdanfinn/tls-client/pull/218#issuecomment-3858171801
 func WithDialContext(dialContext func(ctx context.Context, network, addr string) (net.Conn, error)) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.dialContext = dialContext
