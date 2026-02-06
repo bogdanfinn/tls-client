@@ -146,7 +146,23 @@ func validateConfig(config *httpClientConfig) error {
 		return fmt.Errorf("invalid config: cannot set both proxy URL and custom proxy dialer factory (only one will be used)")
 	}
 
+	if config.dialContext != nil && (config.proxyUrl != "" || config.proxyDialerFactory != nil) {
+        return fmt.Errorf("invalid config: WithDialContext overrides the built-in proxy logic. If you use a custom dialer, you must handle the proxy connection (CONNECT handshake) yourself inside that dialer.")
+    }
+
 	return nil
+}
+
+type customContextDialer struct {
+	dialContext func(ctx context.Context, network, addr string) (net.Conn, error)
+}
+
+func (c *customContextDialer) Dial(network, addr string) (net.Conn, error) {
+	return c.dialContext(context.Background(), network, addr)
+}
+
+func (c *customContextDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	return c.dialContext(ctx, network, addr)
 }
 
 func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, proxy.ContextDialer, bandwidth.BandwidthTracker, profiles.ClientProfile, error) {
@@ -169,6 +185,14 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, pro
 		}
 
 		dialer = proxyDialer
+	}
+
+	// If a custom DialContext is provided, it takes precedence over everything.
+    // This allows the user to have full control over the TCP connection (ZeroDNS, socket tracking, etc).
+	if config.dialContext != nil {
+		dialer = &customContextDialer{
+			dialContext: config.dialContext,
+		}
 	}
 
 	var redirectFunc func(req *http.Request, via []*http.Request) error
@@ -316,6 +340,12 @@ func (c *httpClient) applyProxy() error {
 		}
 
 		dialer = proxyDialer
+	}
+
+	if c.config.dialContext != nil {
+		dialer = &customContextDialer{
+			dialContext: c.config.dialContext,
+		}
 	}
 
 	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.disableHttp3, c.config.enableProtocolRacing, c.config.certificatePins, c.config.badPinHandler, c.config.disableIPV6, c.config.disableIPV4, c.bandwidthTracker, dialer)

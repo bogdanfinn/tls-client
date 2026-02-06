@@ -1,6 +1,7 @@
 package tls_client
 
 import (
+	"context"
 	"crypto/x509"
 	"fmt"
 	"io"
@@ -51,6 +52,7 @@ type httpClientConfig struct {
 	localAddr          *net.TCPAddr
 
 	dialer             net.Dialer
+	dialContext        func(ctx context.Context, network, addr string) (net.Conn, error)
 	proxyDialerFactory ProxyDialerFactory
 
 	proxyUrl                    string
@@ -113,9 +115,14 @@ func WithCookieJar(jar http.CookieJar) HttpClientOption {
 	}
 }
 
-// WithTimeoutMilliseconds configures an HTTP client to use the specified request timeout.
+// WithTimeoutMilliseconds configures a hard deadline for the entire request lifecycle.
 //
-// timeout is the request timeout in milliseconds.
+// This includes connection time, redirects, and reading the response body.
+// WARNING: If the timer expires, the connection is forcibly closed, even if you are
+// actively downloading data.
+//
+// - Use 0 to disable the deadline (Unlimited) for large downloads or long-polling.
+// - Default is 30000 milliseconds (30 seconds).
 func WithTimeoutMilliseconds(timeout int) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.timeout = time.Millisecond * time.Duration(timeout)
@@ -136,9 +143,14 @@ func WithProxyDialerFactory(proxyDialerFactory ProxyDialerFactory) HttpClientOpt
 	}
 }
 
-// WithTimeoutSeconds configures an HTTP client to use the specified request timeout.
+// WithTimeoutSeconds configures a hard deadline for the entire request lifecycle.
 //
-// timeout is the request timeout in seconds.
+// This includes connection time, redirects, and reading the response body.
+// WARNING: If the timer expires, the connection is forcibly closed, even if you are
+// actively downloading data.
+//
+// - Use 0 to disable the deadline (Unlimited) for large downloads or long-polling.
+// - Default is 30 seconds.
 func WithTimeoutSeconds(timeout int) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.timeout = time.Second * time.Duration(timeout)
@@ -305,5 +317,16 @@ func WithConnectHeaders(headers http.Header) HttpClientOption {
 func WithEnableEuckrResponse() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.euckrResponse = true
+	}
+}
+
+// WithDialContext sets a custom dialer for TCP connections, allowing advanced networking
+// (Zero-DNS, socket tagging, DPI bypass).
+//
+// WARNING: This overrides built-in proxy settings. If you need a proxy, you must handle the CONNECT handshake manually.
+// CHECK: https://github.com/bogdanfinn/tls-client/pull/218#issuecomment-3858171801
+func WithDialContext(dialContext func(ctx context.Context, network, addr string) (net.Conn, error)) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.dialContext = dialContext
 	}
 }
