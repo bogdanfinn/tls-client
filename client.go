@@ -3,6 +3,7 @@ package tls_client
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -47,6 +48,11 @@ type HttpClient interface {
 	GetBandwidthTracker() bandwidth.BandwidthTracker
 	GetDialer() proxy.ContextDialer
 	GetTLSDialer() TLSDialerFunc
+
+	AddPreRequestHook(hook PreRequestHookFunc)
+	AddPostResponseHook(hook PostResponseHookFunc)
+	ResetPreHooks()
+	ResetPostHooks()
 }
 
 // Interface guards are a cheap way to make sure all methods are implemented, this is a static check and does not affect runtime performance.
@@ -59,6 +65,11 @@ type httpClient struct {
 	config           *httpClientConfig
 	headerLck        sync.Mutex
 	dialer           proxy.ContextDialer
+
+	preHooksLck  sync.RWMutex
+	postHooksLck sync.RWMutex
+	preHooks     []PreRequestHookFunc
+	postHooks    []PostResponseHookFunc
 }
 
 var DefaultTimeoutSeconds = 30
@@ -122,6 +133,10 @@ func NewHttpClient(logger Logger, options ...HttpClientOption) (HttpClient, erro
 		headerLck:        sync.Mutex{},
 		bandwidthTracker: bandwidthTracker,
 		dialer:           dialer,
+		preHooksLck:      sync.RWMutex{},
+		postHooksLck:     sync.RWMutex{},
+		preHooks:         append([]PreRequestHookFunc{}, config.preHooks...),
+		postHooks:        append([]PostResponseHookFunc{}, config.postHooks...),
 	}, nil
 }
 
@@ -396,10 +411,125 @@ func (c *httpClient) GetBandwidthTracker() bandwidth.BandwidthTracker {
 	return c.bandwidthTracker
 }
 
+// AddPreRequestHook adds a pre-request hook that is called before each request is sent.
+// Multiple hooks can be added and they will be executed in the order they were added.
+// If any hook returns an error, the request is aborted and subsequent hooks are not called.
+// This method is thread-safe.
+func (c *httpClient) AddPreRequestHook(hook PreRequestHookFunc) {
+	c.preHooksLck.Lock()
+	defer c.preHooksLck.Unlock()
+	c.preHooks = append(c.preHooks, hook)
+}
+
+// AddPostResponseHook adds a post-response hook that is called after each request completes.
+// Multiple hooks can be added and they will be executed in the order they were added.
+// All hooks are always executed, even if the request failed or a previous hook panicked.
+// This method is thread-safe.
+func (c *httpClient) AddPostResponseHook(hook PostResponseHookFunc) {
+	c.postHooksLck.Lock()
+	defer c.postHooksLck.Unlock()
+	c.postHooks = append(c.postHooks, hook)
+}
+
+func (c *httpClient) ResetPreHooks() {
+	c.preHooksLck.Lock()
+	defer c.preHooksLck.Unlock()
+	c.preHooks = []PreRequestHookFunc{}
+}
+
+func (c *httpClient) ResetPostHooks() {
+	c.postHooksLck.Lock()
+	defer c.postHooksLck.Unlock()
+	c.postHooks = []PostResponseHookFunc{}
+}
+
+// executePreHooks runs all registered pre-request hooks in order.
+// Returns an error if any hook returns an error or panics, aborting subsequent hooks.
+// If a hook returns an error wrapping ErrContinueHooks, the error is logged and
+// execution continues to the next hook.
+func (c *httpClient) executePreHooks(req *http.Request) error {
+	c.preHooksLck.RLock()
+	hooks := c.preHooks
+	c.preHooksLck.RUnlock()
+
+	for _, hook := range hooks {
+		if err := c.runPreHook(hook, req); err != nil {
+			if errors.Is(err, ErrContinueHooks) {
+				c.logger.Warn("pre-request hook error (continuing): %v", err)
+				continue
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *httpClient) runPreHook(hook PreRequestHookFunc, req *http.Request) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			c.logger.Error("panic in pre-request hook: %v", r)
+			err = fmt.Errorf("panic in pre-request hook: %v", r)
+		}
+	}()
+	return hook(req)
+}
+
+// executePostHooks runs all registered post-response hooks in order.
+// If any hook returns an error or panics, subsequent hooks are not called,
+// unless the error wraps ErrContinueHooks.
+func (c *httpClient) executePostHooks(originalReq *http.Request, resp *http.Response, requestErr error) {
+	c.postHooksLck.RLock()
+	hooks := c.postHooks
+	c.postHooksLck.RUnlock()
+
+	if len(hooks) == 0 {
+		return
+	}
+
+	ctx := &PostResponseContext{
+		Request:  originalReq,
+		Response: resp,
+		Error:    requestErr,
+	}
+
+	for _, hook := range hooks {
+		if err := c.runPostHook(hook, ctx); err != nil {
+			if errors.Is(err, ErrContinueHooks) {
+				c.logger.Warn("post-response hook error (continuing): %v", err)
+				continue
+			}
+			c.logger.Error("post-response hook error: %v", err)
+			return
+		}
+	}
+}
+
+func (c *httpClient) runPostHook(hook PostResponseHookFunc, ctx *PostResponseContext) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			c.logger.Error("panic in post-response hook: %v", r)
+			err = fmt.Errorf("panic in post-response hook: %v", r)
+		}
+	}()
+	return hook(ctx)
+}
+
 // Do issues a given HTTP request and returns the corresponding response.
 //
 // If the returned error is nil, the response contains a non-nil body, which the user is expected to close.
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
+	if err := c.executePreHooks(req); err != nil {
+		return nil, err
+	}
+
+	resp, err := c.do(req)
+
+	c.executePostHooks(req, resp, err)
+
+	return resp, err
+}
+
+func (c *httpClient) do(req *http.Request) (*http.Response, error) {
 	if c.config.catchPanics {
 		defer func() {
 			err := recover()
