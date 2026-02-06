@@ -146,6 +146,10 @@ func validateConfig(config *httpClientConfig) error {
 		return fmt.Errorf("invalid config: cannot set both proxy URL and custom proxy dialer factory (only one will be used)")
 	}
 
+	if config.dialContext != nil && (config.proxyUrl != "" || config.proxyDialerFactory != nil) {
+        return fmt.Errorf("invalid config: WithDialContext overrides the built-in proxy logic. If you use a custom dialer, you must handle the proxy connection (CONNECT handshake) yourself inside that dialer.")
+    }
+
 	return nil
 }
 
