@@ -3,6 +3,7 @@ package tls_client
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -414,6 +415,8 @@ func (c *httpClient) ResetPostHooks() {
 
 // executePreHooks runs all registered pre-request hooks in order.
 // Returns an error if any hook returns an error or panics, aborting subsequent hooks.
+// If a hook returns an error wrapping ErrContinueHooks, the error is logged and
+// execution continues to the next hook.
 func (c *httpClient) executePreHooks(req *http.Request) error {
 	c.preHooksLck.RLock()
 	hooks := c.preHooks
@@ -421,6 +424,10 @@ func (c *httpClient) executePreHooks(req *http.Request) error {
 
 	for _, hook := range hooks {
 		if err := c.runPreHook(hook, req); err != nil {
+			if errors.Is(err, ErrContinueHooks) {
+				c.logger.Warn("pre-request hook error (continuing): %v", err)
+				continue
+			}
 			return err
 		}
 	}

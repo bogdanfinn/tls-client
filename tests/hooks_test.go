@@ -2,6 +2,7 @@ package tests
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -425,4 +426,84 @@ func TestCombinedConstructorAndRuntimeHooks(t *testing.T) {
 
 	// Constructor hooks should run first, then runtime hooks
 	assert.Equal(t, []int{1, 2, 3, 4}, order)
+}
+
+func TestPreHookContinueOnError(t *testing.T) {
+	var executedHooks []int
+	var mu sync.Mutex
+
+	client, err := tls_client.NewHttpClient(
+		tls_client.NewNoopLogger(),
+		tls_client.WithClientProfile(profiles.Chrome_124),
+		tls_client.WithTimeoutSeconds(10),
+		tls_client.WithPreHook(func(req *http.Request) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 1)
+			mu.Unlock()
+			return nil
+		}),
+		tls_client.WithPreHook(func(req *http.Request) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 2)
+			mu.Unlock()
+			return fmt.Errorf("something went wrong: %w", tls_client.ErrContinueHooks)
+		}),
+		tls_client.WithPreHook(func(req *http.Request) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 3)
+			mu.Unlock()
+			return nil
+		}),
+	)
+	require.NoError(t, err)
+
+	req, err := http.NewRequest(http.MethodGet, "https://httpbin.org/get", nil)
+	require.NoError(t, err)
+
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// All 3 hooks should execute because hook 2 wraps ErrContinueHooks
+	assert.Equal(t, []int{1, 2, 3}, executedHooks)
+}
+
+func TestPreHookAbortByDefault(t *testing.T) {
+	var executedHooks []int
+	var mu sync.Mutex
+
+	client, err := tls_client.NewHttpClient(
+		tls_client.NewNoopLogger(),
+		tls_client.WithClientProfile(profiles.Chrome_124),
+		tls_client.WithTimeoutSeconds(10),
+		tls_client.WithPreHook(func(req *http.Request) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 1)
+			mu.Unlock()
+			return nil
+		}),
+		tls_client.WithPreHook(func(req *http.Request) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 2)
+			mu.Unlock()
+			return errors.New("regular error without ErrContinueHooks")
+		}),
+		tls_client.WithPreHook(func(req *http.Request) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 3)
+			mu.Unlock()
+			return nil
+		}),
+	)
+	require.NoError(t, err)
+
+	req, err := http.NewRequest(http.MethodGet, "https://httpbin.org/get", nil)
+	require.NoError(t, err)
+
+	resp, err := client.Do(req)
+	assert.Nil(t, resp)
+	assert.Error(t, err)
+
+	// Hook 3 should NOT execute because hook 2 returned a regular error
+	assert.Equal(t, []int{1, 2}, executedHooks)
 }

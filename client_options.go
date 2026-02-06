@@ -2,6 +2,7 @@ package tls_client
 
 import (
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -40,8 +41,13 @@ type (
 	ProxyDialerFactory func(proxyUrlStr string, timeout time.Duration, localAddr *net.TCPAddr, connectHeaders http.Header, logger Logger) (proxy.ContextDialer, error)
 )
 
+// ErrContinueHooks can be returned (or wrapped) by a PreRequestHookFunc to signal that
+// the error should be logged but hook execution should continue to the next hook.
+// By default any error returned from a hook aborts subsequent hooks and the request.
+var ErrContinueHooks = errors.New("continue hooks")
+
 // PreRequestHookFunc is called before each request is sent.
-// Return an error to abort the request.
+// Return an error to abort the request, or wrap ErrContinueHooks to log and continue.
 type PreRequestHookFunc func(req *http.Request) error
 
 // PostResponseContext contains response metadata for PostHook handlers.
