@@ -58,7 +58,8 @@ type PostResponseContext struct {
 }
 
 // PostResponseHookFunc is called after each request completes.
-type PostResponseHookFunc func(ctx *PostResponseContext)
+// Return an error to abort subsequent hooks, or wrap ErrContinueHooks to log and continue.
+type PostResponseHookFunc func(ctx *PostResponseContext) error
 
 type httpClientConfig struct {
 	cookieJar          http.CookieJar

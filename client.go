@@ -445,7 +445,8 @@ func (c *httpClient) runPreHook(hook PreRequestHookFunc, req *http.Request) (err
 }
 
 // executePostHooks runs all registered post-response hooks in order.
-// If any hook panics, it is recovered and subsequent hooks are not called.
+// If any hook returns an error or panics, subsequent hooks are not called,
+// unless the error wraps ErrContinueHooks.
 func (c *httpClient) executePostHooks(originalReq *http.Request, resp *http.Response, requestErr error) {
 	c.postHooksLck.RLock()
 	hooks := c.postHooks
@@ -463,6 +464,10 @@ func (c *httpClient) executePostHooks(originalReq *http.Request, resp *http.Resp
 
 	for _, hook := range hooks {
 		if err := c.runPostHook(hook, ctx); err != nil {
+			if errors.Is(err, ErrContinueHooks) {
+				c.logger.Warn("post-response hook error (continuing): %v", err)
+				continue
+			}
 			c.logger.Error("post-response hook error: %v", err)
 			return
 		}
@@ -476,8 +481,7 @@ func (c *httpClient) runPostHook(hook PostResponseHookFunc, ctx *PostResponseCon
 			err = fmt.Errorf("panic in post-response hook: %v", r)
 		}
 	}()
-	hook(ctx)
-	return nil
+	return hook(ctx)
 }
 
 // Do issues a given HTTP request and returns the corresponding response.

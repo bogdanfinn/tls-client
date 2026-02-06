@@ -66,8 +66,9 @@ func TestPostHookReceivesCorrectMetadata(t *testing.T) {
 		tls_client.NewNoopLogger(),
 		tls_client.WithClientProfile(profiles.Chrome_124),
 		tls_client.WithTimeoutSeconds(10),
-		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) {
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
 			capturedCtx = ctx
+			return nil
 		}),
 	)
 	require.NoError(t, err)
@@ -133,20 +134,23 @@ func TestMultiplePostHooksExecuteInOrder(t *testing.T) {
 		tls_client.NewNoopLogger(),
 		tls_client.WithClientProfile(profiles.Chrome_124),
 		tls_client.WithTimeoutSeconds(10),
-		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) {
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
 			mu.Lock()
 			order = append(order, 1)
 			mu.Unlock()
+			return nil
 		}),
-		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) {
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
 			mu.Lock()
 			order = append(order, 2)
 			mu.Unlock()
+			return nil
 		}),
-		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) {
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
 			mu.Lock()
 			order = append(order, 3)
 			mu.Unlock()
+			return nil
 		}),
 	)
 	require.NoError(t, err)
@@ -200,7 +204,7 @@ func TestPreHookErrorStopsSubsequentHooks(t *testing.T) {
 	assert.Equal(t, []int{1, 2}, executedHooks) // Hook 3 should not execute
 }
 
-func TestPostHookAlwaysRunsAllHooks(t *testing.T) {
+func TestPostHookPanicAbortsSubsequentHooks(t *testing.T) {
 	var executedHooks []int
 	var mu sync.Mutex
 
@@ -208,21 +212,23 @@ func TestPostHookAlwaysRunsAllHooks(t *testing.T) {
 		tls_client.NewNoopLogger(),
 		tls_client.WithClientProfile(profiles.Chrome_124),
 		tls_client.WithTimeoutSeconds(10),
-		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) {
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
 			mu.Lock()
 			executedHooks = append(executedHooks, 1)
 			mu.Unlock()
+			return nil
 		}),
-		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) {
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
 			mu.Lock()
 			executedHooks = append(executedHooks, 2)
 			mu.Unlock()
 			panic("intentional panic")
 		}),
-		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) {
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
 			mu.Lock()
 			executedHooks = append(executedHooks, 3)
 			mu.Unlock()
+			return nil
 		}),
 	)
 	require.NoError(t, err)
@@ -245,8 +251,9 @@ func TestPostHookReceivesErrorOnRequestFailure(t *testing.T) {
 		tls_client.NewNoopLogger(),
 		tls_client.WithClientProfile(profiles.Chrome_124),
 		tls_client.WithTimeoutSeconds(1),
-		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) {
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
 			capturedCtx = ctx
+			return nil
 		}),
 	)
 	require.NoError(t, err)
@@ -299,8 +306,9 @@ func TestOnPostResponseRuntimeRegistration(t *testing.T) {
 	require.NoError(t, err)
 
 	var capturedCtx *tls_client.PostResponseContext
-	client.AddPostResponseHook(func(ctx *tls_client.PostResponseContext) {
+	client.AddPostResponseHook(func(ctx *tls_client.PostResponseContext) error {
 		capturedCtx = ctx
+		return nil
 	})
 
 	req, err := http.NewRequest(http.MethodGet, "https://httpbin.org/get", nil)
@@ -325,8 +333,9 @@ func TestPostHookNotCalledOnPreHookError(t *testing.T) {
 		tls_client.WithPreHook(func(req *http.Request) error {
 			return preHookErr
 		}),
-		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) {
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
 			postHookCalled = true
+			return nil
 		}),
 	)
 	require.NoError(t, err)
@@ -363,8 +372,9 @@ func TestHooksThreadSafety(t *testing.T) {
 				atomic.AddInt64(&preHookCount, 1)
 				return nil
 			})
-			client.AddPostResponseHook(func(ctx *tls_client.PostResponseContext) {
+			client.AddPostResponseHook(func(ctx *tls_client.PostResponseContext) error {
 				atomic.AddInt64(&postHookCount, 1)
+				return nil
 			})
 		}()
 	}
@@ -396,10 +406,11 @@ func TestCombinedConstructorAndRuntimeHooks(t *testing.T) {
 			mu.Unlock()
 			return nil
 		}),
-		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) {
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
 			mu.Lock()
 			order = append(order, 3)
 			mu.Unlock()
+			return nil
 		}),
 	)
 	require.NoError(t, err)
@@ -411,10 +422,11 @@ func TestCombinedConstructorAndRuntimeHooks(t *testing.T) {
 		mu.Unlock()
 		return nil
 	})
-	client.AddPostResponseHook(func(ctx *tls_client.PostResponseContext) {
+	client.AddPostResponseHook(func(ctx *tls_client.PostResponseContext) error {
 		mu.Lock()
 		order = append(order, 4)
 		mu.Unlock()
+		return nil
 	})
 
 	req, err := http.NewRequest(http.MethodGet, "https://httpbin.org/get", nil)
@@ -503,6 +515,86 @@ func TestPreHookAbortByDefault(t *testing.T) {
 	resp, err := client.Do(req)
 	assert.Nil(t, resp)
 	assert.Error(t, err)
+
+	// Hook 3 should NOT execute because hook 2 returned a regular error
+	assert.Equal(t, []int{1, 2}, executedHooks)
+}
+
+func TestPostHookContinueOnError(t *testing.T) {
+	var executedHooks []int
+	var mu sync.Mutex
+
+	client, err := tls_client.NewHttpClient(
+		tls_client.NewNoopLogger(),
+		tls_client.WithClientProfile(profiles.Chrome_124),
+		tls_client.WithTimeoutSeconds(10),
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 1)
+			mu.Unlock()
+			return nil
+		}),
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 2)
+			mu.Unlock()
+			return fmt.Errorf("post hook issue: %w", tls_client.ErrContinueHooks)
+		}),
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 3)
+			mu.Unlock()
+			return nil
+		}),
+	)
+	require.NoError(t, err)
+
+	req, err := http.NewRequest(http.MethodGet, "https://httpbin.org/get", nil)
+	require.NoError(t, err)
+
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// All 3 hooks should execute because hook 2 wraps ErrContinueHooks
+	assert.Equal(t, []int{1, 2, 3}, executedHooks)
+}
+
+func TestPostHookAbortByDefault(t *testing.T) {
+	var executedHooks []int
+	var mu sync.Mutex
+
+	client, err := tls_client.NewHttpClient(
+		tls_client.NewNoopLogger(),
+		tls_client.WithClientProfile(profiles.Chrome_124),
+		tls_client.WithTimeoutSeconds(10),
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 1)
+			mu.Unlock()
+			return nil
+		}),
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 2)
+			mu.Unlock()
+			return errors.New("regular error without ErrContinueHooks")
+		}),
+		tls_client.WithPostHook(func(ctx *tls_client.PostResponseContext) error {
+			mu.Lock()
+			executedHooks = append(executedHooks, 3)
+			mu.Unlock()
+			return nil
+		}),
+	)
+	require.NoError(t, err)
+
+	req, err := http.NewRequest(http.MethodGet, "https://httpbin.org/get", nil)
+	require.NoError(t, err)
+
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
 
 	// Hook 3 should NOT execute because hook 2 returned a regular error
 	assert.Equal(t, []int{1, 2}, executedHooks)
