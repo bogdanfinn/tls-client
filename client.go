@@ -463,6 +463,7 @@ func (c *httpClient) executePostHooks(originalReq *http.Request, resp *http.Resp
 
 	for _, hook := range hooks {
 		if err := c.runPostHook(hook, ctx); err != nil {
+			c.logger.Error("post-response hook error: %v", err)
 			return
 		}
 	}
