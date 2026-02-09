@@ -359,6 +359,8 @@ func WithPreHook(hook PreRequestHookFunc) HttpClientOption {
 func WithPostHook(hook PostResponseHookFunc) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.postHooks = append(config.postHooks, hook)
+	}
+}
 // WithDialContext sets a custom dialer for TCP connections, allowing advanced networking
 // (Zero-DNS, socket tagging, DPI bypass).
 //
