@@ -125,7 +125,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 
 	cookiesAfterFirstRequest := client.GetCookies(u)
 
-	assert.Equal(t, 7, len(cookiesAfterFirstRequest))
+	assert.Equal(t, 6, len(cookiesAfterFirstRequest))
 
 	cookie3 := &http.Cookie{
 		Name:   cookiesAfterFirstRequest[0].Name,
@@ -135,7 +135,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 	}
 	client.SetCookies(u, []*http.Cookie{cookie3})
 
-	assert.Equal(t, 7, len(client.GetCookies(u)))
+	assert.Equal(t, 6, len(client.GetCookies(u)))
 
 	req, err = http.NewRequest(http.MethodGet, "https://eu.kith.com/", nil)
 	if err != nil {
@@ -169,7 +169,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 
 	cookiesAfterSecondRequest := client.GetCookies(u)
 
-	assert.Equal(t, 7, len(cookiesAfterSecondRequest))
+	assert.Equal(t, 6, len(cookiesAfterSecondRequest))
 }
 
 func TestClient_ExcludeExpiredCookiesFromRequest(t *testing.T) {

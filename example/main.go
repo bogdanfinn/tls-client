@@ -691,7 +691,7 @@ func requestWithCustomClient() {
 		Version:     "1",
 		Seed:        nil,
 		SpecFactory: specFactory,
-	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil)
+	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil, 0, false, nil, nil, 0, nil, false)
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(60),
@@ -814,7 +814,7 @@ func requestWithJa3CustomClientWithTwoGreaseExtensions() {
 		Version:     "1",
 		Seed:        nil,
 		SpecFactory: specFactory,
-	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil)
+	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil, 0, false, nil, nil, 0, nil, false)
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(60),
@@ -957,7 +957,7 @@ func testPskExtension() {
 		Version:     "1",
 		Seed:        nil,
 		SpecFactory: specFactory,
-	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil)
+	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil, 0, false, nil, nil, 0, nil, false)
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(60),

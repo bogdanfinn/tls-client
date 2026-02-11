@@ -18,12 +18,12 @@ GOOS=darwin CGO_ENABLED=1 GOARCH=amd64 go build -buildmode=c-shared -o ./pinwhee
 # # CC is needed when you cross compile from OSX to Linux
 # GOOS=linux CGO_ENABLED=1 GOARCH=arm CC="armv7-linux-gnueabihf-gcc" go build -buildmode=c-shared -o ./dist/tls-client-linux-armv7-$1.so
 
-# # CC is needed when you cross compile from OSX to Linux
+# CC is needed when you cross compile from OSX to Linux
 # echo 'Build Linux Alpine'
-# # For some reason my OSX gcc cross compiler does not work. Therefore i use a alpine docker image
-# # GOOS=linux CGO_ENABLED=1 GOARCH=amd64 CC="x86_64-linux-musl-gcc" go build -buildmode=c-shared -o ./dist/tls-client-linux-amd64.so
-# # Make sure to first build the image based on the Dockerfile.alpine.compile in this directory.
-# docker run -v $PWD/../:/tls-client tls-client-alpine-go-1.20 bash -c "cd /tls-client/cffi_dist && GOOS=linux CGO_ENABLED=1 GOARCH=amd64 go build -buildmode=c-shared -o /tls-client/cffi_dist/dist/tls-client-linux-alpine-amd64-$1.so"
+# For some reason my OSX gcc cross compiler does not work. Therefore i use a alpine docker image
+# GOOS=linux CGO_ENABLED=1 GOARCH=amd64 CC="x86_64-linux-musl-gcc" go build -buildmode=c-shared -o ./dist/tls-client-linux-amd64.so
+# Make sure to first build the image based on the Dockerfile.alpine.compile in this directory.
+# docker run -v $PWD/../:/tls-client tls-client-alpine-go-1.20 bash -c "cd /tls-client/cffi_dist && GOOS=linux CGO_ENABLED=1 GOARCH=amd64 go build -buildmode=c-shared -buildvcs=false -o /tls-client/cffi_dist/dist/tls-client-linux-alpine-amd64-$1.so"
 
 # CC is needed when you cross compile from OSX to Linux
 echo 'Build Linux Ubuntu'
