@@ -289,6 +289,7 @@ func requestToppsAsChrome107Client() {
 
 	defer resp.Body.Close()
 
+	// this will fail as topps does now enforce solving cloudflare. only tls is not enough anymore
 	log.Printf("requesting topps as chrome107 => status code: %d\n", resp.StatusCode)
 
 	u, err := url.Parse("https://www.topps.com/")
@@ -677,7 +678,6 @@ func requestWithCustomClient() {
 					tls.CertCompressionBrotli,
 				}},
 				&tls.ApplicationSettingsExtension{
-					CodePoint:          tls.ExtensionALPSOld,
 					SupportedProtocols: []string{"h2"},
 				},
 				&tls.UtlsGREASEExtension{},
@@ -691,7 +691,7 @@ func requestWithCustomClient() {
 		Version:     "1",
 		Seed:        nil,
 		SpecFactory: specFactory,
-	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil)
+	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil, 0, false, nil, nil, 0, nil, false)
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(60),
@@ -805,16 +805,16 @@ func requestWithJa3CustomClientWithTwoGreaseExtensions() {
 		},
 	}
 	candidatePayloads := []uint16{128, 160, 192, 224}
-	certCompressionAlgo := "brotli"
+	certCompressionAlgos := []string{"brotli"}
 
-	specFactory, err := tls_client.GetSpecFactoryFromJa3String(ja3String, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS, echCandidateCipherSuites, candidatePayloads, certCompressionAlgo)
+	specFactory, err := tls_client.GetSpecFactoryFromJa3String(ja3String, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS, echCandidateCipherSuites, candidatePayloads, certCompressionAlgos, 0)
 
 	customClientProfile := profiles.NewClientProfile(tls.ClientHelloID{
 		Client:      "MyCustomProfile",
 		Version:     "1",
 		Seed:        nil,
 		SpecFactory: specFactory,
-	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil)
+	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil, 0, false, nil, nil, 0, nil, false)
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(60),
@@ -847,7 +847,7 @@ func requestWithJa3CustomClientWithTwoGreaseExtensions() {
 		return
 	}
 
-	log.Printf(string(readBytes))
+	log.Printf("%s", string(readBytes))
 	log.Printf("status code: %d\n", resp.StatusCode)
 }
 
@@ -909,7 +909,6 @@ func testPskExtension() {
 					{Group: tls.X25519},
 				}},
 				&tls.ApplicationSettingsExtension{
-					CodePoint:          tls.ExtensionALPSOld,
 					SupportedProtocols: []string{"h2"},
 				},
 				&tls.SupportedVersionsExtension{[]uint16{
@@ -958,7 +957,7 @@ func testPskExtension() {
 		Version:     "1",
 		Seed:        nil,
 		SpecFactory: specFactory,
-	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil)
+	}, settings, settingsOrder, pseudoHeaderOrder, connectionFlow, nil, nil, 0, false, nil, nil, 0, nil, false)
 
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(60),

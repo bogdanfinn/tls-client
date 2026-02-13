@@ -7,15 +7,15 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	_ "github.com/bdandy/go-socks4" // due to that proxy.FromURL() does support socks4
+	http "github.com/bogdanfinn/fhttp"
+	"golang.org/x/net/proxy"
 	"io"
 	"net"
 	"net/url"
 	"os"
 	"sync"
 	"time"
-
-	http "github.com/bogdanfinn/fhttp"
-	"golang.org/x/net/proxy"
 
 	"github.com/bogdanfinn/fhttp/http2"
 )
@@ -106,6 +106,12 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 			"`, make sure to specify full url like https://username:password@hostname.com:443/")
 	}
 
+	_dialer := configDialer
+	_dialer.Timeout = timeout
+	if nil != localAddr {
+		_dialer.LocalAddr = localAddr
+	}
+
 	switch proxyUrl.Scheme {
 	case "http":
 		if proxyUrl.Port() == "" {
@@ -115,17 +121,14 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 		if proxyUrl.Port() == "" {
 			proxyUrl.Host = net.JoinHostPort(proxyUrl.Host, "443")
 		}
+	case "socks4", "socks4a":
+		return handleSocks4ProxyDialer(proxyUrl, _dialer)
 	case "socks5", "socks5h":
-		return handleSocks5ProxyDialer(proxyUrl, localAddr)
+		return handleSocks5ProxyDialer(proxyUrl, _dialer)
 	case "":
 		return nil, errors.New("specify scheme explicitly (https://)")
 	default:
 		return nil, errors.New("scheme " + proxyUrl.Scheme + " is not supported")
-	}
-	_dialer := configDialer
-	_dialer.Timeout = timeout
-	if nil != localAddr {
-		_dialer.LocalAddr = localAddr
 	}
 
 	dialer := &connectDialer{
@@ -139,7 +142,7 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 
 	if proxyUrl.User != nil {
 		if proxyUrl.User.Username() != "" {
-			//example format (with credentials): http://root:xxx@127.0.0.1:12312
+			// example format (with credentials): http://root:xxx@127.0.0.1:12312
 			password, _ := proxyUrl.User.Password()
 			dialer.DefaultHeader.Set("Proxy-Authorization", "Basic "+
 				base64.StdEncoding.EncodeToString([]byte(proxyUrl.User.Username()+":"+password)))
@@ -149,7 +152,7 @@ func newConnectDialer(proxyUrlStr string, timeout time.Duration, localAddr *net.
 	return dialer, nil
 }
 
-func handleSocks5ProxyDialer(proxyUrl *url.URL, localAddr *net.TCPAddr) (proxy.ContextDialer, error) {
+func handleSocks5ProxyDialer(proxyUrl *url.URL, dialer net.Dialer) (proxy.ContextDialer, error) {
 	var proxyAuth *proxy.Auth
 	if proxyUrl.User != nil {
 		password, _ := proxyUrl.User.Password()
@@ -160,19 +163,24 @@ func handleSocks5ProxyDialer(proxyUrl *url.URL, localAddr *net.TCPAddr) (proxy.C
 	} else {
 		proxyAuth = nil
 	}
-	_dialer := proxy.Dialer(proxy.Direct)
-	if nil != localAddr {
-		_dialer = &net.Dialer{
-			LocalAddr: localAddr,
-		}
-	}
-	socksDialer, err := proxy.SOCKS5("tcp", proxyUrl.Host, proxyAuth, _dialer)
+
+	socksDialer, err := proxy.SOCKS5("tcp", proxyUrl.Host, proxyAuth, &dialer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create socks5 proxy: %w", err)
 	}
 
 	scd := newSocksContextDialer(socksDialer)
 
+	return &scd, nil
+}
+
+func handleSocks4ProxyDialer(proxyUrl *url.URL, dialer net.Dialer) (proxy.ContextDialer, error) {
+	socks4Dialer, err := proxy.FromURL(proxyUrl, &dialer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create socks4 proxy dialer: %w", err)
+	}
+
+	scd := newSocksContextDialer(socks4Dialer)
 	return &scd, nil
 }
 

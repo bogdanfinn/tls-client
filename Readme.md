@@ -21,8 +21,24 @@ With this library you are able to create a http client implementing an interface
 client interface.
 This TLS Client allows you to specify the Client (Browser and Version) you want to use, when requesting a server.
 
-The Interface of the HTTP Client looks like the following and extends the base net/http Client Interface by some useful functions.
-Most likely you will use the `Do()` function like you did before with net/http Client.
+### Features
+
+- ✅ **HTTP/1.1, HTTP/2, HTTP/3** - Full protocol support with automatic negotiation
+- ✅ **Protocol Racing** - Chrome-like "Happy Eyeballs" for HTTP/2 vs HTTP/3
+- ✅ **TLS Fingerprinting** - Mimic Chrome, Firefox, Safari, and other browsers
+- ✅ **HTTP/3 Fingerprinting** - Accurate QUIC/HTTP/3 fingerprints matching real browsers
+- ✅ **WebSocket Support** - Maintain TLS fingerprinting over WebSocket connections
+- ✅ **Custom Header Ordering** - Control the order of HTTP headers
+- ✅ **Proxy Support** - HTTP and SOCKS5 proxies
+- ✅ **Cookie Jar Management** - Built-in cookie handling
+- ✅ **Certificate Pinning** - Enhanced security with custom certificate validation
+- ✅ **Bandwidth Tracking** - Monitor upload/download bandwidth
+- ✅ **Language Bindings** - Use from JavaScript (Node.js), Python, and C# via FFI
+
+### Interface
+
+The HTTP Client interface extends the base net/http Client with additional functionality:
+
 ```go
 type HttpClient interface {
     GetCookies(u *url.URL) []*http.Cookie
@@ -38,9 +54,16 @@ type HttpClient interface {
     Get(url string) (resp *http.Response, err error)
     Head(url string) (resp *http.Response, err error)
     Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
+
+    GetBandwidthTracker() bandwidth.BandwidthTracker
+    GetDialer() proxy.ContextDialer
+    GetTLSDialer() TLSDialerFunc
 }
 ```
 
+### Detailed Documentation
+
+https://bogdanfinn.gitbook.io/open-source-oasis/
 
 ### Quick Usage Example
 
@@ -58,10 +81,10 @@ import (
 )
 
 func main() {
-    jar := tls_client.NewCookieJar()
+	jar := tls_client.NewCookieJar()
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(30),
-		tls_client.WithClientProfile(profiles.Chrome_120),
+		tls_client.WithClientProfile(profiles.Chrome_144),
 		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
 	}
@@ -109,10 +132,6 @@ func main() {
 }
 ```
 
-### Detailed Documentation
-
-https://bogdanfinn.gitbook.io/open-source-oasis/
-
 ### Questions?
 
 Join my discord support server for free: https://discord.gg/7Ej9eJvHqk
@@ -123,3 +142,21 @@ No Support in DMs!
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/CaptainBarnius)
 
+---
+
+## 🛡️ Need Antibot Bypass?
+
+<a href="https://hypersolutions.co/?utm_source=github&utm_medium=readme&utm_campaign=tls-client" target="_blank"><img src="https://raw.githubusercontent.com/bogdanfinn/tls-client/master/.github/assets/hypersolutions.jpg" height="47" width="149"></a>
+
+TLS fingerprinting alone isn't enough for modern bot protection. **[Hyper Solutions](https://hypersolutions.co?utm_source=github&utm_medium=readme&utm_campaign=tls-client)** provides the missing piece - API endpoints that generate valid antibot tokens for:
+
+**Akamai** • **DataDome** • **Kasada** • **Incapsula**
+
+No browser automation. Just simple API calls that return the exact cookies and headers these systems require.
+
+🚀 **[Get Your API Key](https://hypersolutions.co?utm_source=github&utm_medium=readme&utm_campaign=tls-client)** | 📖 **[Docs](https://docs.justhyped.dev)** | 💬 **[Discord](https://discord.gg/akamai)**
+
+---
+
+### Powered by
+[![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSource)

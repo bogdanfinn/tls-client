@@ -19,6 +19,7 @@ export interface TLSClientRequestPayload {
     followRedirects?: boolean;
     insecureSkipVerify?: boolean;
     isByteResponse?: boolean;
+    euckrResponse?: boolean;
     withoutCookieJar?: boolean;
     withRandomTLSExtensionOrder?: boolean;
     timeoutSeconds?: number;
@@ -38,7 +39,7 @@ export interface TLSClientRequestPayload {
         supportedSignatureAlgorithms: string[];
         supportedVersions: string[];
         keyShareCurves: string[];
-        certCompressionAlgo: string;
+        certCompressionAlgos: string[];
         pseudoHeaderOrder: string[];
         connectionFlow: number;
         priorityFrames: string[]
