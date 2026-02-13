@@ -87,6 +87,7 @@ type httpClientConfig struct {
 	withRandomTlsExtensionOrder bool
 	forceHttp1                  bool
 	disableHttp3                bool
+	disableSessionTickets       bool
 	enableProtocolRacing        bool
 
 	// Establish a connection to origin server via ipv4 only
@@ -274,6 +275,13 @@ func WithForceHttp1() HttpClientOption {
 func WithDisableHttp3() HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.disableHttp3 = true
+	}
+}
+
+// WithDisableSessionTickets configures a client to disable TLS session ticket caching and resumption.
+func WithDisableSessionTickets() HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.disableSessionTickets = true
 	}
 }
 
