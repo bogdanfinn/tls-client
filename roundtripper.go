@@ -538,7 +538,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, disableHttp3 bool, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify, withRandomTlsExtensionOrder, forceHttp1, disableHttp3, disableSessionTickets, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -546,7 +546,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 
 	var clientSessionCache tls.ClientSessionCache
 
-	withSessionResumption := supportsSessionResumption(clientProfile.GetClientHelloId())
+	withSessionResumption := !disableSessionTickets && supportsSessionResumption(clientProfile.GetClientHelloId())
 
 	if withSessionResumption {
 		clientSessionCache = tls.NewLRUClientSessionCache(32)
