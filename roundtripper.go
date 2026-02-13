@@ -99,13 +99,13 @@ func (rt *roundTripper) CloseIdleConnections() {
 }
 
 func (rt *roundTripper) getHttp3Settings() map[uint64]uint64 {
-	if rt.http3Settings == nil || len(rt.http3Settings) == 0 {
+	if len(rt.http3Settings) == 0 {
 		return nil
 	}
 
 	// Build settings in the correct order
 	orderedSettings := make(map[uint64]uint64)
-	if rt.http3SettingsOrder != nil && len(rt.http3SettingsOrder) > 0 {
+	if len(rt.http3SettingsOrder) > 0 {
 		for _, id := range rt.http3SettingsOrder {
 			if val, ok := rt.http3Settings[id]; ok {
 				orderedSettings[id] = val
@@ -159,7 +159,7 @@ func buildHTTP3Transport(cfg *http3Config) (http.RoundTripper, error) {
 		http3Settings[greaseID] = greaseValue
 
 		// Set the order if available, and append GREASE at the end
-		if cfg.http3SettingsOrder != nil && len(cfg.http3SettingsOrder) > 0 {
+		if len(cfg.http3SettingsOrder) > 0 {
 			orderWithGrease := make([]uint64, len(cfg.http3SettingsOrder)+1)
 			copy(orderWithGrease, cfg.http3SettingsOrder)
 			orderWithGrease[len(cfg.http3SettingsOrder)] = greaseID
@@ -167,14 +167,14 @@ func buildHTTP3Transport(cfg *http3Config) (http.RoundTripper, error) {
 		}
 	} else {
 		// Just use the settings order as-is without random GREASE
-		if cfg.http3SettingsOrder != nil && len(cfg.http3SettingsOrder) > 0 {
+		if len(cfg.http3SettingsOrder) > 0 {
 			t3.AdditionalSettingsOrder = cfg.http3SettingsOrder
 		}
 	}
 
 	t3.AdditionalSettings = http3Settings
 
-	if cfg.http3PseudoHeaderOrder != nil && len(cfg.http3PseudoHeaderOrder) > 0 {
+	if len(cfg.http3PseudoHeaderOrder) > 0 {
 		t3.PseudoHeaderOrder = cfg.http3PseudoHeaderOrder
 	}
 
@@ -531,11 +531,11 @@ func (rt *roundTripper) dialTLSForWebsocket(ctx context.Context, network, addr s
 
 func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	host := req.URL.Hostname()
-    port := req.URL.Port()
-    if port != "" {
-        return net.JoinHostPort(host, port)
-    }
-    return net.JoinHostPort(host, "443")
+	port := req.URL.Port()
+	if port != "" {
+		return net.JoinHostPort(host, port)
+	}
+	return net.JoinHostPort(host, "443")
 }
 
 func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify bool, withRandomTlsExtensionOrder bool, forceHttp1 bool, disableHttp3 bool, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6 bool, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
