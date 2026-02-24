@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/bogdanfinn/tls-client/profiles"
+	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding/korean"
 	"golang.org/x/text/transform"
 
@@ -146,7 +147,7 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	return tlsReq, nil
 }
 
-func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]byte, error) {
+func readAllBodyWithStreamToFile(respBody io.Reader, input RequestInput) ([]byte, error) {
 	var respBodyBytes []byte
 	var err error
 	bodyLen := 0
@@ -206,18 +207,33 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	euckrResponse := input.EuckrResponse
 
 	ce := resp.Header.Get("Content-Encoding")
+	ct := resp.Header.Get("Content-Type")
 
 	var respBodyBytes []byte
+	var decodedReader io.Reader
 	var err error
 
 	if !resp.Uncompressed {
 		resp.Body = http.DecompressBodyByType(resp.Body, ce)
 	}
 
+	decodedReader = resp.Body
+
+	// Automatically detect the charset for non-byte responses
+	if !isByteResponse {
+		decodedReader, err = charset.NewReader(resp.Body, ct)
+
+		if err != nil {
+			clientErr := NewTLSClientError(err)
+
+			return Response{}, clientErr
+		}
+	}
+
 	if input.StreamOutputPath != nil {
-		respBodyBytes, err = readAllBodyWithStreamToFile(resp.Body, input)
+		respBodyBytes, err = readAllBodyWithStreamToFile(decodedReader, input)
 	} else {
-		respBodyBytes, err = io.ReadAll(resp.Body)
+		respBodyBytes, err = io.ReadAll(decodedReader)
 	}
 
 	if err != nil {

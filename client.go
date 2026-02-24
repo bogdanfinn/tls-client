@@ -16,6 +16,7 @@ import (
 	"github.com/bogdanfinn/fhttp/httputil"
 	"github.com/bogdanfinn/tls-client/bandwidth"
 	"github.com/bogdanfinn/tls-client/profiles"
+	"golang.org/x/net/html/charset"
 	"golang.org/x/net/proxy"
 	"golang.org/x/text/encoding/korean"
 	"golang.org/x/text/transform"
@@ -162,8 +163,8 @@ func validateConfig(config *httpClientConfig) error {
 	}
 
 	if config.dialContext != nil && (config.proxyUrl != "" || config.proxyDialerFactory != nil) {
-        return fmt.Errorf("invalid config: WithDialContext overrides the built-in proxy logic. If you use a custom dialer, you must handle the proxy connection (CONNECT handshake) yourself inside that dialer.")
-    }
+		return fmt.Errorf("invalid config: WithDialContext overrides the built-in proxy logic. If you use a custom dialer, you must handle the proxy connection (CONNECT handshake) yourself inside that dialer.")
+	}
 
 	return nil
 }
@@ -203,7 +204,7 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, pro
 	}
 
 	// If a custom DialContext is provided, it takes precedence over everything.
-    // This allows the user to have full control over the TCP connection (ZeroDNS, socket tracking, etc).
+	// This allows the user to have full control over the TCP connection (ZeroDNS, socket tracking, etc).
 	if config.dialContext != nil {
 		dialer = &customContextDialer{
 			dialContext: config.dialContext,
@@ -599,7 +600,13 @@ func (c *httpClient) do(req *http.Request) (*http.Response, error) {
 		}
 
 		if resp.Body != nil {
-			buf, err := io.ReadAll(resp.Body)
+			// Automatically detect the correct charset
+			chr, err := charset.NewReader(resp.Body, resp.Header.Get("Content-Type"))
+			if err != nil {
+				return nil, err
+			}
+
+			buf, err := io.ReadAll(chr)
 			if err != nil {
 				return nil, err
 			}
