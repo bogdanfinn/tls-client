@@ -86,7 +86,6 @@ type RequestInput struct {
 	WithCustomCookieJar         bool                `json:"withCustomCookieJar"`
 	WithoutCookieJar            bool                `json:"withoutCookieJar"`
 	WithRandomTLSExtensionOrder bool                `json:"withRandomTLSExtensionOrder"`
-	EuckrResponse               bool                `json:"euckrResponse"`
 }
 
 // CustomTlsClient contains custom TLS specifications to construct a client from.
