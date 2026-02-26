@@ -11,8 +11,7 @@ import (
 	"sync"
 
 	"github.com/bogdanfinn/tls-client/profiles"
-	"golang.org/x/text/encoding/korean"
-	"golang.org/x/text/transform"
+	"golang.org/x/net/html/charset"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/cookiejar"
@@ -146,7 +145,7 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 	return tlsReq, nil
 }
 
-func readAllBodyWithStreamToFile(respBody io.ReadCloser, input RequestInput) ([]byte, error) {
+func readAllBodyWithStreamToFile(respBody io.Reader, input RequestInput) ([]byte, error) {
 	var respBodyBytes []byte
 	var err error
 	bodyLen := 0
@@ -203,21 +202,35 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	defer resp.Body.Close()
 
 	isByteResponse := input.IsByteResponse
-	euckrResponse := input.EuckrResponse
 
 	ce := resp.Header.Get("Content-Encoding")
+	ct := resp.Header.Get("Content-Type")
 
 	var respBodyBytes []byte
+	var decodedReader io.Reader
 	var err error
 
 	if !resp.Uncompressed {
 		resp.Body = http.DecompressBodyByType(resp.Body, ce)
 	}
 
+	decodedReader = resp.Body
+
+	// Automatically detect the charset for non-byte responses
+	if !isByteResponse {
+		decodedReader, err = charset.NewReader(resp.Body, ct)
+
+		if err != nil {
+			clientErr := NewTLSClientError(err)
+
+			return Response{}, clientErr
+		}
+	}
+
 	if input.StreamOutputPath != nil {
-		respBodyBytes, err = readAllBodyWithStreamToFile(resp.Body, input)
+		respBodyBytes, err = readAllBodyWithStreamToFile(decodedReader, input)
 	} else {
-		respBodyBytes, err = io.ReadAll(resp.Body)
+		respBodyBytes, err = io.ReadAll(decodedReader)
 	}
 
 	if err != nil {
@@ -234,14 +247,6 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 		base64Encoding += base64.StdEncoding.EncodeToString(respBodyBytes)
 
 		finalResponse = base64Encoding
-	}
-
-	if euckrResponse {
-		var bufs bytes.Buffer
-		wr := transform.NewWriter(&bufs, korean.EUCKR.NewDecoder())
-		wr.Write(respBodyBytes)
-		wr.Close()
-		finalResponse = bufs.String()
 	}
 
 	response := Response{
@@ -412,10 +417,6 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 	if requestInput.ServerNameOverwrite != nil && *requestInput.ServerNameOverwrite != "" {
 		options = append(options, tls_client.WithServerNameOverwrite(*requestInput.ServerNameOverwrite))
-	}
-
-	if requestInput.EuckrResponse {
-		options = append(options, tls_client.WithEnableEuckrResponse())
 	}
 
 	proxy := proxyUrl

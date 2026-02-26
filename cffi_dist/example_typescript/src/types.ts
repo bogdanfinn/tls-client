@@ -19,7 +19,6 @@ export interface TLSClientRequestPayload {
     followRedirects?: boolean;
     insecureSkipVerify?: boolean;
     isByteResponse?: boolean;
-    euckrResponse?: boolean;
     withoutCookieJar?: boolean;
     withRandomTLSExtensionOrder?: boolean;
     timeoutSeconds?: number;

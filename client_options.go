@@ -95,7 +95,6 @@ type httpClientConfig struct {
 	disableIPV4 bool
 
 	enabledBandwidthTracker bool
-	euckrResponse           bool
 
 	preHooks  []PreRequestHookFunc
 	postHooks []PostResponseHookFunc
@@ -338,12 +337,6 @@ func WithConnectHeaders(headers http.Header) HttpClientOption {
 	}
 }
 
-func WithEnableEuckrResponse() HttpClientOption {
-	return func(config *httpClientConfig) {
-		config.euckrResponse = true
-	}
-}
-
 // WithPreHook adds a pre-request hook that is called before each request is sent.
 // Multiple hooks can be added and they will be executed in the order they were added.
 // If any hook returns an error, the request is aborted and subsequent hooks are not called.
@@ -361,6 +354,7 @@ func WithPostHook(hook PostResponseHookFunc) HttpClientOption {
 		config.postHooks = append(config.postHooks, hook)
 	}
 }
+
 // WithDialContext sets a custom dialer for TCP connections, allowing advanced networking
 // (Zero-DNS, socket tagging, DPI bypass).
 //
