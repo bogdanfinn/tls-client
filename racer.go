@@ -164,7 +164,7 @@ func (pr *protocolRacer) attemptHTTP3(req *http.Request, resultCh chan<- racingR
 	if err != nil {
 		resultCh <- racingResult{protocol: "h3", err: fmt.Errorf("HTTP/3 request failed: %w", err)}
 	} else {
-		resultCh <- racingResult{protocol: "h3", response: resp}
+		resultCh <- racingResult{protocol: "h3", response: resp, transport: h3Transport}
 	}
 }
 
@@ -185,7 +185,7 @@ func (pr *protocolRacer) attemptHTTP2(req *http.Request, addr string, getTranspo
 	pr.cachedTransportsLck.Unlock()
 
 	resp, err := h2Transport.RoundTrip(req)
-	resultCh <- racingResult{protocol: "h2", response: resp, err: err}
+	resultCh <- racingResult{protocol: "h2", response: resp, err: err, transport: h2Transport}
 }
 
 func (pr *protocolRacer) waitForRaceWinner(ctx context.Context, addr string, resultCh <-chan racingResult, cancel context.CancelFunc) (*http.Response, error) {
@@ -194,8 +194,8 @@ func (pr *protocolRacer) waitForRaceWinner(ctx context.Context, addr string, res
 	for i := 0; i < 2; i++ {
 		select {
 		case result := <-resultCh:
-			if result.err == nil && result.response != nil {
-				pr.cacheWinningProtocol(addr, result.protocol)
+			if result.err == nil && result.response != nil && result.transport != nil {
+				pr.cacheWinningProtocol(addr, result.protocol, result.transport)
 				cancel()
 				return result.response, nil
 			}
@@ -228,15 +228,14 @@ func (pr *protocolRacer) clearProtocolCache(addr string) {
 	pr.protocolCacheMu.Unlock()
 }
 
-func (pr *protocolRacer) cacheWinningProtocol(addr, protocol string) {
+func (pr *protocolRacer) cacheWinningProtocol(addr, protocol string, transport http.RoundTripper) {
 	pr.protocolCacheMu.Lock()
 	pr.protocolCache[addr] = protocol
 	pr.protocolCacheMu.Unlock()
 
 	if protocol == "h3" {
 		pr.cachedTransportsLck.Lock()
-		h3Transport, _ := buildHTTP3Transport(pr.getHTTP3Config())
-		pr.cachedTransports[addr+":h3"] = h3Transport
+		pr.cachedTransports[addr+":h3"] = transport
 		pr.cachedTransportsLck.Unlock()
 	}
 }
@@ -263,7 +262,8 @@ func (pr *protocolRacer) getHTTP3Config() *http3Config {
 }
 
 type racingResult struct {
-	protocol string
-	response *http.Response
-	err      error
+	protocol  string
+	response  *http.Response
+	transport http.RoundTripper
+	err       error
 }
