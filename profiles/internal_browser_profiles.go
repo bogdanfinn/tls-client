@@ -88,7 +88,7 @@ var Chrome_146_PSK = ClientProfile{
 						"h2",
 						"http/1.1",
 					}},
-					&tls.GenericExtension{Id: 0xca34, Data: []byte{0x00, 0x00}}, // https://source.chromium.org/search?q=TLSEXT_TYPE_trust_anchors https://issues.chromium.org/issues/398275713
+					//&tls.GenericExtension{Id: 0xca34, Data: []byte{0x00, 0x00}}, // https://source.chromium.org/search?q=TLSEXT_TYPE_trust_anchors https://issues.chromium.org/issues/398275713
 					&tls.UtlsGREASEExtension{},
 					&tls.UtlsPreSharedKeyExtension{},
 				},
@@ -199,7 +199,7 @@ var Chrome_146 = ClientProfile{
 					&tls.PSKKeyExchangeModesExtension{Modes: []uint8{
 						tls.PskModeDHE,
 					}},
-					&tls.GenericExtension{Id: 0xca34, Data: []byte{0x00, 0x00}}, // https://source.chromium.org/search?q=TLSEXT_TYPE_trust_anchors https://issues.chromium.org/issues/398275713
+					//&tls.GenericExtension{Id: 0xca34, Data: []byte{0x00, 0x00}}, // https://source.chromium.org/search?q=TLSEXT_TYPE_trust_anchors https://issues.chromium.org/issues/398275713
 					&tls.UtlsGREASEExtension{},
 				},
 			}, nil
