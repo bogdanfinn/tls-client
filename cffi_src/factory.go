@@ -4,6 +4,7 @@ package tls_client_cffi_src
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -207,36 +208,43 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	ct := resp.Header.Get("Content-Type")
 
 	var respBodyBytes []byte
-	var decodedReader io.Reader
-	var err error
+	var bodyReader io.Reader
 
 	if !resp.Uncompressed {
 		resp.Body = http.DecompressBodyByType(resp.Body, ce)
 	}
 
-	decodedReader = resp.Body
+	bodyReader = resp.Body
 
-	// Automatically detect the charset for non-byte responses
 	if !isByteResponse {
-		decodedReader, err = charset.NewReader(resp.Body, ct)
-
-		if err != nil {
-			clientErr := NewTLSClientError(err)
-
-			return Response{}, clientErr
+		// Try to preview a single byte of the body reader to prevent EOF caused by empty bodies.
+		// This is probably the best way of reliably detecting empty response bodies,
+		// especially when the content-length response header is not present.
+		firstByte := make([]byte, 1)
+		n, err := io.ReadFull(resp.Body, firstByte)
+		if err != nil && !errors.Is(err, io.EOF) {
+			return Response{}, NewTLSClientError(err)
 		}
-	}
 
-	if input.StreamOutputPath != nil {
-		respBodyBytes, err = readAllBodyWithStreamToFile(decodedReader, input)
-	} else {
-		respBodyBytes, err = io.ReadAll(decodedReader)
-	}
+		if n == 0 {
+			respBodyBytes = nil
+		} else {
+			bodyReader = io.MultiReader(bytes.NewReader(firstByte[:n]), resp.Body)
+			// Automatically detect the charset for non-byte responses
+			bodyReader, err = charset.NewReader(bodyReader, ct)
+			if err != nil {
+				return Response{}, NewTLSClientError(err)
+			}
 
-	if err != nil {
-		clientErr := NewTLSClientError(err)
-
-		return Response{}, clientErr
+			if input.StreamOutputPath != nil {
+				respBodyBytes, err = readAllBodyWithStreamToFile(bodyReader, input)
+			} else {
+				respBodyBytes, err = io.ReadAll(bodyReader)
+			}
+			if err != nil {
+				return Response{}, NewTLSClientError(err)
+			}
+		}
 	}
 
 	finalResponse := string(respBodyBytes)
