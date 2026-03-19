@@ -177,14 +177,11 @@ func (jar *cookieJar) buildCookieHostKey(u *url.URL) string {
 
 	hostParts := strings.Split(host, ".")
 
-	switch len(hostParts) {
-	case 3:
+	if len(hostParts) >= 2 {
 		return fmt.Sprintf("%s.%s", hostParts[len(hostParts)-2], hostParts[len(hostParts)-1])
-	case 2:
-		return fmt.Sprintf("%s.%s", hostParts[len(hostParts)-2], hostParts[len(hostParts)-1])
-	default:
-		return host
 	}
+
+	return host
 }
 
 func (jar *cookieJar) unique(cookies []*http.Cookie) []*http.Cookie {
