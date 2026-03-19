@@ -7,7 +7,7 @@ import (
 )
 
 
-var Firefox_148 = ClientProfile{
+var Firefox_148v1 = ClientProfile{
 	clientHelloId: tls.ClientHelloID{
 		Client:               "Firefox",
 		RandomExtensionOrder: false,
@@ -29,8 +29,8 @@ var Firefox_148 = ClientProfile{
 					tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
 					tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
 					tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-					uint16(0x0033), // TLS_DHE_RSA_WITH_AES_128_CBC_SHA
-					uint16(0x0039), // TLS_DHE_RSA_WITH_AES_256_CBC_SHA
+					0x0033, // TLS_DHE_RSA_WITH_AES_128_CBC_SHA
+					0x0039, // TLS_DHE_RSA_WITH_AES_256_CBC_SHA
 					tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
 					tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
 					tls.TLS_RSA_WITH_AES_128_CBC_SHA,
@@ -172,7 +172,7 @@ var Firefox_148 = ClientProfile{
 	http3SendGreaseFrames: true,
 }
 
-var Firefox_148_PSK = ClientProfile{
+var Firefox_148v2 = ClientProfile{
 	clientHelloId: tls.ClientHelloID{
 		Client:               "Firefox",
 		RandomExtensionOrder: false,
@@ -194,8 +194,6 @@ var Firefox_148_PSK = ClientProfile{
 					tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
 					tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
 					tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-					uint16(0x0033), // TLS_DHE_RSA_WITH_AES_128_CBC_SHA
-					uint16(0x0039), // TLS_DHE_RSA_WITH_AES_256_CBC_SHA
 					tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
 					tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
 					tls.TLS_RSA_WITH_AES_128_CBC_SHA,
@@ -280,7 +278,6 @@ var Firefox_148_PSK = ClientProfile{
 						},
 						CandidatePayloadLens: []uint16{128, 223},
 					},
-					&tls.UtlsPreSharedKeyExtension{OmitEmptyPsk: true},
 				},
 			}, nil
 		},
