@@ -2415,3 +2415,245 @@ var Opera_89 = ClientProfile{
 	},
 	connectionFlow: 15663105,
 }
+
+// Brave_146 is a TLS client profile for Brave Browser v146 (Chromium 146 based).
+// Captured from tls.peet.ws/api/all on 2026-03-27 (5 samples verified).
+// NOTE: Brave randomizes TLS extension order on every connection (anti-fingerprinting).
+// JA3 hash: varies per connection (extension order changes)
+// JA4: t13d1516h2_8daaf6152771_d8a2da3f94cd (consistent - JA4 sorts extensions)
+// Peetprint hash: 1d4ffe9b0e34acac0bd883fa7f79d7b5 (consistent)
+var Brave_146 = ClientProfile{
+	clientHelloId: tls.ClientHelloID{
+		Client:               "Brave",
+		RandomExtensionOrder: true,
+		Version:              "146",
+		Seed:                 nil,
+		SpecFactory: func() (tls.ClientHelloSpec, error) {
+			return tls.ClientHelloSpec{
+				CipherSuites: []uint16{
+					tls.GREASE_PLACEHOLDER,
+					tls.TLS_AES_128_GCM_SHA256,
+					tls.TLS_AES_256_GCM_SHA384,
+					tls.TLS_CHACHA20_POLY1305_SHA256,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+					tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+				},
+				CompressionMethods: []byte{
+					tls.CompressionNone,
+				},
+				Extensions: []tls.TLSExtension{
+					// Brave randomizes extension order each connection (RandomExtensionOrder=true).
+					// GREASE bookends (first+last) stay fixed; inner extensions are shuffled.
+					&tls.UtlsGREASEExtension{},
+					&tls.SessionTicketExtension{},
+					&tls.SupportedVersionsExtension{Versions: []uint16{
+						tls.GREASE_PLACEHOLDER,
+						tls.VersionTLS13,
+						tls.VersionTLS12,
+					}},
+					&tls.PSKKeyExchangeModesExtension{Modes: []uint8{
+						tls.PskModeDHE,
+					}},
+					&tls.RenegotiationInfoExtension{
+						Renegotiation: tls.RenegotiateOnceAsClient,
+					},
+					&tls.ALPNExtension{AlpnProtocols: []string{
+						"h2",
+						"http/1.1",
+					}},
+					&tls.SupportedCurvesExtension{Curves: []tls.CurveID{
+						tls.GREASE_PLACEHOLDER,
+						tls.X25519MLKEM768,
+						tls.X25519,
+						tls.CurveP256,
+						tls.CurveP384,
+					}},
+					&tls.ExtendedMasterSecretExtension{},
+					tls.BoringGREASEECH(),
+					&tls.SNIExtension{},
+					&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
+						{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
+						{Group: tls.X25519MLKEM768},
+						{Group: tls.X25519},
+					}},
+					&tls.UtlsCompressCertExtension{Algorithms: []tls.CertCompressionAlgo{
+						tls.CertCompressionBrotli,
+					}},
+					&tls.ApplicationSettingsExtensionNew{
+						SupportedProtocols: []string{"h2"},
+					},
+					&tls.SCTExtension{},
+					&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
+						tls.ECDSAWithP256AndSHA256,
+						tls.PSSWithSHA256,
+						tls.PKCS1WithSHA256,
+						tls.ECDSAWithP384AndSHA384,
+						tls.PSSWithSHA384,
+						tls.PKCS1WithSHA384,
+						tls.PSSWithSHA512,
+						tls.PKCS1WithSHA512,
+					}},
+					&tls.SupportedPointsExtension{SupportedPoints: []byte{
+						tls.PointFormatUncompressed,
+					}},
+					&tls.StatusRequestExtension{},
+					&tls.UtlsGREASEExtension{},
+				},
+			}, nil
+		},
+	},
+	headerPriority: &http2.PriorityParam{
+		StreamDep: 0,
+		Exclusive: true,
+		Weight:    255,
+	},
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:   65536,
+		http2.SettingEnablePush:        0,
+		http2.SettingInitialWindowSize: 6291456,
+		http2.SettingMaxHeaderListSize: 262144,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingEnablePush,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	},
+	connectionFlow: 15663105,
+}
+
+// Brave_146_PSK is a TLS client profile for Brave Browser v146 with PSK (Pre-Shared Key)
+// for subsequent TLS 1.3 connections where session resumption is available.
+// Extension order is randomized like the non-PSK variant.
+var Brave_146_PSK = ClientProfile{
+	clientHelloId: tls.ClientHelloID{
+		Client:               "Brave",
+		RandomExtensionOrder: true,
+		Version:              "146_PSK",
+		Seed:                 nil,
+		SpecFactory: func() (tls.ClientHelloSpec, error) {
+			return tls.ClientHelloSpec{
+				CipherSuites: []uint16{
+					tls.GREASE_PLACEHOLDER,
+					tls.TLS_AES_128_GCM_SHA256,
+					tls.TLS_AES_256_GCM_SHA384,
+					tls.TLS_CHACHA20_POLY1305_SHA256,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+					tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+				},
+				CompressionMethods: []byte{
+					tls.CompressionNone,
+				},
+				Extensions: []tls.TLSExtension{
+					// Brave randomizes extension order each connection (RandomExtensionOrder=true).
+					// GREASE bookends (first+last) stay fixed; inner extensions are shuffled.
+					&tls.UtlsGREASEExtension{},
+					&tls.SessionTicketExtension{},
+					&tls.SupportedVersionsExtension{Versions: []uint16{
+						tls.GREASE_PLACEHOLDER,
+						tls.VersionTLS13,
+						tls.VersionTLS12,
+					}},
+					&tls.PSKKeyExchangeModesExtension{Modes: []uint8{
+						tls.PskModeDHE,
+					}},
+					&tls.RenegotiationInfoExtension{
+						Renegotiation: tls.RenegotiateOnceAsClient,
+					},
+					&tls.ALPNExtension{AlpnProtocols: []string{
+						"h2",
+						"http/1.1",
+					}},
+					&tls.SupportedCurvesExtension{Curves: []tls.CurveID{
+						tls.GREASE_PLACEHOLDER,
+						tls.X25519MLKEM768,
+						tls.X25519,
+						tls.CurveP256,
+						tls.CurveP384,
+					}},
+					&tls.ExtendedMasterSecretExtension{},
+					tls.BoringGREASEECH(),
+					&tls.SNIExtension{},
+					&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
+						{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
+						{Group: tls.X25519MLKEM768},
+						{Group: tls.X25519},
+					}},
+					&tls.UtlsCompressCertExtension{Algorithms: []tls.CertCompressionAlgo{
+						tls.CertCompressionBrotli,
+					}},
+					&tls.ApplicationSettingsExtensionNew{
+						SupportedProtocols: []string{"h2"},
+					},
+					&tls.SCTExtension{},
+					&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
+						tls.ECDSAWithP256AndSHA256,
+						tls.PSSWithSHA256,
+						tls.PKCS1WithSHA256,
+						tls.ECDSAWithP384AndSHA384,
+						tls.PSSWithSHA384,
+						tls.PKCS1WithSHA384,
+						tls.PSSWithSHA512,
+						tls.PKCS1WithSHA512,
+					}},
+					&tls.SupportedPointsExtension{SupportedPoints: []byte{
+						tls.PointFormatUncompressed,
+					}},
+					&tls.StatusRequestExtension{},
+					&tls.UtlsGREASEExtension{},
+					&tls.UtlsPreSharedKeyExtension{},
+				},
+			}, nil
+		},
+	},
+	headerPriority: &http2.PriorityParam{
+		StreamDep: 0,
+		Exclusive: true,
+		Weight:    255,
+	},
+	settings: map[http2.SettingID]uint32{
+		http2.SettingHeaderTableSize:   65536,
+		http2.SettingEnablePush:        0,
+		http2.SettingInitialWindowSize: 6291456,
+		http2.SettingMaxHeaderListSize: 262144,
+	},
+	settingsOrder: []http2.SettingID{
+		http2.SettingHeaderTableSize,
+		http2.SettingEnablePush,
+		http2.SettingInitialWindowSize,
+		http2.SettingMaxHeaderListSize,
+	},
+	pseudoHeaderOrder: []string{
+		":method",
+		":authority",
+		":scheme",
+		":path",
+	},
+	connectionFlow: 15663105,
+}
