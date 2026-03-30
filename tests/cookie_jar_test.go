@@ -172,6 +172,50 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 	assert.Equal(t, 6, len(cookiesAfterSecondRequest))
 }
 
+func TestClient_CookiesSharedAcrossDeepSubdomains(t *testing.T) {
+	jar := tls_client.NewCookieJar()
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithCookieJar(jar),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Set cookies on the base domain (simulating a cookie with Domain=.ticketmaster.com)
+	baseURL := &url.URL{Scheme: "https", Host: "ticketmaster.com", Path: "/"}
+	client.SetCookies(baseURL, []*http.Cookie{
+		{Name: "session", Value: "abc123", MaxAge: 3600},
+		{Name: "token", Value: "xyz789", MaxAge: 3600},
+	})
+
+	// Verify cookies are available on the base domain
+	assert.Equal(t, 2, len(client.GetCookies(baseURL)), "base domain should have 2 cookies")
+
+	// Verify cookies are available on a single-level subdomain
+	authURL := &url.URL{Scheme: "https", Host: "auth.ticketmaster.com", Path: "/"}
+	assert.Equal(t, 2, len(client.GetCookies(authURL)), "single-level subdomain should have 2 cookies")
+
+	// Verify cookies are available on a two-level (deep) subdomain
+	deepURL := &url.URL{Scheme: "https", Host: "checkout.prod.ticketmaster.com", Path: "/"}
+	assert.Equal(t, 2, len(client.GetCookies(deepURL)), "two-level subdomain should have 2 cookies")
+
+	// Verify cookies are available on an even deeper subdomain
+	deeperURL := &url.URL{Scheme: "https", Host: "a.b.c.ticketmaster.com", Path: "/"}
+	assert.Equal(t, 2, len(client.GetCookies(deeperURL)), "three-level subdomain should have 2 cookies")
+
+	// Verify cookies set on a deep subdomain are also visible from the base domain
+	deepSetURL := &url.URL{Scheme: "https", Host: "api.checkout.prod.ticketmaster.com", Path: "/"}
+	client.SetCookies(deepSetURL, []*http.Cookie{
+		{Name: "deep_cookie", Value: "deep_value", MaxAge: 3600},
+	})
+	assert.Equal(t, 3, len(client.GetCookies(baseURL)), "base domain should see cookie set from deep subdomain")
+	assert.Equal(t, 3, len(client.GetCookies(deepSetURL)), "deep subdomain should see all cookies")
+}
+
 func TestClient_ExcludeExpiredCookiesFromRequest(t *testing.T) {
 	jar := tls_client.NewCookieJar()
 
