@@ -125,6 +125,7 @@ func buildHTTP3Transport(cfg *http3Config) (http.RoundTripper, error) {
 	}
 	if cfg.transportOptions != nil {
 		utlsConfig.RootCAs = cfg.transportOptions.RootCAs
+		utlsConfig.Certificates = cfg.transportOptions.Certificates
 	}
 
 	if cfg.serverNameOverwrite != "" {
@@ -295,6 +296,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	if rt.transportOptions != nil {
 		tlsConfig.RootCAs = rt.transportOptions.RootCAs
 		tlsConfig.KeyLogWriter = rt.transportOptions.KeyLogWriter
+		tlsConfig.Certificates = rt.transportOptions.Certificates
 	}
 
 	rawConn = rt.bandwidthTracker.TrackConnection(ctx, rawConn)
@@ -324,6 +326,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		utlsConfig := &tls.Config{ClientSessionCache: rt.clientSessionCache, InsecureSkipVerify: rt.insecureSkipVerify, OmitEmptyPsk: true}
 		if rt.transportOptions != nil {
 			utlsConfig.RootCAs = rt.transportOptions.RootCAs
+			utlsConfig.Certificates = rt.transportOptions.Certificates
 		}
 
 		if rt.serverNameOverwrite != "" {
@@ -439,6 +442,7 @@ func (rt *roundTripper) buildHttp1Transport() *http.Transport {
 	utlsConfig := &tls.Config{ClientSessionCache: rt.clientSessionCache, InsecureSkipVerify: rt.insecureSkipVerify, OmitEmptyPsk: true}
 	if rt.transportOptions != nil {
 		utlsConfig.RootCAs = rt.transportOptions.RootCAs
+		utlsConfig.Certificates = rt.transportOptions.Certificates
 	}
 
 	if rt.serverNameOverwrite != "" {
@@ -509,6 +513,7 @@ func (rt *roundTripper) dialTLSForWebsocket(ctx context.Context, network, addr s
 	if rt.transportOptions != nil {
 		tlsConfig.RootCAs = rt.transportOptions.RootCAs
 		tlsConfig.KeyLogWriter = rt.transportOptions.KeyLogWriter
+		tlsConfig.Certificates = rt.transportOptions.Certificates
 	}
 
 	rawConn = rt.bandwidthTracker.TrackConnection(ctx, rawConn)
