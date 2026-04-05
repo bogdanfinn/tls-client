@@ -11,6 +11,7 @@ import (
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/tls-client/profiles"
+	tls "github.com/bogdanfinn/utls"
 	"golang.org/x/net/proxy"
 )
 
@@ -27,6 +28,7 @@ type TransportOptions struct {
 	// RootCAs is the set of root certificate authorities used to verify
 	// the remote server's certificate.
 	RootCAs                *x509.CertPool
+	Certificates           []tls.Certificate
 	MaxIdleConns           int
 	MaxIdleConnsPerHost    int
 	MaxConnsPerHost        int
