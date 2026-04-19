@@ -14,7 +14,7 @@ const requestPayload = {
     "followRedirects": false,
     "insecureSkipVerify": false,
     "withoutCookieJar": false,
-    "withDefaultCookieJar": false,
+    "withCustomCookieJar": false,
     "isByteRequest": false,
     "catchPanics": false,
     "forceHttp1": false,

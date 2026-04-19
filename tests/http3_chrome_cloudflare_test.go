@@ -6,16 +6,14 @@ import (
 	"testing"
 
 	http "github.com/bogdanfinn/fhttp"
-	tls_client "github.com/glowww/tls-client"
-	"github.com/glowww/tls-client/profiles"
+	tls_client "github.com/bogdanfinn/tls-client"
+	"github.com/bogdanfinn/tls-client/profiles"
 )
 
-func TestHTTP3(t *testing.T) {
+func TestHTTP3WithChromeOnCloudflare(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(profiles.Chrome_144),
-		tls_client.WithTimeoutSeconds(30),
 		tls_client.WithProtocolRacing(),
-		tls_client.WithDebug(),
 	}
 
 	client, err := tls_client.NewHttpClient(nil, options...)
@@ -23,7 +21,7 @@ func TestHTTP3(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, "https://http3.is/", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://www.cloudflare.com/cdn-cgi/trace", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,17 +38,15 @@ func TestHTTP3(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !strings.Contains(string(body), "it does support HTTP/3!") {
+	if !strings.Contains(string(body), "http=http/3") {
 		t.Fatal("Response did not contain HTTP3 result")
 	}
 }
 
-func TestDisableHTTP3(t *testing.T) {
+func TestHTTP2WithChromeOnCloudflare(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(profiles.Chrome_144),
-		tls_client.WithTimeoutSeconds(30),
-		tls_client.WithDisableHttp3(),
-		tls_client.WithDebug(),
+		// tls_client.WithProtocolRacing(), // we explicitly disable racing and stick to the "old" behavior
 	}
 
 	client, err := tls_client.NewHttpClient(nil, options...)
@@ -58,7 +54,7 @@ func TestDisableHTTP3(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, "https://http3.is/", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://www.cloudflare.com/cdn-cgi/trace", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +71,7 @@ func TestDisableHTTP3(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !strings.Contains(string(body), "HTTP/3 (h3-29 or h3-27) was not used to request this page") {
+	if !strings.Contains(string(body), "http=http/2") {
 		t.Fatal("Response did contain HTTP3 result")
 	}
 }
