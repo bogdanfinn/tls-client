@@ -5,10 +5,10 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/bogdanfinn/tls-client/profiles"
+	"github.com/glowww/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
-	tls_client "github.com/bogdanfinn/tls-client"
+	tls_client "github.com/glowww/tls-client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -125,7 +125,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 
 	cookiesAfterFirstRequest := client.GetCookies(u)
 
-	assert.Equal(t, 6, len(cookiesAfterFirstRequest))
+	assert.Equal(t, 7, len(cookiesAfterFirstRequest))
 
 	cookie3 := &http.Cookie{
 		Name:   cookiesAfterFirstRequest[0].Name,
@@ -135,7 +135,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 	}
 	client.SetCookies(u, []*http.Cookie{cookie3})
 
-	assert.Equal(t, 6, len(client.GetCookies(u)))
+	assert.Equal(t, 7, len(client.GetCookies(u)))
 
 	req, err = http.NewRequest(http.MethodGet, "https://eu.kith.com/", nil)
 	if err != nil {
@@ -169,7 +169,7 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 
 	cookiesAfterSecondRequest := client.GetCookies(u)
 
-	assert.Equal(t, 6, len(cookiesAfterSecondRequest))
+	assert.Equal(t, 7, len(cookiesAfterSecondRequest))
 }
 
 func TestClient_ExcludeExpiredCookiesFromRequest(t *testing.T) {

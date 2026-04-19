@@ -6,24 +6,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bogdanfinn/tls-client/profiles"
+	"github.com/glowww/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
-	tls_client "github.com/bogdanfinn/tls-client"
+	tls_client "github.com/glowww/tls-client"
 	tls "github.com/bogdanfinn/utls"
 )
 
 func TestClients(t *testing.T) {
-	t.Log("testing firefox 147")
-	firefox_147(t)
-	t.Log("testing chrome 146 with PSK")
-	chrome_146_PSK(t)
-	t.Log("testing safari ios 26.0")
-	safari_iOS_26_0(t)
-	t.Log("testing safari ios 18.5")
-	safari_iOS_18_5(t)
-	t.Log("testing chrome 144")
-	chrome_144(t)
 	t.Log("testing chrome 133")
 	chrome_133(t)
 	t.Log("testing chrome 131")
@@ -584,121 +574,6 @@ func chrome_124(t *testing.T) {
 	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_124.GetClientHelloStr()], resp)
 }
 
-func chrome_146_PSK(t *testing.T) {
-	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Chrome_146_PSK),
-		tls_client.WithTimeoutSeconds(120),
-	}
-
-	client, err := tls_client.NewHttpClient(nil, options...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header = defaultHeader
-
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_146.GetClientHelloStr()], resp)
-
-	req, err = http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header = defaultHeader
-
-	resp, err = client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_146_PSK.GetClientHelloStr()], resp)
-}
-
-func safari_iOS_26_0(t *testing.T) {
-	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Safari_IOS_26_0),
-	}
-
-	client, err := tls_client.NewHttpClient(nil, options...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header = defaultHeader
-
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	compareResponse(t, "safari ios", clientFingerprints[safariIos][profiles.Safari_IOS_26_0.GetClientHelloStr()], resp)
-}
-
-func safari_iOS_18_5(t *testing.T) {
-	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Safari_IOS_18_5),
-	}
-
-	client, err := tls_client.NewHttpClient(nil, options...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header = defaultHeader
-
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	compareResponse(t, "safari ios", clientFingerprints[safariIos][profiles.Safari_IOS_18_5.GetClientHelloStr()], resp)
-}
-
-func chrome_144(t *testing.T) {
-	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Chrome_144),
-	}
-
-	client, err := tls_client.NewHttpClient(nil, options...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header = defaultHeader
-
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_144.GetClientHelloStr()], resp)
-}
-
 func chrome_133(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		tls_client.WithClientProfile(profiles.Chrome_133),
@@ -797,31 +672,6 @@ func chrome_117(t *testing.T) {
 	}
 
 	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_117.GetClientHelloStr()], resp)
-}
-
-func firefox_147(t *testing.T) {
-	options := []tls_client.HttpClientOption{
-		tls_client.WithClientProfile(profiles.Firefox_147),
-	}
-
-	client, err := tls_client.NewHttpClient(nil, options...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header = defaultHeader
-
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	compareResponse(t, "firefox", clientFingerprints[firefox][profiles.Firefox_147.GetClientHelloStr()], resp)
 }
 
 func firefox_117(t *testing.T) {
