@@ -24,7 +24,7 @@ class RequestPayload
     public bool FollowRedirects { get; set; } = true;
     public bool InsecureSkipVerify { get; set; } = false;
     public bool WithoutCookieJar { get; set; } = false;
-    public bool WithDefaultCookieJar { get; set; } = false;
+    public bool WithCustomCookieJar { get; set; } = false;
     public bool IsByteRequest { get; set; } = false;
     public bool ForceHttp1 { get; set; } = false;
     public bool WithDebug { get; set; } = false;
