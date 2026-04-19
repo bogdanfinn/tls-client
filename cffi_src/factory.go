@@ -18,7 +18,7 @@ import (
 	"github.com/bogdanfinn/fhttp/cookiejar"
 	"github.com/bogdanfinn/fhttp/http2"
 	tls "github.com/bogdanfinn/utls"
-	tls_client "github.com/glowww/tls-client"
+	tls_client "github.com/bogdanfinn/tls-client"
 	"github.com/google/uuid"
 )
 

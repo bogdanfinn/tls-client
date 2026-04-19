@@ -16,10 +16,10 @@ github.com/bogdanfinn/websocket v1.5.5-barnius h1:bY+qnxpai1qe7Jmjx+Sds/cmOSpuuL
 github.com/bogdanfinn/websocket v1.5.5-barnius/go.mod h1:gvvEw6pTKHb7yOiFvIfAFTStQWyrm25BMVCTj5wRSsI=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/glowww/tls-client v1.6.2-0.20250902112959-2e286cb875df h1:3C6XJ3Xb8u/IdEslNiiUEl71huqiXiqe0J0U5Tc0ihU=
-github.com/glowww/tls-client v1.6.2-0.20250902112959-2e286cb875df/go.mod h1:Mnnyijt7hLOvNgCOF5jS34iQmk8jJPbGF1IxQVzcJcU=
-github.com/glowww/tls-client v1.11.0 h1:JCSSf2CSEHPB6Rk8amTeaW84iXdapDbjVl6O4/s1sn8=
-github.com/glowww/tls-client v1.11.0/go.mod h1:3GkHek7BLiVBWnBCvSjiTl5mzgdVuUnjac6oIY4scXI=
+github.com/bogdanfinn/tls-client v1.6.2-0.20250902112959-2e286cb875df h1:3C6XJ3Xb8u/IdEslNiiUEl71huqiXiqe0J0U5Tc0ihU=
+github.com/bogdanfinn/tls-client v1.6.2-0.20250902112959-2e286cb875df/go.mod h1:Mnnyijt7hLOvNgCOF5jS34iQmk8jJPbGF1IxQVzcJcU=
+github.com/bogdanfinn/tls-client v1.11.0 h1:JCSSf2CSEHPB6Rk8amTeaW84iXdapDbjVl6O4/s1sn8=
+github.com/bogdanfinn/tls-client v1.11.0/go.mod h1:3GkHek7BLiVBWnBCvSjiTl5mzgdVuUnjac6oIY4scXI=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/klauspost/compress v1.18.2 h1:iiPHWW0YrcFgpBYhsA6D1+fqHssJscY/Tm/y2Uqnapk=

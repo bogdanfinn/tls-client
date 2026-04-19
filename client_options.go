@@ -10,7 +10,7 @@ import (
 	"time"
 
 	http "github.com/bogdanfinn/fhttp"
-	"github.com/glowww/tls-client/profiles"
+	"github.com/bogdanfinn/tls-client/profiles"
 	"golang.org/x/net/proxy"
 )
 
