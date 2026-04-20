@@ -217,34 +217,37 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 
 	bodyReader = resp.Body
 
-	if !isByteResponse {
-		// Try to preview a single byte of the body reader to prevent EOF caused by empty bodies.
-		// This is probably the best way of reliably detecting empty response bodies,
-		// especially when the content-length response header is not present.
-		firstByte := make([]byte, 1)
-		n, err := io.ReadFull(resp.Body, firstByte)
-		if err != nil && !errors.Is(err, io.EOF) {
-			return Response{}, NewTLSClientError(err)
-		}
+	// Preview a single byte first so we can cleanly return an empty body
+	// without letting charset.NewReader's auto-detection raise EOF on
+	// zero-length responses. The peeked byte is stitched back on via
+	// io.MultiReader before we hand the stream to either the charset reader
+	// (text responses) or io.ReadAll (byte responses).
+	firstByte := make([]byte, 1)
+	n, err := io.ReadFull(resp.Body, firstByte)
+	if err != nil && !errors.Is(err, io.EOF) {
+		return Response{}, NewTLSClientError(err)
+	}
 
-		if n == 0 {
-			respBodyBytes = nil
-		} else {
-			bodyReader = io.MultiReader(bytes.NewReader(firstByte[:n]), resp.Body)
+	if n == 0 {
+		respBodyBytes = nil
+	} else {
+		bodyReader = io.MultiReader(bytes.NewReader(firstByte[:n]), resp.Body)
+
+		if !isByteResponse {
 			// Automatically detect the charset for non-byte responses
 			bodyReader, err = charset.NewReader(bodyReader, ct)
 			if err != nil {
 				return Response{}, NewTLSClientError(err)
 			}
+		}
 
-			if input.StreamOutputPath != nil {
-				respBodyBytes, err = readAllBodyWithStreamToFile(bodyReader, input)
-			} else {
-				respBodyBytes, err = io.ReadAll(bodyReader)
-			}
-			if err != nil {
-				return Response{}, NewTLSClientError(err)
-			}
+		if input.StreamOutputPath != nil {
+			respBodyBytes, err = readAllBodyWithStreamToFile(bodyReader, input)
+		} else {
+			respBodyBytes, err = io.ReadAll(bodyReader)
+		}
+		if err != nil {
+			return Response{}, NewTLSClientError(err)
 		}
 	}
 
