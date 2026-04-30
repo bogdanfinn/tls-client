@@ -335,7 +335,12 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 	client, ok := clients[sessionId]
 
-	if ok && withSession {
+	// Bypass the client cache when WithDebug is set so the freshly-built client picks up
+	// the debug logger configured below. Otherwise the cached client (built earlier on
+	// the same session with NewNoopLogger) would silently win and the WithDebug flag
+	// would have no observable effect on the cffi caller. Diagnostic-only path; normal
+	// callers don't pay this cost.
+	if ok && withSession && !requestInput.WithDebug {
 		modifiedClient, changed, err := handleModification(client, proxyUrl, requestInput.FollowRedirects, requestInput.IsRotatingProxy)
 		if err != nil {
 			return nil, fmt.Errorf("failed to modify existing client: %w", err)
@@ -471,7 +476,21 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithProxyUrl(*proxy))
 	}
 
-	tlsClient, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	// Honour WithDebug=true at the cffi layer too. tls_client.WithDebug() (added
+	// to options above) already makes NewHttpClient auto-wrap the supplied logger
+	// via NewDebugLogger, which routes Debug() through fmt.Printf. The catch: the
+	// wrapper only overrides Debug() — Info / Warn / Error keep forwarding through
+	// to the wrapped base logger. With a NewNoopLogger() base, diagnostic calls
+	// like c.logger.Warn("you did not setup a cookie jar") and c.logger.Error(
+	// "critical error during request handling") were silently dropped. Switch the
+	// base to NewLogger() so non-Debug levels also reach stdout. The explicit
+	// NewDebugLogger() wrap is belt-and-suspenders: if a future refactor drops
+	// tls_client.WithDebug() from the options chain, Debug() still surfaces.
+	var clientLogger tls_client.Logger = tls_client.NewNoopLogger()
+	if requestInput.WithDebug {
+		clientLogger = tls_client.NewDebugLogger(tls_client.NewLogger())
+	}
+	tlsClient, err := tls_client.NewHttpClient(clientLogger, options...)
 
 	if withSession {
 		clients[sessionId] = tlsClient
