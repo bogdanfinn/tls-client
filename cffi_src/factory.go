@@ -230,10 +230,16 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 			respBodyBytes = nil
 		} else {
 			bodyReader = io.MultiReader(bytes.NewReader(firstByte[:n]), resp.Body)
-			// Automatically detect the charset for non-byte responses
-			bodyReader, err = charset.NewReader(bodyReader, ct)
-			if err != nil {
-				return Response{}, NewTLSClientError(err)
+			// Charset detection is only relevant when the body becomes a string
+			// in the JSON envelope. The stream-to-file path saves raw bytes,
+			// so running them through charset.NewReader would corrupt binary
+			// content — e.g. an image whose body is mostly high-byte values
+			// gets re-encoded windows-1252 → UTF-8 and grows by ~1.6×.
+			if input.StreamOutputPath == nil {
+				bodyReader, err = charset.NewReader(bodyReader, ct)
+				if err != nil {
+					return Response{}, NewTLSClientError(err)
+				}
 			}
 
 			if input.StreamOutputPath != nil {
