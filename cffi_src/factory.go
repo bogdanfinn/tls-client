@@ -245,6 +245,19 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 				return Response{}, NewTLSClientError(err)
 			}
 		}
+	} else {
+		// Byte responses skip the charset wrapper / empty-body preview entirely — they are
+		// returned to the caller as raw bytes inside a base64 data URI, so charset decoding
+		// would corrupt the payload.
+		var err error
+		if input.StreamOutputPath != nil {
+			respBodyBytes, err = readAllBodyWithStreamToFile(bodyReader, input)
+		} else {
+			respBodyBytes, err = io.ReadAll(bodyReader)
+		}
+		if err != nil {
+			return Response{}, NewTLSClientError(err)
+		}
 	}
 
 	finalResponse := string(respBodyBytes)
