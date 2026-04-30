@@ -75,9 +75,13 @@ def call(fn, payload):
 #   - streamOutputBlockSize : how many bytes the Go-side pump reads per chunk
 #                             (default 4096)
 #   - timeoutSeconds        : the http.Client timeout wraps the *entire*
-#                             response including body reads, so for long-lived
-#                             SSE streams set it to 0 (no timeout); for finite
-#                             streams a generous value is fine.
+#                             response including body reads. For long-lived
+#                             SSE streams pass a NEGATIVE value (e.g. -1) to
+#                             disable the deadline; 0 means "use the 30 s
+#                             default" because the cffi cannot distinguish
+#                             "field omitted" from "field set to 0".
+#                             For finite streams a generous positive value
+#                             is fine.
 requestPayload = {
     "tlsClientIdentifier": "chrome_124",
     "followRedirects": True,

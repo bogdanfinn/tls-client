@@ -291,6 +291,35 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	return response, nil
 }
 
+// ResolveTimeoutOption picks the right tls_client timeout option based on the
+// cffi RequestInput timeout fields. The mapping is:
+//
+//   - timeoutMilliseconds > 0 → WithTimeoutMilliseconds (millisecond precision wins
+//     when both are positive, matching the previous precedence)
+//   - timeoutSeconds      > 0 → WithTimeoutSeconds
+//   - either field        < 0 → WithTimeoutSeconds(0), which the underlying library
+//     interprets as "no deadline" — required for SSE / long-polling streams
+//   - both fields         = 0 → WithTimeoutSeconds(DefaultTimeoutSeconds)
+//
+// The negative sentinel exists because the cffi RequestInput fields are non-pointer
+// ints: 0 cannot be distinguished from "field omitted from JSON", so it has to keep
+// meaning "default" for backwards compatibility. Callers that need a genuinely
+// disabled deadline (e.g. consuming an open-ended event stream) must pass a
+// negative value explicitly.
+func ResolveTimeoutOption(timeoutSeconds, timeoutMilliseconds int) tls_client.HttpClientOption {
+	if timeoutSeconds < 0 || timeoutMilliseconds < 0 {
+		// 0 in the underlying library means "unlimited" — see WithTimeoutSeconds doc.
+		return tls_client.WithTimeoutSeconds(0)
+	}
+	if timeoutMilliseconds > 0 {
+		return tls_client.WithTimeoutMilliseconds(timeoutMilliseconds)
+	}
+	if timeoutSeconds > 0 {
+		return tls_client.WithTimeoutSeconds(timeoutSeconds)
+	}
+	return tls_client.WithTimeoutSeconds(tls_client.DefaultTimeoutSeconds)
+}
+
 func getTlsClient(requestInput RequestInput, sessionId string, withSession bool) (tls_client.HttpClient, error) {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
@@ -328,18 +357,8 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		clientProfile = getTlsClientProfile(tlsClientIdentifier)
 	}
 
-	timeoutOption := tls_client.WithTimeoutSeconds(tls_client.DefaultTimeoutSeconds)
-
-	if requestInput.TimeoutSeconds != 0 {
-		timeoutOption = tls_client.WithTimeoutSeconds(requestInput.TimeoutSeconds)
-	}
-
-	if requestInput.TimeoutMilliseconds != 0 {
-		timeoutOption = tls_client.WithTimeoutMilliseconds(requestInput.TimeoutMilliseconds)
-	}
-
 	options := []tls_client.HttpClientOption{
-		timeoutOption,
+		ResolveTimeoutOption(requestInput.TimeoutSeconds, requestInput.TimeoutMilliseconds),
 		tls_client.WithClientProfile(clientProfile),
 	}
 
