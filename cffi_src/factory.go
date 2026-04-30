@@ -297,6 +297,44 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	return response, nil
 }
 
+// SSLKEYLOGFILE is captured exactly once per process. The env var is read
+// and the file is opened on the first call to sslKeyLogWriterFromEnv; both
+// the resolved writer (or nil, if unset / unopenable) are then frozen for
+// the rest of the process lifetime. Doing it this way:
+//
+//   - reads os.Getenv at most once instead of on every getTlsClient call
+//   - shares one append-mode writer across all TLS connections, which is
+//     exactly the contract Wireshark / NSS expect (one master-secret line
+//     per CR/LF, all collated into one file)
+//   - intentionally ignores mid-process changes to SSLKEYLOGFILE — chasing
+//     env mutations would only matter for a debug feature where session
+//     log continuity is more useful than reactivity.
+var (
+	sslKeyLogOnce   sync.Once
+	sslKeyLogWriter io.Writer
+)
+
+// sslKeyLogWriterFromEnv returns the io.Writer attached to SSLKEYLOGFILE, or
+// nil if the env var was unset at first call or the file couldn't be opened.
+// SSLKEYLOGFILE is the convention Chrome, curl, Firefox and Go's standard
+// crypto/tls package use — dropping the same env var that decrypts a desktop
+// app capture is enough to have Wireshark decrypt the cffi caller's TLS too.
+func sslKeyLogWriterFromEnv() io.Writer {
+	sslKeyLogOnce.Do(func() {
+		path := os.Getenv("SSLKEYLOGFILE")
+		if path == "" {
+			return
+		}
+		f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+		if err != nil {
+			fmt.Printf("tls-client: failed to open SSLKEYLOGFILE %q: %v\n", path, err)
+			return
+		}
+		sslKeyLogWriter = f
+	})
+	return sslKeyLogWriter
+}
+
 // ResolveTimeoutOption picks the right tls_client timeout option based on the
 // cffi RequestInput timeout fields. The mapping is:
 //
@@ -411,7 +449,20 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 			// RootCAs:                requestInput.TransportOptions.RootCAs,
 		}
 
+		if w := sslKeyLogWriterFromEnv(); w != nil && transportOptions.KeyLogWriter == nil {
+			transportOptions.KeyLogWriter = w
+		}
 		options = append(options, tls_client.WithTransportOptions(transportOptions))
+	} else if w := sslKeyLogWriterFromEnv(); w != nil {
+		// Honour SSLKEYLOGFILE even when the caller didn't pass TransportOptions —
+		// avoids forcing every cffi consumer to construct an empty TransportOptions
+		// just to enable Wireshark TLS decryption. The empty TransportOptions{} we
+		// pass below has zero-valued fields that all happen to match the "no
+		// transportOptions" defaults (see roundtripper.go), so the only behavioural
+		// difference is the attached KeyLogWriter.
+		options = append(options, tls_client.WithTransportOptions(&tls_client.TransportOptions{
+			KeyLogWriter: w,
+		}))
 	}
 
 	if requestInput.LocalAddress != nil {
