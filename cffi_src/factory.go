@@ -230,10 +230,16 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 			respBodyBytes = nil
 		} else {
 			bodyReader = io.MultiReader(bytes.NewReader(firstByte[:n]), resp.Body)
-			// Automatically detect the charset for non-byte responses
-			bodyReader, err = charset.NewReader(bodyReader, ct)
-			if err != nil {
-				return Response{}, NewTLSClientError(err)
+			// Charset detection is only relevant when the body becomes a string
+			// in the JSON envelope. The stream-to-file path saves raw bytes,
+			// so running them through charset.NewReader would corrupt binary
+			// content — e.g. an image whose body is mostly high-byte values
+			// gets re-encoded windows-1252 → UTF-8 and grows by ~1.6×.
+			if input.StreamOutputPath == nil {
+				bodyReader, err = charset.NewReader(bodyReader, ct)
+				if err != nil {
+					return Response{}, NewTLSClientError(err)
+				}
 			}
 
 			if input.StreamOutputPath != nil {
@@ -244,6 +250,19 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 			if err != nil {
 				return Response{}, NewTLSClientError(err)
 			}
+		}
+	} else {
+		// Byte responses skip the charset wrapper / empty-body preview entirely — they are
+		// returned to the caller as raw bytes inside a base64 data URI, so charset decoding
+		// would corrupt the payload.
+		var err error
+		if input.StreamOutputPath != nil {
+			respBodyBytes, err = readAllBodyWithStreamToFile(bodyReader, input)
+		} else {
+			respBodyBytes, err = io.ReadAll(bodyReader)
+		}
+		if err != nil {
+			return Response{}, NewTLSClientError(err)
 		}
 	}
 
@@ -278,6 +297,73 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 	return response, nil
 }
 
+// SSLKEYLOGFILE is captured exactly once per process. The env var is read
+// and the file is opened on the first call to sslKeyLogWriterFromEnv; both
+// the resolved writer (or nil, if unset / unopenable) are then frozen for
+// the rest of the process lifetime. Doing it this way:
+//
+//   - reads os.Getenv at most once instead of on every getTlsClient call
+//   - shares one append-mode writer across all TLS connections, which is
+//     exactly the contract Wireshark / NSS expect (one master-secret line
+//     per CR/LF, all collated into one file)
+//   - intentionally ignores mid-process changes to SSLKEYLOGFILE — chasing
+//     env mutations would only matter for a debug feature where session
+//     log continuity is more useful than reactivity.
+var (
+	sslKeyLogOnce   sync.Once
+	sslKeyLogWriter io.Writer
+)
+
+// sslKeyLogWriterFromEnv returns the io.Writer attached to SSLKEYLOGFILE, or
+// nil if the env var was unset at first call or the file couldn't be opened.
+// SSLKEYLOGFILE is the convention Chrome, curl, Firefox and Go's standard
+// crypto/tls package use — dropping the same env var that decrypts a desktop
+// app capture is enough to have Wireshark decrypt the cffi caller's TLS too.
+func sslKeyLogWriterFromEnv() io.Writer {
+	sslKeyLogOnce.Do(func() {
+		path := os.Getenv("SSLKEYLOGFILE")
+		if path == "" {
+			return
+		}
+		f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+		if err != nil {
+			fmt.Printf("tls-client: failed to open SSLKEYLOGFILE %q: %v\n", path, err)
+			return
+		}
+		sslKeyLogWriter = f
+	})
+	return sslKeyLogWriter
+}
+
+// ResolveTimeoutOption picks the right tls_client timeout option based on the
+// cffi RequestInput timeout fields. The mapping is:
+//
+//   - timeoutMilliseconds > 0 → WithTimeoutMilliseconds (millisecond precision wins
+//     when both are positive, matching the previous precedence)
+//   - timeoutSeconds      > 0 → WithTimeoutSeconds
+//   - either field        < 0 → WithTimeoutSeconds(0), which the underlying library
+//     interprets as "no deadline" — required for SSE / long-polling streams
+//   - both fields         = 0 → WithTimeoutSeconds(DefaultTimeoutSeconds)
+//
+// The negative sentinel exists because the cffi RequestInput fields are non-pointer
+// ints: 0 cannot be distinguished from "field omitted from JSON", so it has to keep
+// meaning "default" for backwards compatibility. Callers that need a genuinely
+// disabled deadline (e.g. consuming an open-ended event stream) must pass a
+// negative value explicitly.
+func ResolveTimeoutOption(timeoutSeconds, timeoutMilliseconds int) tls_client.HttpClientOption {
+	if timeoutSeconds < 0 || timeoutMilliseconds < 0 {
+		// 0 in the underlying library means "unlimited" — see WithTimeoutSeconds doc.
+		return tls_client.WithTimeoutSeconds(0)
+	}
+	if timeoutMilliseconds > 0 {
+		return tls_client.WithTimeoutMilliseconds(timeoutMilliseconds)
+	}
+	if timeoutSeconds > 0 {
+		return tls_client.WithTimeoutSeconds(timeoutSeconds)
+	}
+	return tls_client.WithTimeoutSeconds(tls_client.DefaultTimeoutSeconds)
+}
+
 func getTlsClient(requestInput RequestInput, sessionId string, withSession bool) (tls_client.HttpClient, error) {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
@@ -287,7 +373,12 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 	client, ok := clients[sessionId]
 
-	if ok && withSession {
+	// Bypass the client cache when WithDebug is set so the freshly-built client picks up
+	// the debug logger configured below. Otherwise the cached client (built earlier on
+	// the same session with NewNoopLogger) would silently win and the WithDebug flag
+	// would have no observable effect on the cffi caller. Diagnostic-only path; normal
+	// callers don't pay this cost.
+	if ok && withSession && !requestInput.WithDebug {
 		modifiedClient, changed, err := handleModification(client, proxyUrl, requestInput.FollowRedirects, requestInput.IsRotatingProxy)
 		if err != nil {
 			return nil, fmt.Errorf("failed to modify existing client: %w", err)
@@ -315,18 +406,8 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		clientProfile = getTlsClientProfile(tlsClientIdentifier)
 	}
 
-	timeoutOption := tls_client.WithTimeoutSeconds(tls_client.DefaultTimeoutSeconds)
-
-	if requestInput.TimeoutSeconds != 0 {
-		timeoutOption = tls_client.WithTimeoutSeconds(requestInput.TimeoutSeconds)
-	}
-
-	if requestInput.TimeoutMilliseconds != 0 {
-		timeoutOption = tls_client.WithTimeoutMilliseconds(requestInput.TimeoutMilliseconds)
-	}
-
 	options := []tls_client.HttpClientOption{
-		timeoutOption,
+		ResolveTimeoutOption(requestInput.TimeoutSeconds, requestInput.TimeoutMilliseconds),
 		tls_client.WithClientProfile(clientProfile),
 	}
 
@@ -368,7 +449,20 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 			// RootCAs:                requestInput.TransportOptions.RootCAs,
 		}
 
+		if w := sslKeyLogWriterFromEnv(); w != nil && transportOptions.KeyLogWriter == nil {
+			transportOptions.KeyLogWriter = w
+		}
 		options = append(options, tls_client.WithTransportOptions(transportOptions))
+	} else if w := sslKeyLogWriterFromEnv(); w != nil {
+		// Honour SSLKEYLOGFILE even when the caller didn't pass TransportOptions —
+		// avoids forcing every cffi consumer to construct an empty TransportOptions
+		// just to enable Wireshark TLS decryption. The empty TransportOptions{} we
+		// pass below has zero-valued fields that all happen to match the "no
+		// transportOptions" defaults (see roundtripper.go), so the only behavioural
+		// difference is the attached KeyLogWriter.
+		options = append(options, tls_client.WithTransportOptions(&tls_client.TransportOptions{
+			KeyLogWriter: w,
+		}))
 	}
 
 	if requestInput.LocalAddress != nil {
@@ -433,7 +527,21 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 		options = append(options, tls_client.WithProxyUrl(*proxy))
 	}
 
-	tlsClient, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	// Honour WithDebug=true at the cffi layer too. tls_client.WithDebug() (added
+	// to options above) already makes NewHttpClient auto-wrap the supplied logger
+	// via NewDebugLogger, which routes Debug() through fmt.Printf. The catch: the
+	// wrapper only overrides Debug() — Info / Warn / Error keep forwarding through
+	// to the wrapped base logger. With a NewNoopLogger() base, diagnostic calls
+	// like c.logger.Warn("you did not setup a cookie jar") and c.logger.Error(
+	// "critical error during request handling") were silently dropped. Switch the
+	// base to NewLogger() so non-Debug levels also reach stdout. The explicit
+	// NewDebugLogger() wrap is belt-and-suspenders: if a future refactor drops
+	// tls_client.WithDebug() from the options chain, Debug() still surfaces.
+	var clientLogger tls_client.Logger = tls_client.NewNoopLogger()
+	if requestInput.WithDebug {
+		clientLogger = tls_client.NewDebugLogger(tls_client.NewLogger())
+	}
+	tlsClient, err := tls_client.NewHttpClient(clientLogger, options...)
 
 	if withSession {
 		clients[sessionId] = tlsClient
