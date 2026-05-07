@@ -193,19 +193,24 @@ func buildHTTP3Transport(cfg *http3Config) (http.RoundTripper, error) {
 
 		if maxResponseHeaderBytes > 0 {
 			t3.MaxResponseHeaderBytes = maxResponseHeaderBytes
-		} else if maxResponseHeaderBytes == 0 {
-			// Chrome's default MAX_FIELD_SECTION_SIZE
-			t3.MaxResponseHeaderBytes = CHROME_MAX_FIELD_SECTION_SIZE
-		} else {
+		} else if maxResponseHeaderBytes < 0 {
 			// -1 means don't send SETTINGS_MAX_FIELD_SECTION_SIZE (Firefox behavior)
 			t3.MaxResponseHeaderBytes = -1
+		} else {
+			t3.MaxResponseHeaderBytes = profileDefaultMaxResponseHeaderBytes(cfg)
 		}
 	} else {
-		// Chrome's default MAX_FIELD_SECTION_SIZE
-		t3.MaxResponseHeaderBytes = CHROME_MAX_FIELD_SECTION_SIZE
+		t3.MaxResponseHeaderBytes = profileDefaultMaxResponseHeaderBytes(cfg)
 	}
 
 	return t3, nil
+}
+
+func profileDefaultMaxResponseHeaderBytes(cfg *http3Config) int {
+	if cfg.http3PriorityParam > 0 {
+		return CHROME_MAX_FIELD_SECTION_SIZE
+	}
+	return -1
 }
 
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
