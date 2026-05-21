@@ -280,6 +280,124 @@ func request(requestParams *C.char) *C.char {
 	return responseString
 }
 
+//export wsConnect
+func wsConnect(wsConnectParams *C.char) *C.char {
+	wsConnectParamsJson := C.GoString(wsConnectParams)
+
+	wsConnectInput := tls_client_cffi_src.WsConnectInput{}
+	if marshallError := json.Unmarshal([]byte(wsConnectParamsJson), &wsConnectInput); marshallError != nil {
+		return handleErrorResponse("", false, tls_client_cffi_src.NewTLSClientError(marshallError))
+	}
+
+	out, clientErr := tls_client_cffi_src.WsConnect(wsConnectInput)
+	if clientErr != nil {
+		sessionId := ""
+		withSession := false
+		if wsConnectInput.SessionId != nil && *wsConnectInput.SessionId != "" {
+			sessionId = *wsConnectInput.SessionId
+			withSession = true
+		}
+		return handleErrorResponse(sessionId, withSession, clientErr)
+	}
+
+	jsonResponse, marshallError := json.Marshal(out)
+	if marshallError != nil {
+		return handleErrorResponse(out.SessionId, out.SessionId != "", tls_client_cffi_src.NewTLSClientError(marshallError))
+	}
+
+	responseString := C.CString(string(jsonResponse))
+
+	unsafePointersLck.Lock()
+	unsafePointers[out.Id] = responseString
+	unsafePointersLck.Unlock()
+
+	return responseString
+}
+
+//export wsRead
+func wsRead(wsReadParams *C.char) *C.char {
+	wsReadParamsJson := C.GoString(wsReadParams)
+
+	wsReadInput := tls_client_cffi_src.WsReadInput{}
+	if marshallError := json.Unmarshal([]byte(wsReadParamsJson), &wsReadInput); marshallError != nil {
+		return handleErrorResponse("", false, tls_client_cffi_src.NewTLSClientError(marshallError))
+	}
+
+	out, clientErr := tls_client_cffi_src.WsRead(wsReadInput)
+	if clientErr != nil {
+		return handleErrorResponse("", false, clientErr)
+	}
+
+	jsonResponse, marshallError := json.Marshal(out)
+	if marshallError != nil {
+		return handleErrorResponse("", false, tls_client_cffi_src.NewTLSClientError(marshallError))
+	}
+
+	responseString := C.CString(string(jsonResponse))
+
+	unsafePointersLck.Lock()
+	unsafePointers[out.Id] = responseString
+	unsafePointersLck.Unlock()
+
+	return responseString
+}
+
+//export wsWrite
+func wsWrite(wsWriteParams *C.char) *C.char {
+	wsWriteParamsJson := C.GoString(wsWriteParams)
+
+	wsWriteInput := tls_client_cffi_src.WsWriteInput{}
+	if marshallError := json.Unmarshal([]byte(wsWriteParamsJson), &wsWriteInput); marshallError != nil {
+		return handleErrorResponse("", false, tls_client_cffi_src.NewTLSClientError(marshallError))
+	}
+
+	out, clientErr := tls_client_cffi_src.WsWrite(wsWriteInput)
+	if clientErr != nil {
+		return handleErrorResponse("", false, clientErr)
+	}
+
+	jsonResponse, marshallError := json.Marshal(out)
+	if marshallError != nil {
+		return handleErrorResponse("", false, tls_client_cffi_src.NewTLSClientError(marshallError))
+	}
+
+	responseString := C.CString(string(jsonResponse))
+
+	unsafePointersLck.Lock()
+	unsafePointers[out.Id] = responseString
+	unsafePointersLck.Unlock()
+
+	return responseString
+}
+
+//export wsClose
+func wsClose(wsCloseParams *C.char) *C.char {
+	wsCloseParamsJson := C.GoString(wsCloseParams)
+
+	wsCloseInput := tls_client_cffi_src.WsCloseInput{}
+	if marshallError := json.Unmarshal([]byte(wsCloseParamsJson), &wsCloseInput); marshallError != nil {
+		return handleErrorResponse("", false, tls_client_cffi_src.NewTLSClientError(marshallError))
+	}
+
+	out, clientErr := tls_client_cffi_src.WsClose(wsCloseInput)
+	if clientErr != nil {
+		return handleErrorResponse("", false, clientErr)
+	}
+
+	jsonResponse, marshallError := json.Marshal(out)
+	if marshallError != nil {
+		return handleErrorResponse("", false, tls_client_cffi_src.NewTLSClientError(marshallError))
+	}
+
+	responseString := C.CString(string(jsonResponse))
+
+	unsafePointersLck.Lock()
+	unsafePointers[out.Id] = responseString
+	unsafePointersLck.Unlock()
+
+	return responseString
+}
+
 func handleErrorResponse(sessionId string, withSession bool, err *tls_client_cffi_src.TLSClientError) *C.char {
 	response := tls_client_cffi_src.Response{
 		Id:      uuid.New().String(),

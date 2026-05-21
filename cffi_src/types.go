@@ -204,3 +204,70 @@ type Response struct {
 	UsedProtocol string              `json:"usedProtocol"`
 	Status       int                 `json:"status"`
 }
+
+// WsConnectInput contains the parameters for establishing a WebSocket connection.
+// Either SessionId (to reuse an existing TLS session) or TLSClientIdentifier / CustomTlsClient
+// (to create an inline client) must be provided.
+type WsConnectInput struct {
+	SessionId                    *string          `json:"sessionId"`
+	CustomTlsClient              *CustomTlsClient `json:"customTlsClient"`
+	ProxyUrl                     *string          `json:"proxyUrl"`
+	Url                          string           `json:"url"`
+	TLSClientIdentifier          string           `json:"tlsClientIdentifier"`
+	Headers                      map[string]string `json:"headers"`
+	HeaderOrder                  []string         `json:"headerOrder"`
+	HandshakeTimeoutMilliseconds int              `json:"handshakeTimeoutMilliseconds"`
+	ReadBufferSize               int              `json:"readBufferSize"`
+	WriteBufferSize              int              `json:"writeBufferSize"`
+	InsecureSkipVerify           bool             `json:"insecureSkipVerify"`
+	WithRandomTLSExtensionOrder  bool             `json:"withRandomTLSExtensionOrder"`
+}
+
+// WsConnectOutput is returned after a successful WebSocket handshake.
+type WsConnectOutput struct {
+	Id           string `json:"id"`
+	ConnectionId string `json:"connectionId"`
+	SessionId    string `json:"sessionId,omitempty"`
+	Status       int    `json:"status"`
+}
+
+// WsReadInput contains the parameters for reading a single message from a WebSocket connection.
+type WsReadInput struct {
+	ConnectionId        string `json:"connectionId"`
+	TimeoutMilliseconds int    `json:"timeoutMilliseconds"`
+}
+
+// WsReadOutput contains a message received from a WebSocket connection.
+// MessageType 1 = text, 2 = binary (Data is base64-encoded for binary messages).
+type WsReadOutput struct {
+	Id           string `json:"id"`
+	ConnectionId string `json:"connectionId"`
+	MessageType  int    `json:"messageType"`
+	Data         string `json:"data"`
+}
+
+// WsWriteInput contains the parameters for sending a message over a WebSocket connection.
+// For binary messages (MessageType 2), Data must be base64-encoded.
+type WsWriteInput struct {
+	ConnectionId string `json:"connectionId"`
+	Data         string `json:"data"`
+	MessageType  int    `json:"messageType"`
+}
+
+// WsWriteOutput is returned after sending a WebSocket message.
+type WsWriteOutput struct {
+	Id           string `json:"id"`
+	ConnectionId string `json:"connectionId"`
+	Success      bool   `json:"success"`
+}
+
+// WsCloseInput contains the parameters for closing a WebSocket connection.
+type WsCloseInput struct {
+	ConnectionId string `json:"connectionId"`
+}
+
+// WsCloseOutput is returned after closing a WebSocket connection.
+type WsCloseOutput struct {
+	Id      string `json:"id"`
+	Success bool   `json:"success"`
+}
