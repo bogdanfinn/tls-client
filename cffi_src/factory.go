@@ -231,7 +231,11 @@ func BuildResponse(sessionId string, withSession bool, resp *http.Response, cook
 		} else {
 			bodyReader = io.MultiReader(bytes.NewReader(firstByte[:n]), resp.Body)
 			// Automatically detect the charset for non-byte responses
-			bodyReader, err = charset.NewReader(bodyReader, ct)
+			if input.ForcedEncoding != nil && *input.ForcedEncoding != "" {
+				bodyReader, err = charset.NewReaderLabel(*input.ForcedEncoding, bodyReader)
+			} else {
+				bodyReader, err = charset.NewReader(bodyReader, ct)
+			}
 			if err != nil {
 				return Response{}, NewTLSClientError(err)
 			}

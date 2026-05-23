@@ -79,6 +79,7 @@ type RequestInput struct {
 	InsecureSkipVerify          bool                `json:"insecureSkipVerify"`
 	IsByteRequest               bool                `json:"isByteRequest"`
 	IsByteResponse              bool                `json:"isByteResponse"`
+	ForcedEncoding              *string             `json:"forcedEncoding"`
 	IsRotatingProxy             bool                `json:"isRotatingProxy"`
 	DisableIPV6                 bool                `json:"disableIPV6"`
 	DisableIPV4                 bool                `json:"disableIPV4"`

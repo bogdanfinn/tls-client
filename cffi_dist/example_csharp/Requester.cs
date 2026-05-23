@@ -26,6 +26,7 @@ class RequestPayload
     public bool WithoutCookieJar { get; set; } = false;
     public bool WithCustomCookieJar { get; set; } = false;
     public bool IsByteRequest { get; set; } = false;
+    public string ForcedEncoding { get; set; } = "";
     public bool ForceHttp1 { get; set; } = false;
     public bool WithDebug { get; set; } = false;
     public bool CatchPanics { get; set; } = false;
