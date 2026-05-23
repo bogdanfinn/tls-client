@@ -45,7 +45,10 @@ func ClearSessionCache() {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
 
-	// the remaining clients will be cleaned up by the garbage collection
+	for _, client := range clients {
+		client.CloseIdleConnections()
+	}
+
 	clients = make(map[string]tls_client.HttpClient)
 }
 
