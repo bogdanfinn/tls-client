@@ -48,6 +48,11 @@ type CookiesFromSessionOutput struct {
 }
 
 // RequestInput is the data a Python client can construct a client and request from.
+//
+// TimeoutSeconds / TimeoutMilliseconds: 0 means "use the default timeout" (30s),
+// a positive value sets an explicit deadline, and a negative value disables the
+// deadline entirely (required for long-lived SSE / streaming responses). See
+// ResolveTimeoutOption for the precedence rules between the two fields.
 type RequestInput struct {
 	CertificatePinningHosts     map[string][]string `json:"certificatePinningHosts"`
 	CustomTlsClient             *CustomTlsClient    `json:"customTlsClient"`
@@ -203,4 +208,55 @@ type Response struct {
 	Target       string              `json:"target"`
 	UsedProtocol string              `json:"usedProtocol"`
 	Status       int                 `json:"status"`
+}
+
+// ReadStreamInput is the input for the readStream cffi export.
+//
+// TimeoutMs:
+//
+//	< 0  block until the next chunk, EOF, or error
+//	  0  non-blocking poll: returns Timeout=true immediately when no chunk is buffered
+//	> 0  block up to TimeoutMs, then return Timeout=true if no chunk arrived
+type ReadStreamInput struct {
+	StreamId  string `json:"streamId"`
+	TimeoutMs int    `json:"timeoutMs"`
+}
+
+// ReadStreamAllInput is the input for the readStreamAll cffi export.
+type ReadStreamAllInput struct {
+	StreamId string `json:"streamId"`
+}
+
+// CancelStreamInput is the input for the cancelStream cffi export.
+type CancelStreamInput struct {
+	StreamId string `json:"streamId"`
+}
+
+// StreamStartResponse is returned by requestStream. It carries the same fields
+// as Response (status, headers, cookies, ...) with an empty Body and an
+// additional StreamId. The caller uses StreamId for subsequent readStream /
+// readStreamAll / cancelStream calls. Body is always empty here.
+type StreamStartResponse struct {
+	Response
+	StreamId string `json:"streamId"`
+}
+
+// StreamChunkResponse is returned by readStream.
+//
+// Exactly one of EOF, Timeout, Error, or a non-empty Chunk is set on a
+// successful call:
+//   - Chunk (base64) holds the next slice of decompressed body bytes.
+//   - EOF=true means the stream completed naturally; the StreamId is invalid
+//     after this call.
+//   - Timeout=true means no data was available within TimeoutMs; the stream
+//     is still live and the caller may retry.
+//   - Error holds a non-empty message when the underlying read failed; the
+//     StreamId is invalid after this call.
+type StreamChunkResponse struct {
+	Id       string `json:"id"`
+	StreamId string `json:"streamId"`
+	Chunk    string `json:"chunk"`
+	Error    string `json:"error,omitempty"`
+	EOF      bool   `json:"eof"`
+	Timeout  bool   `json:"timeout"`
 }
