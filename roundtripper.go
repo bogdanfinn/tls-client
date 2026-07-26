@@ -214,6 +214,32 @@ func profileDefaultMaxResponseHeaderBytes(cfg *http3Config) int {
 	return -1
 }
 
+// applyH2GreaseSetting appends a random GREASE setting to the HTTP/2 settings map
+// and order for Chrome profiles, mirroring the HTTP/3 path in buildHTTP3Transport.
+// Real Chrome sends a GREASE entry in its HTTP/2 SETTINGS frame; Firefox does not.
+// The GREASE setting is placed at the end of the settings list, matching real
+// Chrome's frame order. The input map and slice are not mutated.
+func applyH2GreaseSetting(settings map[http2.SettingID]uint32, settingsOrder []http2.SettingID, isChrome bool) (map[http2.SettingID]uint32, []http2.SettingID) {
+	if !isChrome {
+		return settings, settingsOrder
+	}
+
+	greaseID := http2.SettingID(generateH2GreaseSettingID())
+	greaseValue := uint32(generateGREASESettingValue())
+
+	withGrease := make(map[http2.SettingID]uint32, len(settings)+1)
+	for k, v := range settings {
+		withGrease[k] = v
+	}
+	withGrease[greaseID] = greaseValue
+
+	orderWithGrease := make([]http2.SettingID, len(settingsOrder)+1)
+	copy(orderWithGrease, settingsOrder)
+	orderWithGrease[len(settingsOrder)] = greaseID
+
+	return withGrease, orderWithGrease
+}
+
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	addr := rt.getDialTLSAddr(req)
 
@@ -405,6 +431,13 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 			t2.Settings = rt.settings
 			t2.SettingsOrder = rt.settingsOrder
 		}
+
+		// Add a random GREASE setting for Chrome profiles, mirroring the HTTP/3 path
+		// in buildHTTP3Transport. Real Chrome sends a GREASE entry in its HTTP/2
+		// SETTINGS frame; Firefox does not. The GREASE setting is appended at the end
+		// of the settings list, matching real Chrome's frame order and the H3
+		// implementation. The input map and slice are not mutated.
+		t2.Settings, t2.SettingsOrder = applyH2GreaseSetting(t2.Settings, t2.SettingsOrder, rt.clientHelloId.Client == "Chrome")
 
 		t2.Priorities = rt.priorities
 
