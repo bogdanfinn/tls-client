@@ -148,6 +148,7 @@ var defaultOkHttp4Header = http.Header{
 
 func chrome116WithPsk(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_116_PSK),
 		tls_client.WithTimeoutSeconds(120),
 	}
@@ -188,6 +189,7 @@ func chrome116WithPsk(t *testing.T) {
 
 func chrome112(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_112),
 	}
 
@@ -213,6 +215,7 @@ func chrome112(t *testing.T) {
 
 func chrome111(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_111),
 	}
 
@@ -238,6 +241,7 @@ func chrome111(t *testing.T) {
 
 func chrome110(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_110),
 	}
 
@@ -263,6 +267,7 @@ func chrome110(t *testing.T) {
 
 func chrome109(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_109),
 	}
 
@@ -288,6 +293,7 @@ func chrome109(t *testing.T) {
 
 func chrome108(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_108),
 	}
 
@@ -313,6 +319,7 @@ func chrome108(t *testing.T) {
 
 func chrome107(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_107),
 	}
 
@@ -338,6 +345,7 @@ func chrome107(t *testing.T) {
 
 func chrome105(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_105),
 	}
 
@@ -363,6 +371,7 @@ func chrome105(t *testing.T) {
 
 func chrome104(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_104),
 	}
 
@@ -388,6 +397,7 @@ func chrome104(t *testing.T) {
 
 func chrome103(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_103),
 	}
 
@@ -413,6 +423,7 @@ func chrome103(t *testing.T) {
 
 func safari_16_0(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Safari_16_0),
 	}
 
@@ -438,6 +449,7 @@ func safari_16_0(t *testing.T) {
 
 func safari_iOS_16_0(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Safari_IOS_16_0),
 	}
 
@@ -463,6 +475,7 @@ func safari_iOS_16_0(t *testing.T) {
 
 func safari_iOS_18_0(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Safari_IOS_18_0),
 	}
 
@@ -488,6 +501,7 @@ func safari_iOS_18_0(t *testing.T) {
 
 func firefox_105(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Firefox_105),
 	}
 
@@ -513,6 +527,7 @@ func firefox_105(t *testing.T) {
 
 func firefox_106(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Firefox_106),
 	}
 
@@ -538,6 +553,7 @@ func firefox_106(t *testing.T) {
 
 func firefox_108(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Firefox_108),
 	}
 
@@ -563,6 +579,7 @@ func firefox_108(t *testing.T) {
 
 func chrome_124(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_124),
 	}
 
@@ -588,6 +605,7 @@ func chrome_124(t *testing.T) {
 
 func chrome_146_PSK(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_146_PSK),
 		tls_client.WithTimeoutSeconds(120),
 	}
@@ -628,6 +646,7 @@ func chrome_146_PSK(t *testing.T) {
 
 func chrome_150_PSK(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_150_PSK),
 		tls_client.WithTimeoutSeconds(120),
 	}
@@ -668,6 +687,7 @@ func chrome_150_PSK(t *testing.T) {
 
 func safari_iOS_26_0(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Safari_IOS_26_0),
 	}
 
@@ -693,6 +713,7 @@ func safari_iOS_26_0(t *testing.T) {
 
 func safari_iOS_18_5(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Safari_IOS_18_5),
 	}
 
@@ -718,6 +739,7 @@ func safari_iOS_18_5(t *testing.T) {
 
 func chrome_144(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_144),
 	}
 
@@ -743,6 +765,7 @@ func chrome_144(t *testing.T) {
 
 func chrome_133(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_133),
 	}
 
@@ -768,6 +791,7 @@ func chrome_133(t *testing.T) {
 
 func chrome_131(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_131),
 	}
 
@@ -793,6 +817,7 @@ func chrome_131(t *testing.T) {
 
 func chrome_120(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_120),
 	}
 
@@ -818,6 +843,7 @@ func chrome_120(t *testing.T) {
 
 func chrome_117(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_117),
 	}
 
@@ -843,6 +869,7 @@ func chrome_117(t *testing.T) {
 
 func firefox_147(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Firefox_147),
 	}
 
@@ -868,6 +895,7 @@ func firefox_147(t *testing.T) {
 
 func firefox_117(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Firefox_117),
 	}
 
@@ -893,6 +921,7 @@ func firefox_117(t *testing.T) {
 
 func firefox_110(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Firefox_110),
 	}
 
@@ -918,6 +947,7 @@ func firefox_110(t *testing.T) {
 
 func firefox_132(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Firefox_132),
 	}
 
@@ -943,6 +973,7 @@ func firefox_132(t *testing.T) {
 
 func opera_91(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Opera_91),
 	}
 
@@ -968,6 +999,7 @@ func opera_91(t *testing.T) {
 
 func safariIos17(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Safari_IOS_17_0),
 	}
 
@@ -1028,6 +1060,7 @@ func compareResponse(t *testing.T, clientName string, expectedValues map[string]
 
 func okhttp4Android13(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Okhttp4Android13),
 	}
 
@@ -1053,6 +1086,7 @@ func okhttp4Android13(t *testing.T) {
 
 func okhttp4Android12(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Okhttp4Android12),
 	}
 
@@ -1078,6 +1112,7 @@ func okhttp4Android12(t *testing.T) {
 
 func okhttp4Android11(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Okhttp4Android11),
 	}
 
@@ -1103,6 +1138,7 @@ func okhttp4Android11(t *testing.T) {
 
 func okhttp4Android10(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Okhttp4Android10),
 	}
 
@@ -1128,6 +1164,7 @@ func okhttp4Android10(t *testing.T) {
 
 func okhttp4Android9(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Okhttp4Android9),
 	}
 
@@ -1153,6 +1190,7 @@ func okhttp4Android9(t *testing.T) {
 
 func okhttp4Android8(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Okhttp4Android8),
 	}
 
@@ -1178,6 +1216,7 @@ func okhttp4Android8(t *testing.T) {
 
 func okhttp4Android7(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Okhttp4Android7),
 	}
 

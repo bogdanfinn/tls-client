@@ -15,6 +15,7 @@ import (
 
 func TestClient_HeaderOrder(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_105),
 	}
 
@@ -102,6 +103,7 @@ func TestClient_HeaderOrder(t *testing.T) {
 
 func TestClient_HeaderOrderHttp1(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_105),
 		tls_client.WithForceHttp1(),
 	}
@@ -190,6 +192,7 @@ func TestClient_HeaderOrderHttp1(t *testing.T) {
 
 func TestClient_HeaderOrderWithContentLengthHttp1(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_105),
 		tls_client.WithForceHttp1(),
 	}
@@ -244,6 +247,7 @@ func TestClient_HeaderOrderWithContentLengthHttp1(t *testing.T) {
 
 func TestClient_HeaderOrderWithContentLength(t *testing.T) {
 	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
 		tls_client.WithClientProfile(profiles.Chrome_105),
 	}
 

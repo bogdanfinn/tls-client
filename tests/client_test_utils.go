@@ -1,6 +1,7 @@
 package tests
 
 import (
+	tls_client "github.com/bogdanfinn/tls-client"
 	"github.com/bogdanfinn/tls-client/profiles"
 	tls "github.com/bogdanfinn/utls"
 )
@@ -79,6 +80,12 @@ const (
 	akamaiFingerprint     = "akamaiFingerprint"
 	akamaiFingerprintHash = "akamaiFingerprintHash"
 )
+
+// skipPeetCertVerify disables certificate verification for one client.
+// tls.peet.ws serves a self-signed certificate, so verification fails there.
+// Only the tests that call peetApiEndpoint use this option.
+// Tests against other hosts keep normal certificate verification.
+var skipPeetCertVerify = tls_client.WithInsecureSkipVerify()
 
 var clientFingerprints = map[string]map[string]map[string]string{
 	chrome: {
