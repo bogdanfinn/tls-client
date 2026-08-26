@@ -18,6 +18,8 @@ func TestClients(t *testing.T) {
 	firefox_147(t)
 	t.Log("testing chrome 146 with PSK")
 	chrome_146_PSK(t)
+	t.Log("testing chrome 152 with PSK")
+	chrome_152_PSK(t)
 	t.Log("testing chrome 150 with PSK")
 	chrome_150_PSK(t)
 	t.Log("testing safari ios 26.0")
@@ -644,6 +646,47 @@ func chrome_146_PSK(t *testing.T) {
 	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_146_PSK.GetClientHelloStr()], resp)
 }
 
+func chrome_152_PSK(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
+		tls_client.WithClientProfile(profiles.Chrome_152_PSK),
+		tls_client.WithTimeoutSeconds(120),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_152.GetClientHelloStr()], resp)
+
+	req, err = http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_152_PSK.GetClientHelloStr()], resp)
+}
+
 func chrome_150_PSK(t *testing.T) {
 	options := []tls_client.HttpClientOption{
 		skipPeetCertVerify,
@@ -1045,6 +1088,14 @@ func compareResponse(t *testing.T, clientName string, expectedValues map[string]
 		case ja3Hash:
 			if tlsApiResponse.TLS.Ja3Hash != expectedValue {
 				t.Errorf("TLS Ja3 hash mismatch.\nexpected: %s\nactual  : %s\nclient: %s", expectedValue, tlsApiResponse.TLS.Ja3Hash, clientName)
+			}
+		case ja4String:
+			if tlsApiResponse.TLS.Ja4R != expectedValue {
+				t.Errorf("TLS Ja4 mismatch.\nexpected: %s\nactual  : %s\nclient: %s", expectedValue, tlsApiResponse.TLS.Ja4R, clientName)
+			}
+		case ja4Hash:
+			if tlsApiResponse.TLS.Ja4 != expectedValue {
+				t.Errorf("TLS Ja4 hash mismatch.\nexpected: %s\nactual  : %s\nclient: %s", expectedValue, tlsApiResponse.TLS.Ja4, clientName)
 			}
 		case akamaiFingerprint:
 			if tlsApiResponse.HTTP2.AkamaiFingerprint != expectedValue {

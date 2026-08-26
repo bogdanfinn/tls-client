@@ -34,6 +34,8 @@ var MappedTLSClients = map[string]ClientProfile{
 	"chrome_146_PSK":         Chrome_146_PSK,
 	"chrome_150":             Chrome_150,
 	"chrome_150_PSK":         Chrome_150_PSK,
+	"chrome_152":             Chrome_152,
+	"chrome_152_PSK":         Chrome_152_PSK,
 	"brave_146":              Brave_146,
 	"brave_146_PSK":          Brave_146_PSK,
 	"safari_15_6_1":          Safari_15_6_1,
