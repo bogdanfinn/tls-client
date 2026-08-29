@@ -39,6 +39,11 @@ type roundTripper struct {
 	cachedConnections map[string]net.Conn
 	cachedTransports  map[string]http.RoundTripper
 
+	// cachedProtocols records the ALPN protocol each cached transport was built
+	// for, so a later handshake to the same address can tell whether the cached
+	// transport still fits what the server just negotiated.
+	cachedProtocols map[string]string
+
 	headerPriority      *http2.PriorityParam
 	settings            map[http2.SettingID]uint32
 	transportOptions    *TransportOptions
@@ -320,14 +325,48 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 		return nil, err
 	}
 
-	if rt.cachedTransports[addr] != nil {
-		return conn, nil
+	negotiatedProtocol := conn.ConnectionState().NegotiatedProtocol
+
+	// A transport is already cached for this address. Reuse it only when the
+	// handshake that just completed negotiated the same protocol it was built
+	// for.
+	//
+	// Servers do change their mind: an address behind a load balancer can offer
+	// http/1.1 on one connection and h2 on the next. Handing the new connection
+	// to the cached transport regardless means an HTTP/1 transport reading an
+	// HTTP/2 SETTINGS frame as if it were a status line, which fails with a
+	// "malformed HTTP response" naming the raw frame bytes, and keeps failing for
+	// that address until the whole client is thrown away.
+	//
+	// The connection cannot be rescued here, because this dial belongs to the
+	// cached transport and that transport speaks the wrong protocol whatever we
+	// hand it. So drop the cache entry instead: this request fails with a message
+	// that says what happened, and the next one to the same address builds the
+	// transport the server is now asking for.
+	if cached := rt.cachedTransports[addr]; cached != nil {
+		cachedProtocol := rt.cachedProtocols[addr]
+		if cachedProtocol == negotiatedProtocol {
+			return conn, nil
+		}
+
+		if closer, ok := cached.(interface{ CloseIdleConnections() }); ok {
+			closer.CloseIdleConnections()
+		}
+		delete(rt.cachedTransports, addr)
+		delete(rt.cachedProtocols, addr)
+		_ = conn.Close()
+
+		return nil, fmt.Errorf(
+			"tls-client: %s negotiated %q but the cached transport speaks %q; that transport has been dropped, so the next request to this address builds one for the protocol the server is offering",
+			addr, negotiatedProtocol, cachedProtocol)
 	}
 
-	// No http.Transport constructed yet, create one based on the results
-	// of ALPN if no http1 is enforced.
+	// No usable http.Transport for this address yet, create one based on the
+	// results of ALPN if no http1 is enforced.
 
-	switch conn.ConnectionState().NegotiatedProtocol {
+	rt.cachedProtocols[addr] = negotiatedProtocol
+
+	switch negotiatedProtocol {
 	case http2.NextProtoTLS:
 		utlsConfig := &tls.Config{ClientSessionCache: rt.clientSessionCache, InsecureSkipVerify: rt.insecureSkipVerify, OmitEmptyPsk: true}
 		if rt.transportOptions != nil {
@@ -583,6 +622,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		clientHelloId:               clientProfile.GetClientHelloId(),
 		cachedTransports:            make(map[string]http.RoundTripper),
 		cachedConnections:           make(map[string]net.Conn),
+		cachedProtocols:             make(map[string]string),
 		disableIPV6:                 disableIPV6,
 		disableIPV4:                 disableIPV4,
 		bandwidthTracker:            bandwidthTracker,
