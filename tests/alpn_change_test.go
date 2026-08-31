@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"math/big"
 	"net"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -100,7 +101,7 @@ func TestClient_ProtocolChangeBetweenConnections(t *testing.T) {
 		resp2.Body.Close()
 		t.Fatal("expected the request that runs into the protocol change to fail")
 	}
-	assert.Contains(t, err.Error(), "cached transport speaks")
+	assert.Contains(t, err.Error(), "does not speak")
 
 	// The third request is the point of the fix. Without it this one, and every
 	// one after it, fails the same way as the second.
@@ -148,7 +149,12 @@ func serveChangingProtocol(listener net.Listener) {
 				return
 			}
 
+			// Keep-alive off, so the connection really is closed after the
+			// response and the client has to dial again. Without this the
+			// client may reuse it, no second handshake happens, and the test
+			// passes without exercising anything.
 			server := &http.Server{Handler: handler}
+			server.SetKeepAlivesEnabled(false)
 			_ = server.Serve(&singleConnListener{Conn: conn})
 		}(conn)
 	}
@@ -199,4 +205,126 @@ func selfSignedCert(t *testing.T) tls.Certificate {
 	}
 
 	return tls.Certificate{Certificate: [][]byte{der}, PrivateKey: key}
+}
+
+// TestClient_NoALPNThenHTTP1KeepsTheCachedTransport covers the other half of the
+// comparison. A load balancer that negotiates no ALPN on one connection and
+// "http/1.1" on the next has not changed anything: both get the HTTP/1
+// transport. Comparing the protocol strings rather than the transport they map
+// to would call that a change and throw away a working transport.
+func TestClient_NoALPNThenHTTP1KeepsTheCachedTransport(t *testing.T) {
+	var handshakes int64
+
+	cert := selfSignedCert(t)
+	listener, err := tls.Listen("tcp", "127.0.0.1:0", &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		GetConfigForClient: func(*tls.ClientHelloInfo) (*tls.Config, error) {
+			config := &tls.Config{Certificates: []tls.Certificate{cert}}
+			if atomic.AddInt64(&handshakes, 1) > 1 {
+				config.NextProtos = []string{"http/1.1"}
+			}
+			return config, nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer listener.Close()
+
+	go serveChangingProtocol(listener)
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(),
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithInsecureSkipVerify(),
+		tls_client.WithTimeoutSeconds(10),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	endpoint := fmt.Sprintf("https://%s/", listener.Addr().String())
+
+	for i := 1; i <= 2; i++ {
+		req, err := http.NewRequest(http.MethodGet, endpoint, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("request %d: %v, want no ALPN and http/1.1 to count as the same transport", i, err)
+		}
+
+		assert.Equal(t, 200, resp.StatusCode)
+		assert.Equal(t, "HTTP/1.1", resp.Proto)
+		resp.Body.Close()
+	}
+
+	assert.Greater(t, atomic.LoadInt64(&handshakes), int64(1), "the second request should have dialed again")
+}
+
+// TestClient_ProtocolChangeUnderConcurrentLoad drives the same protocol change
+// with requests in flight, which is where dropping the cached transport can race
+// with RoundTrip reading it. Run with -race.
+func TestClient_ProtocolChangeUnderConcurrentLoad(t *testing.T) {
+	var handshakes int64
+
+	cert := selfSignedCert(t)
+	listener, err := tls.Listen("tcp", "127.0.0.1:0", &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		GetConfigForClient: func(*tls.ClientHelloInfo) (*tls.Config, error) {
+			config := &tls.Config{Certificates: []tls.Certificate{cert}}
+			if atomic.AddInt64(&handshakes, 1) == 1 {
+				config.NextProtos = []string{"http/1.1"}
+			} else {
+				config.NextProtos = []string{http2.NextProtoTLS}
+			}
+			return config, nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer listener.Close()
+
+	go serveChangingProtocol(listener)
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(),
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithInsecureSkipVerify(),
+		tls_client.WithTimeoutSeconds(10),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	endpoint := fmt.Sprintf("https://%s/", listener.Addr().String())
+
+	// One request first, so an HTTP/1 transport is cached and every goroutine
+	// below runs into the change rather than racing to build the first one.
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp, err := client.Do(req); err == nil {
+		resp.Body.Close()
+	}
+
+	var wg sync.WaitGroup
+	for i := 0; i < 24; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			req, err := http.NewRequest(http.MethodGet, endpoint, nil)
+			if err != nil {
+				return
+			}
+			// Whether an individual request succeeds is not the point. Some run
+			// into the change and some do not. The point is that none of this
+			// panics on a concurrent map write.
+			if resp, err := client.Do(req); err == nil {
+				resp.Body.Close()
+			}
+		}()
+	}
+	wg.Wait()
 }
