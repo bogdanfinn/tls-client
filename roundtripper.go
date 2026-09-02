@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -70,6 +71,7 @@ type roundTripper struct {
 
 	forceHttp1   bool
 	disableHttp3 bool
+	proxyURL     string
 
 	// racer handles HTTP/3 racing (nil if racing is disabled)
 	racer *protocolRacer
@@ -98,6 +100,7 @@ type http3Config struct {
 	http3PriorityParam     uint32
 	http3PseudoHeaderOrder []string
 	http3SendGreaseFrames  bool
+	proxyURL               string
 }
 
 // transportKind is which of the three transports an ALPN result maps to.
@@ -216,6 +219,22 @@ func buildHTTP3Transport(cfg *http3Config) (http.RoundTripper, error) {
 	t3 := &http3.Transport{
 		TLSClientConfig: utlsConfig,
 		EnableDatagrams: true, // Chrome enables H3_DATAGRAM (setting 0x33)
+	}
+
+	if cfg.proxyURL != "" {
+		parsedURL, parseErr := url.Parse(cfg.proxyURL)
+		if parseErr != nil {
+			return nil, fmt.Errorf("can not use proxy for HTTP/3: invalid proxy url: %w", parseErr)
+		}
+
+		// Only SOCKS5 can tunnel UDP (via UDP ASSOCIATE), which QUIC requires. Every other
+		// scheme would leave the QUIC connection unproxied and leak the real IP, so refuse
+		// here instead of silently dialing direct.
+		if parsedURL.Scheme != "socks5" && parsedURL.Scheme != "socks5h" {
+			return nil, fmt.Errorf("can not use proxy for HTTP/3: proxy scheme %q only supports TCP and can not tunnel QUIC/UDP traffic. Use a socks5:// proxy or disable HTTP/3", parsedURL.Scheme)
+		}
+
+		t3.Dial = newSOCKS5QUICDialer(cfg.proxyURL)
 	}
 
 	http3Settings := cfg.http3Settings
@@ -531,6 +550,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 			http3PriorityParam:     rt.http3PriorityParam,
 			http3PseudoHeaderOrder: rt.http3PseudoHeaderOrder,
 			http3SendGreaseFrames:  rt.http3SendGreaseFrames,
+			proxyURL:               rt.proxyURL,
 		})
 		if err != nil {
 			return nil, err
@@ -661,7 +681,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify, withRandomTlsExtensionOrder, forceHttp1, disableHttp3, disableSessionTickets, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify, withRandomTlsExtensionOrder, forceHttp1, disableHttp3, disableSessionTickets, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, proxyURL string, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner, err := NewCertificatePinner(certificatePins)
 	if err != nil {
 		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
@@ -706,6 +726,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		http3PriorityParam:          clientProfile.GetHttp3PriorityParam(),
 		http3PseudoHeaderOrder:      clientProfile.GetHttp3PseudoHeaderOrder(),
 		http3SendGreaseFrames:       clientProfile.GetHttp3SendGreaseFrames(),
+		proxyURL:                    proxyURL,
 	}
 
 	// Create protocol racer if HTTP/3 racing is enabled
@@ -727,6 +748,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 			clientProfile.GetHttp3PriorityParam(),
 			clientProfile.GetHttp3PseudoHeaderOrder(),
 			clientProfile.GetHttp3SendGreaseFrames(),
+			proxyURL,
 		)
 	}
 

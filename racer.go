@@ -40,6 +40,8 @@ type protocolRacer struct {
 	http3PriorityParam     uint32
 	http3PseudoHeaderOrder []string
 	http3SendGreaseFrames  bool
+
+	proxyURL string
 }
 
 func newProtocolRacer(
@@ -59,6 +61,7 @@ func newProtocolRacer(
 	http3PriorityParam uint32,
 	http3PseudoHeaderOrder []string,
 	http3SendGreaseFrames bool,
+	proxyURL string,
 ) *protocolRacer {
 	return &protocolRacer{
 		protocolCache:          make(map[string]string),
@@ -78,6 +81,7 @@ func newProtocolRacer(
 		http3PriorityParam:     http3PriorityParam,
 		http3PseudoHeaderOrder: http3PseudoHeaderOrder,
 		http3SendGreaseFrames:  http3SendGreaseFrames,
+		proxyURL:               proxyURL,
 	}
 }
 
@@ -262,8 +266,13 @@ func (pr *protocolRacer) cacheWinningProtocol(addr, protocol string) {
 	pr.protocolCacheMu.Unlock()
 
 	if protocol == "h3" {
+		h3Transport, err := buildHTTP3Transport(pr.getHTTP3Config())
+		if err != nil {
+			// Never cache a nil transport, the next request would panic on it.
+			return
+		}
+
 		pr.cachedTransportsLck.Lock()
-		h3Transport, _ := buildHTTP3Transport(pr.getHTTP3Config())
 		pr.cachedTransports[addr+":h3"] = h3Transport
 		pr.cachedTransportsLck.Unlock()
 	}
@@ -287,6 +296,7 @@ func (pr *protocolRacer) getHTTP3Config() *http3Config {
 		http3PriorityParam:     pr.http3PriorityParam,
 		http3PseudoHeaderOrder: pr.http3PseudoHeaderOrder,
 		http3SendGreaseFrames:  pr.http3SendGreaseFrames,
+		proxyURL:               pr.proxyURL,
 	}
 }
 

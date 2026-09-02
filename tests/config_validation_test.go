@@ -282,3 +282,173 @@ func TestConfigValidation_OrderIndependent(t *testing.T) {
 		}
 	})
 }
+
+// --- Proxy + HTTP/3 validation tests ---
+
+func TestConfigValidation_ProtocolRacingWithHTTPProxy(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithProtocolRacing(),
+		tls_client.WithProxyUrl("http://proxy.example.com:8080"),
+	}
+
+	_, err := tls_client.NewHttpClient(nil, options...)
+	if err == nil {
+		t.Fatal("Expected error when enabling protocol racing with HTTP proxy")
+	}
+
+	expectedMsg := "protocol racing requires a SOCKS5 proxy"
+	if !strings.Contains(err.Error(), expectedMsg) {
+		t.Fatalf("Expected error message to contain '%s', got: %v", expectedMsg, err)
+	}
+
+	t.Logf("✓ Correctly rejected HTTP proxy with racing: %v", err)
+}
+
+func TestConfigValidation_ProtocolRacingWithHTTPSProxy(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithProtocolRacing(),
+		tls_client.WithProxyUrl("https://proxy.example.com:443"),
+	}
+
+	_, err := tls_client.NewHttpClient(nil, options...)
+	if err == nil {
+		t.Fatal("Expected error when enabling protocol racing with HTTPS proxy")
+	}
+
+	expectedMsg := "protocol racing requires a SOCKS5 proxy"
+	if !strings.Contains(err.Error(), expectedMsg) {
+		t.Fatalf("Expected error message to contain '%s', got: %v", expectedMsg, err)
+	}
+
+	t.Logf("✓ Correctly rejected HTTPS proxy with racing: %v", err)
+}
+
+func TestConfigValidation_ProtocolRacingWithSOCKS4Proxy(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithProtocolRacing(),
+		tls_client.WithProxyUrl("socks4://proxy.example.com:1080"),
+	}
+
+	_, err := tls_client.NewHttpClient(nil, options...)
+	if err == nil {
+		t.Fatal("Expected error when enabling protocol racing with SOCKS4 proxy")
+	}
+
+	expectedMsg := "protocol racing requires a SOCKS5 proxy"
+	if !strings.Contains(err.Error(), expectedMsg) {
+		t.Fatalf("Expected error message to contain '%s', got: %v", expectedMsg, err)
+	}
+
+	t.Logf("✓ Correctly rejected SOCKS4 proxy with racing: %v", err)
+}
+
+func TestConfigValidation_ProtocolRacingWithSOCKS5Proxy(t *testing.T) {
+	// SOCKS5 + racing should be accepted (no actual proxy needed for config validation)
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithProtocolRacing(),
+		tls_client.WithProxyUrl("socks5://127.0.0.1:1080"),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatalf("Expected SOCKS5 proxy with racing to be accepted, got error: %v", err)
+	}
+	if client == nil {
+		t.Fatal("Expected client to be created")
+	}
+
+	t.Log("✓ SOCKS5 proxy with protocol racing accepted")
+}
+
+func TestConfigValidation_ProtocolRacingWithSOCKS5hProxy(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithProtocolRacing(),
+		tls_client.WithProxyUrl("socks5h://user:pass@127.0.0.1:1080"),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatalf("Expected SOCKS5h proxy with racing to be accepted, got error: %v", err)
+	}
+	if client == nil {
+		t.Fatal("Expected client to be created")
+	}
+
+	t.Log("✓ SOCKS5h proxy with protocol racing accepted")
+}
+
+func TestConfigValidation_HTTPProxyWithoutRacing(t *testing.T) {
+	// HTTP proxy without racing should be fine (HTTP/3 won't be attempted)
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithProxyUrl("http://proxy.example.com:8080"),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatalf("Expected HTTP proxy without racing to be accepted, got error: %v", err)
+	}
+	if client == nil {
+		t.Fatal("Expected client to be created")
+	}
+
+	t.Log("✓ HTTP proxy without racing accepted")
+}
+
+func TestConfigValidation_NoProxyWithRacing(t *testing.T) {
+	// Racing without proxy should be fine
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithProtocolRacing(),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatalf("Expected racing without proxy to be accepted, got error: %v", err)
+	}
+	if client == nil {
+		t.Fatal("Expected client to be created")
+	}
+
+	t.Log("✓ Racing without proxy accepted")
+}
+
+// The proxy checks in validateConfig only run when the client is built, so SetProxy has
+// to repeat them. Otherwise a client created without a proxy could be switched to a TCP
+// only proxy at runtime and let the HTTP/3 leg of the race bypass it.
+func TestConfigValidation_SetProxyRevalidatesProtocolRacing(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithProtocolRacing(),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatalf("Expected client without proxy to be created, got error: %v", err)
+	}
+
+	err = client.SetProxy("http://proxy.example.com:8080")
+	if err == nil {
+		t.Fatal("Expected SetProxy to reject an HTTP proxy while protocol racing is enabled")
+	}
+
+	expectedMsg := "protocol racing requires a SOCKS5 proxy"
+	if !strings.Contains(err.Error(), expectedMsg) {
+		t.Fatalf("Expected error message to contain '%s', got: %v", expectedMsg, err)
+	}
+
+	if got := client.GetProxy(); got != "" {
+		t.Fatalf("Expected the rejected proxy not to be applied, GetProxy() = %q", got)
+	}
+
+	if err := client.SetProxy("socks5://127.0.0.1:1080"); err != nil {
+		t.Fatalf("Expected SetProxy to accept a SOCKS5 proxy, got error: %v", err)
+	}
+
+	t.Logf("✓ SetProxy revalidates the racing/proxy combination")
+}
