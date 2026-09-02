@@ -6,7 +6,6 @@ import (
 	"github.com/bogdanfinn/utls/dicttls"
 )
 
-
 var Firefox_148 = ClientProfile{
 	clientHelloId: tls.ClientHelloID{
 		Client:               "Firefox",

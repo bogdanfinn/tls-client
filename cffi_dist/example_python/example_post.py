@@ -4,7 +4,7 @@ import base64
 import re
 
 # load the tls-client shared package for your OS you are currently running your python script (i'm running on mac)
-library = ctypes.cdll.LoadLibrary('./../dist/tls-client-darwin-amd64-1.7.2.dylib')
+library = ctypes.cdll.LoadLibrary('./../dist/tls-client-xgo-1.16.0-darwin-amd64.dylib')
 
 # extract the exposed request function from the shared package
 request = library.request
@@ -30,7 +30,7 @@ destroyAll = library.destroyAll
 destroyAll.restype = ctypes.c_char_p
 
 requestPayload = {
-    "tlsClientIdentifier": "chrome_103",
+    "tlsClientIdentifier": "chrome_150",
     "followRedirects": False,
     "insecureSkipVerify": False,
     "withoutCookieJar": False,
@@ -48,7 +48,7 @@ requestPayload = {
     "isRotatingProxy": False,
     "headers": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
         "accept-encoding": "gzip, deflate, br",
         "content-type": "application/x-www-form-urlencoded",
         "accept-language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"

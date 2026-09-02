@@ -84,7 +84,7 @@ func main() {
 	jar := tls_client.NewCookieJar()
 	options := []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(30),
-		tls_client.WithClientProfile(profiles.Chrome_144),
+		tls_client.WithClientProfile(profiles.Chrome_150),
 		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
 	}
@@ -104,7 +104,7 @@ func main() {
 	req.Header = http.Header{
 		"accept":                    {"*/*"},
 		"accept-language":           {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
-		"user-agent":                {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"},
+		"user-agent":                {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"},
 		http.HeaderOrderKey: {
 			"accept",
 			"accept-language",
@@ -141,6 +141,13 @@ No Support in DMs!
 ### Appreciate my work?
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/CaptainBarnius)
+
+Or, if you prefer crypto:
+
+- **ETH** `0x1Ef18abfE61372e49F08eD24B1055cbDD5d7e0Fc`
+- **BTC** `bc1qkfqu5xvayqh55gwjtyannvyqzr4cax4eu3k2u6`
+- **ADA** `addr1qxj5hg5xfq9l5r5ed7av7mzg0gy5xemn64lkna5cuu9e4yt0vk8st6zvmfuqjdz849drd7zgcdky4zrdvm603dzf4dgs5unend`
+- **SOL** `7hYfiX4R5bEbggYY2JRZi2a3EdcEzQ6XbgZiHRiRHjau`
 
 ---
 

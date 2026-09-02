@@ -1,7 +1,7 @@
 const ffi = require('ffi-napi');
 
 // load the tls-client shared package for your OS you are currently running your nodejs script (i'm running on mac)
-const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-1.7.2.dylib', {
+const tlsClientLibrary = ffi.Library('./../dist/tls-client-xgo-1.16.0-darwin-amd64.dylib', {
     'request': ['string', ['string']],
     'getCookiesFromSession': ['string', ['string']],
     'addCookiesToSession': ['string', ['string']],
@@ -11,7 +11,7 @@ const tlsClientLibrary = ffi.Library('./../dist/tls-client-darwin-amd64-1.7.2.dy
 });
 
 const requestPayload = {
-    "tlsClientIdentifier": "chrome_103",
+    "tlsClientIdentifier": "chrome_150",
     "followRedirects": false,
     "insecureSkipVerify": false,
     "withoutCookieJar": false,
@@ -27,7 +27,7 @@ const requestPayload = {
     "certificatePinningHosts": {},
     "headers": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
         "accept-encoding": "gzip, deflate, br",
         "accept-language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"
     },

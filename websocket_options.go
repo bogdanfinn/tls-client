@@ -32,7 +32,7 @@ func WithUrl(url string) WebsocketOption {
 // you MUST use WithForceHttp1() option to ensure compatibility:
 //
 //	client, _ := NewHttpClient(nil,
-//	    WithClientProfile(profiles.Chrome_133),
+//	    WithClientProfile(profiles.Chrome_150),
 //	    WithForceHttp1(), // Required for WebSocket!
 //	)
 func WithTlsClient(tlsClient HttpClient) WebsocketOption {

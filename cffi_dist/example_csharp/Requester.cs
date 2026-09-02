@@ -20,7 +20,7 @@ class RequestResult
 
 class RequestPayload
 {
-    public string TlsClientIdentifier { get; set; } = "FireFox110";
+    public string TlsClientIdentifier { get; set; } = "chrome_150";
     public bool FollowRedirects { get; set; } = true;
     public bool InsecureSkipVerify { get; set; } = false;
     public bool WithoutCookieJar { get; set; } = false;
@@ -45,17 +45,17 @@ class RequestPayload
 
 class TLSSession
 {
-    [DllImport("../dist/tls-client-windows-64-1.7.2.dll", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("../dist/tls-client-xgo-1.16.0-windows-amd64.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern IntPtr request(byte[] requestPayload, string sessionID);
 
 
-    [DllImport("../dist/tls-client-windows-64-1.7.2.dll", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("../dist/tls-client-xgo-1.16.0-windows-amd64.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern void freeMemory(string sessionID);
 
     private string sessionID;
     private RequestPayload sessionPayload;
 
-    public TLSSession(Dictionary<string, string> headers = null, string TlsClientIdentifier = "FireFox110", int TimeoutSeconds = 30, bool FollowRedirects = true, string proxy = null)
+    public TLSSession(Dictionary<string, string> headers = null, string TlsClientIdentifier = "chrome_150", int TimeoutSeconds = 30, bool FollowRedirects = true, string proxy = null)
     {
 
         this.sessionID = Guid.NewGuid().ToString();

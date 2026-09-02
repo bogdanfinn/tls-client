@@ -8,7 +8,7 @@ import {TLSClient} from "@project/client";
 const tlsClient = new TLSClient()
 
 const payload: TLSClientRequestPayload = {
-    tlsClientIdentifier: 'chrome_103',
+    tlsClientIdentifier: 'chrome_150',
     followRedirects: false,
     insecureSkipVerify: false,
     withoutCookieJar: false,
@@ -18,7 +18,7 @@ const payload: TLSClientRequestPayload = {
     proxyUrl: '',
     headers: {
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36',
         'accept-encoding': 'gzip, deflate, br',
         'accept-language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7'
     },

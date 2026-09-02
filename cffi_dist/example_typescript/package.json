@@ -6,7 +6,14 @@
     "scripts": {
         "build": "tsc -p . && tscpaths -p tsconfig.json -s ./src -o ./build",
         "start:sync": "npm run build && node build/samples/sync",
-        "start:async": "npm run build && node build/samples/async"
+        "start:async": "npm run build && node build/samples/async",
+        "start:post": "npm run build && node build/samples/post",
+        "start:cookies": "npm run build && node build/samples/cookies",
+        "start:custom_client": "npm run build && node build/samples/custom_client",
+        "start:proxy": "npm run build && node build/samples/proxy",
+        "start:redirects": "npm run build && node build/samples/redirects",
+        "start:pinning": "npm run build && node build/samples/pinning",
+        "start:download": "npm run build && node build/samples/download"
     },
     "keywords": [],
     "author": "Andrea Vitale",
