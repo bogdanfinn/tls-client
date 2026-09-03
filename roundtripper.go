@@ -355,7 +355,7 @@ func (rt *roundTripper) getTransport(req *http.Request, addr string) error {
 		return fmt.Errorf("invalid URL scheme: [%v]", req.URL.Scheme)
 	}
 
-	_, err := rt.dialTLS(req.Context(), "tcp", addr)
+	_, err := rt.dialTLSSetup(req.Context(), "tcp", addr)
 	switch err {
 	case errProtocolNegotiated:
 	case nil:
@@ -368,7 +368,28 @@ func (rt *roundTripper) getTransport(req *http.Request, addr string) error {
 	return nil
 }
 
+// dialTLS is the transport's own DialTLSContext, so it runs whenever a cached
+// transport opens a replacement connection. RoundTrip has released
+// cachedTransportsLck by then, so this path must not write cachedTransports.
 func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.Conn, error) {
+	return rt.dialTLSWithSetup(ctx, network, addr, false)
+}
+
+// dialTLSSetup is the first dial for an address, made by getTransport while the
+// caller holds cachedTransportsLck. It is the only path allowed to put a
+// transport in the cache.
+func (rt *roundTripper) dialTLSSetup(ctx context.Context, network, addr string) (net.Conn, error) {
+	return rt.dialTLSWithSetup(ctx, network, addr, true)
+}
+
+// dialTLSWithSetup does the dial and the handshake for both.
+//
+// setup says whether the caller holds cachedTransportsLck, and so whether this
+// may build a transport and cache it. Every other caller reaches here from
+// inside a transport's own RoundTrip, on a goroutine of the transport's making,
+// with no lock held at all: writing the map there raced with the read in
+// RoundTrip, on two different mutexes.
+func (rt *roundTripper) dialTLSWithSetup(ctx context.Context, network, addr string, setup bool) (net.Conn, error) {
 	rt.Lock()
 	defer rt.Unlock()
 
@@ -428,8 +449,9 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	negotiatedProtocol := conn.ConnectionState().NegotiatedProtocol
 	negotiatedKind := kindForProtocol(negotiatedProtocol)
 
-	// A transport is already cached for this address. Reuse it only when the
-	// handshake that just completed negotiated a protocol it can speak.
+	// A reconnect belongs to a transport that already exists, so it never builds
+	// one: it either hands the connection back or reports that the connection is
+	// unusable.
 	//
 	// Servers do change their mind: an address behind a load balancer can offer
 	// http/1.1 on one connection and h2 on the next. Handing the new connection to
@@ -438,20 +460,33 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 	// HTTP response" naming the raw frame bytes and keeps failing for that address
 	// until the whole client is thrown away.
 	//
-	// This connection cannot be rescued, because the dial belongs to the transport
-	// that speaks the wrong protocol. Report it instead, and let RoundTrip drop the
-	// cache entry: it holds the lock that guards cachedTransports, and this
-	// function does not.
-	if cachedKind, ok := rt.cachedKind(addr); ok {
-		if cachedKind == negotiatedKind {
+	// Neither case can be rescued here, because the dial belongs to the transport
+	// that speaks the wrong protocol and this function does not hold the lock that
+	// guards cachedTransports. Report it and let RoundTrip drop the entry and
+	// rebuild through getTransport.
+	if !setup {
+		cachedKind, ok := rt.cachedKind(addr)
+		switch {
+		case ok && cachedKind == negotiatedKind:
 			return conn, nil
+		case ok:
+			_ = conn.Close()
+
+			return nil, fmt.Errorf("%w: %s negotiated %q", errProtocolChanged, addr, negotiatedProtocol)
+		default:
+			// The entry was dropped while this transport was still in flight.
+			_ = conn.Close()
+
+			return nil, fmt.Errorf("%w: %s negotiated %q with no transport cached", errProtocolChanged, addr, negotiatedProtocol)
 		}
-
-		_ = conn.Close()
-
-		return nil, fmt.Errorf("%w: %s negotiated %q", errProtocolChanged, addr, negotiatedProtocol)
 	}
 
+	// The setup dial always builds, and deliberately does not consult
+	// cachedKinds. getTransport only calls it when no transport is cached, so
+	// there is nothing to reuse, and a kind left behind by a drop that has not
+	// finished would otherwise return the connection with a nil error, which
+	// getTransport panics on.
+	//
 	// No usable http.Transport for this address yet, create one based on the
 	// results of ALPN if no http1 is enforced.
 
