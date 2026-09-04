@@ -5,6 +5,31 @@ import (
 	"testing"
 )
 
+func TestGenerateH2GreaseSettingID(t *testing.T) {
+	// RFC 8701 reserved 16-bit GREASE values: 0x0a0a, 0x1a1a, ..., 0xfafa
+	validGrease := map[uint16]bool{
+		0x0a0a: true, 0x1a1a: true, 0x2a2a: true, 0x3a3a: true,
+		0x4a4a: true, 0x5a5a: true, 0x6a6a: true, 0x7a7a: true,
+		0x8a8a: true, 0x9a9a: true, 0xaaaa: true, 0xbaba: true,
+		0xcaca: true, 0xdada: true, 0xeaea: true, 0xfafa: true,
+	}
+
+	seen := map[uint16]bool{}
+	for i := 0; i < 1000; i++ {
+		id := generateH2GreaseSettingID()
+		if !validGrease[id] {
+			t.Errorf("generated non-RFC-8701 GREASE setting ID: 0x%04x", id)
+		}
+		seen[id] = true
+	}
+
+	// 1000 draws from 16 values should produce more than one distinct value,
+	// confirming the ID is randomized per call (real Chrome randomizes per connection).
+	if len(seen) < 2 {
+		t.Errorf("expected randomized GREASE IDs, got %d distinct value(s)", len(seen))
+	}
+}
+
 func TestInt64ToInt(t *testing.T) {
 	tests := []struct {
 		name    string
