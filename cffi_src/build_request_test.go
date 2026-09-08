@@ -19,6 +19,16 @@ func TestBuildRequestWithoutHeadersLeavesTheMapEmpty(t *testing.T) {
 		t.Fatalf("an input without headers gives a request with %d header entries: %v", len(req.Header), req.Header)
 	}
 
+	// An order with nothing to order is the same case: the default headers
+	// bring their own.
+	req, cerr = BuildRequest(RequestInput{RequestMethod: "GET", RequestUrl: "https://example.test/", HeaderOrder: []string{"user-agent", "accept"}})
+	if cerr != nil {
+		t.Fatal(cerr)
+	}
+	if len(req.Header) != 0 {
+		t.Fatalf("an order without headers gives a request with %d header entries: %v", len(req.Header), req.Header)
+	}
+
 	// The control: an order that was given is kept.
 	req, cerr = BuildRequest(RequestInput{
 		RequestMethod: "GET", RequestUrl: "https://example.test/",
