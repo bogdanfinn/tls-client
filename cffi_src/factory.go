@@ -142,7 +142,12 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 		headers[key] = []string{value}
 	}
 
-	headers[http.HeaderOrderKey] = input.HeaderOrder
+	// Only when there are headers to order. The order key counts as a header
+	// too, and the client's default headers apply to an empty set only, so an
+	// order on its own kept them from ever applying.
+	if len(headers) > 0 && len(input.HeaderOrder) > 0 {
+		headers[http.HeaderOrderKey] = input.HeaderOrder
+	}
 
 	tlsReq.Header = headers
 
@@ -435,6 +440,13 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 	if requestInput.DefaultHeaders != nil && len(requestInput.DefaultHeaders) != 0 {
 		options = append(options, tls_client.WithDefaultHeaders(requestInput.DefaultHeaders))
+	} else if len(requestInput.Headers) == 0 && requestInput.TLSClientIdentifier != "" {
+		// A browser profile and no headers at all: the browser's own headers
+		// go out instead of Go-http-client. Any header the caller sets turns
+		// this off, and so does a defaultHeaders of their own.
+		if headers, ok := getTlsClientProfile(requestInput.TLSClientIdentifier).DefaultHeaders(); ok {
+			options = append(options, tls_client.WithDefaultHeaders(headers))
+		}
 	}
 
 	if requestInput.ConnectHeaders != nil && len(requestInput.ConnectHeaders) != 0 {
