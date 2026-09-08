@@ -440,6 +440,13 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 
 	if requestInput.DefaultHeaders != nil && len(requestInput.DefaultHeaders) != 0 {
 		options = append(options, tls_client.WithDefaultHeaders(requestInput.DefaultHeaders))
+	} else if len(requestInput.Headers) == 0 && requestInput.TLSClientIdentifier != "" {
+		// A browser profile and no headers at all: the browser's own headers
+		// go out instead of Go-http-client. Any header the caller sets turns
+		// this off, and so does a defaultHeaders of their own.
+		if headers, ok := getTlsClientProfile(requestInput.TLSClientIdentifier).DefaultHeaders(); ok {
+			options = append(options, tls_client.WithDefaultHeaders(headers))
+		}
 	}
 
 	if requestInput.ConnectHeaders != nil && len(requestInput.ConnectHeaders) != 0 {
