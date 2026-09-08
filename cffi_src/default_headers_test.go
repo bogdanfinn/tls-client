@@ -3,6 +3,7 @@ package tls_client_cffi_src
 import (
 	"strings"
 	"testing"
+	"time"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/httptest"
@@ -12,9 +13,11 @@ import (
 // browser's headers; a request with a header of its own, or with a profile that
 // is not a mapped browser, is left as it was.
 func TestABrowserProfileWithNoHeadersSendsTheBrowsersHeaders(t *testing.T) {
-	var got http.Header
+	// The handler runs on the server's goroutine, so what it saw travels
+	// over a channel instead of a shared variable.
+	got := make(chan http.Header, 1)
 	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		got = r.Header.Clone()
+		got <- r.Header.Clone()
 	}))
 	defer srv.Close()
 
@@ -38,7 +41,13 @@ func TestABrowserProfileWithNoHeadersSendsTheBrowsersHeaders(t *testing.T) {
 			t.Fatal(err)
 		}
 		resp.Body.Close()
-		return got
+		select {
+		case h := <-got:
+			return h
+		case <-time.After(5 * time.Second):
+			t.Fatal("the server saw no request")
+			return nil
+		}
 	}
 
 	h := send(t, RequestInput{TLSClientIdentifier: "chrome_152"})
