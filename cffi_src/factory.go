@@ -142,7 +142,12 @@ func BuildRequest(input RequestInput) (*http.Request, *TLSClientError) {
 		headers[key] = []string{value}
 	}
 
-	headers[http.HeaderOrderKey] = input.HeaderOrder
+	// Only when an order was given. An empty order still counts as a header,
+	// and the client's default headers apply to an empty set only, so putting
+	// it here unconditionally kept them from ever applying.
+	if len(input.HeaderOrder) > 0 {
+		headers[http.HeaderOrderKey] = input.HeaderOrder
+	}
 
 	tlsReq.Header = headers
 
