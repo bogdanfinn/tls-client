@@ -15,9 +15,9 @@ import (
 )
 
 // portMappingDialer sends the two well-known ports to local test servers, so a
-// URL that names no port can be requested without binding 80 or 443. The
-// collision under test only happens when the port is left out, because that is
-// when both schemes fall back to the same default.
+// URL that names no port can be requested without binding 80 or 443. That is
+// the case the test needs: before the fix a URL without a port was keyed under
+// 443 whichever scheme it had, and only then did the two schemes collide.
 type portMappingDialer struct {
 	tlsAddr   string
 	plainAddr string
