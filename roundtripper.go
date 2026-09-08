@@ -707,12 +707,22 @@ func (rt *roundTripper) dialTLSForWebsocket(ctx context.Context, network, addr s
 	return conn, nil
 }
 
+// getDialTLSAddr is the address a request dials, and the key its transport is
+// cached under. A URL that names no port gets the default for its scheme.
+//
+// It used to get 443 either way, so http://host/ and https://host/ shared a
+// key: a redirect from an https page to a plain http URL found the HTTP/2
+// transport the first request had cached, and that transport refuses any
+// scheme but https before it dials.
 func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	host := req.URL.Hostname()
-	port := req.URL.Port()
-	if port != "" {
+	if port := req.URL.Port(); port != "" {
 		return net.JoinHostPort(host, port)
 	}
+	if strings.EqualFold(req.URL.Scheme, "http") {
+		return net.JoinHostPort(host, "80")
+	}
+
 	return net.JoinHostPort(host, "443")
 }
 
