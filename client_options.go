@@ -341,6 +341,11 @@ func WithBandwidthTracker() HttpClientOption {
 }
 
 // WithConnectHeaders configures a client to use the specified headers for the CONNECT request.
+//
+// The client writes Host itself and, when no User-Agent is given, Go's own. The
+// headers go out in the order named under http.HeaderOrderKey, spelled either
+// way, and alphabetically when no order is given. Chrome sends three on a
+// CONNECT: Host, Proxy-Connection: keep-alive and User-Agent, in that order.
 func WithConnectHeaders(headers http.Header) HttpClientOption {
 	return func(config *httpClientConfig) {
 		config.connectHeaders = headers
