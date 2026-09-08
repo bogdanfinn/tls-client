@@ -28,9 +28,11 @@ const (
 // Chrome 123, the priority header from Chrome 124.
 //
 // The set is what the browser sends over HTTP/2, which this client negotiates
-// by default. Over HTTP/1.1 the browser sends Host and Connection first, which
-// the client writes for you, and no priority header; with WithForceHttp1,
-// delete(headers, "priority") first. Names carry the browser's HTTP/1.1
+// by default. Over HTTP/1.1 the browser sends Host first, which the client
+// writes for you and which is therefore in the order and not in the set, then
+// Connection, which is in the set and which HTTP/2 leaves out, and it sends
+// no priority header; with WithForceHttp1, delete(headers, "priority") first.
+// Names carry the browser's HTTP/1.1
 // spelling, lower case for the client hints and capitals elsewhere, because
 // HTTP/1.1 puts a name on the wire as it is written; HTTP/2 lower-cases every
 // name.
