@@ -32,12 +32,19 @@ var trustAnchorProfiles = []struct {
 }{
 	{"Chrome_152", profiles.Chrome_152, chrome152TrustAnchorsCapture},
 	{"Chrome_152_PSK", profiles.Chrome_152_PSK, chrome152TrustAnchorsCapture},
+	{"Chrome_153", profiles.Chrome_153, chrome153TrustAnchorsCapture},
+	{"Chrome_153_PSK", profiles.Chrome_153_PSK, chrome153TrustAnchorsCapture},
 }
 
 // chrome152TrustAnchorsCapture is the payload as stable Chrome 152.0.7977.64 on
 // Android sent it. The profile keeps its IDs and gives them a new order, so a
 // ClientHello that repeats this exact order means the reordering did not run.
 const chrome152TrustAnchorsCapture = "00b80582df13020108839a648c9b2d010c08839a648c9b2d010704d679090c08839a648c9b2d010a04d679090b08839a648c9b2d010d0582df13020e08839a648c9b2d010b04d67909050582df13020d0582df13021404d679090404d679090804d679090d04d679090a04d679090708839a648c9b2d011204d67909010582df13020608839a648c9b2d01080582df13021208839a648c9b2d011304d679090f0582df13021308839a648c9b2d01090582df13020f04d6790906"
+
+// chrome153TrustAnchorsCapture is the payload as stable Chrome 153.0.8010.37 on
+// Windows 11 25H2 (fresh user profile) sent it. Same 28 anchor IDs as the
+// Chrome 152 capture in a different absl::flat_hash_set iteration order.
+const chrome153TrustAnchorsCapture = "00b80582df13020d08839a648c9b2d01070582df13021408839a648c9b2d010a04d679090708839a648c9b2d01090582df13020e04d679090108839a648c9b2d010808839a648c9b2d010b04d679090f04d679090408839a648c9b2d010d04d679090c08839a648c9b2d010c04d67909060582df13021204d679090808839a648c9b2d011204d67909050582df13020604d679090b0582df13021304d679090d0582df13020108839a648c9b2d011304d679090a0582df13020f"
 
 // splitTrustAnchors parses a RequestedTrustAnchorList the way a server does. It
 // returns the IDs in the order they arrived and fails the test on a malformed

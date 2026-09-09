@@ -12,6 +12,8 @@ import (
 var greaseSignatureSchemeProfiles = map[string]profiles.ClientProfile{
 	"Chrome_152":     profiles.Chrome_152,
 	"Chrome_152_PSK": profiles.Chrome_152_PSK,
+	"Chrome_153":     profiles.Chrome_153,
+	"Chrome_153_PSK": profiles.Chrome_153_PSK,
 }
 
 // TestGreaseSignatureSchemeIsRandom builds ClientHello specs offline and checks

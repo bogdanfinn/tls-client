@@ -33,6 +33,14 @@ const chrome152TrustAnchorsCapture = "00b80582df13020108839a648c9b2d010c08839a64
 
 var chrome152TrustAnchors = shuffleTrustAnchors(mustSplitTrustAnchors(chrome152TrustAnchorsCapture))
 
+// Stable Chrome 153.0.8010.37 on Windows 11 25H2 (fresh user profile). 186 bytes,
+// 28 IDs, same anchor set as Chrome 152 in a different absl::flat_hash_set
+// iteration order. Chrome Root Store 39, no MTC anchors (VerifyMTCs off by
+// default). Captured 2026-09-09 via https://tls.peet.ws/api/all.
+const chrome153TrustAnchorsCapture = "00b80582df13020d08839a648c9b2d01070582df13021408839a648c9b2d010a04d679090708839a648c9b2d01090582df13020e04d679090108839a648c9b2d010808839a648c9b2d010b04d679090f04d679090408839a648c9b2d010d04d679090c08839a648c9b2d010c04d67909060582df13021204d679090808839a648c9b2d011204d67909050582df13020604d679090b0582df13021304d679090d0582df13020108839a648c9b2d011304d679090a0582df13020f"
+
+var chrome153TrustAnchors = shuffleTrustAnchors(mustSplitTrustAnchors(chrome153TrustAnchorsCapture))
+
 // mustDecodeHex converts a wire-format hex string into extension data. It
 // panics on malformed input, which can only come from a literal in this
 // package.
