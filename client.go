@@ -262,7 +262,7 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, pro
 
 	clientProfile := config.clientProfile
 
-	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.disableHttp3, config.disableSessionTickets, config.enableProtocolRacing, config.certificatePins, config.badPinHandler, config.disableIPV6, config.disableIPV4, bandwidthTracker, config.proxyUrl, dialer)
+	transport, err := newRoundTripper(clientProfile, config.transportOptions, config.serverNameOverwrite, config.insecureSkipVerify, config.withRandomTlsExtensionOrder, config.forceHttp1, config.disableHttp3, config.disableSessionTickets, config.enableProtocolRacing, config.certificatePins, config.badPinHandler, config.certificatePinner, config.disableIPV6, config.disableIPV4, bandwidthTracker, config.proxyUrl, dialer)
 	if err != nil {
 		return nil, nil, nil, clientProfile, err
 	}
@@ -402,7 +402,7 @@ func (c *httpClient) applyProxy() error {
 		}
 	}
 
-	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.disableHttp3, c.config.disableSessionTickets, c.config.enableProtocolRacing, c.config.certificatePins, c.config.badPinHandler, c.config.disableIPV6, c.config.disableIPV4, c.bandwidthTracker, c.config.proxyUrl, dialer)
+	transport, err := newRoundTripper(c.config.clientProfile, c.config.transportOptions, c.config.serverNameOverwrite, c.config.insecureSkipVerify, c.config.withRandomTlsExtensionOrder, c.config.forceHttp1, c.config.disableHttp3, c.config.disableSessionTickets, c.config.enableProtocolRacing, c.config.certificatePins, c.config.badPinHandler, c.config.certificatePinner, c.config.disableIPV6, c.config.disableIPV4, c.bandwidthTracker, c.config.proxyUrl, dialer)
 	if err != nil {
 		return err
 	}

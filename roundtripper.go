@@ -716,10 +716,14 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify, withRandomTlsExtensionOrder, forceHttp1, disableHttp3, disableSessionTickets, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, disableIPV6, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, proxyURL string, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
-	pinner, err := NewCertificatePinner(certificatePins)
-	if err != nil {
-		return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify, withRandomTlsExtensionOrder, forceHttp1, disableHttp3, disableSessionTickets, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, certificatePinner CertificatePinner, disableIPV6, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, proxyURL string, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+	pinner := certificatePinner
+	if pinner == nil {
+		var err error
+		pinner, err = NewCertificatePinner(certificatePins)
+		if err != nil {
+			return nil, fmt.Errorf("can not instantiate certificate pinner: %w", err)
+		}
 	}
 
 	var clientSessionCache tls.ClientSessionCache
