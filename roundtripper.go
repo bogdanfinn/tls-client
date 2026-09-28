@@ -520,6 +520,8 @@ func (rt *roundTripper) dialTLSWithSetup(ctx context.Context, network, addr stri
 
 		if rt.transportOptions != nil {
 			t2.DisableCompression = rt.transportOptions.DisableCompression
+			t2.ReadIdleTimeout = rt.transportOptions.ReadIdleTimeout
+			t2.PingTimeout = rt.transportOptions.PingTimeout
 
 			t1 := t2.GetT1()
 			if t1 != nil {
