@@ -713,6 +713,12 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	if port != "" {
 		return net.JoinHostPort(host, port)
 	}
+	// The address keys the transport cache, so a plain-http URL must not share
+	// the https key: its HTTP/1 transport would otherwise be reused for a later
+	// https request to the same host, which then reads h2 frames as HTTP/1.
+	if strings.EqualFold(req.URL.Scheme, "http") {
+		return net.JoinHostPort(host, "80")
+	}
 	return net.JoinHostPort(host, "443")
 }
 
