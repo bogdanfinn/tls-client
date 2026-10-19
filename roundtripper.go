@@ -713,6 +713,9 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	if port != "" {
 		return net.JoinHostPort(host, port)
 	}
+	if strings.ToLower(req.URL.Scheme) == "http" {
+		return net.JoinHostPort(host, "80")
+	}
 	return net.JoinHostPort(host, "443")
 }
 
