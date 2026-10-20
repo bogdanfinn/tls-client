@@ -150,6 +150,12 @@ type TransportOptions struct {
 	ReadBufferSize         int            `json:"readBufferSize"`         // If zero, a default (currently 4KB) is used.
 	DisableKeepAlives      bool           `json:"disableKeepAlives"`
 	DisableCompression     bool           `json:"disableCompression"`
+	// ReadIdleTimeout sends an HTTP/2 health-check PING when no frame has been
+	// received for this long. Zero disables it.
+	ReadIdleTimeout time.Duration `json:"readIdleTimeout"`
+	// PingTimeout closes the connection when that PING is not acknowledged in
+	// time. Zero means 15 seconds.
+	PingTimeout time.Duration `json:"pingTimeout"`
 }
 
 type PriorityFrames struct {

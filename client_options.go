@@ -25,6 +25,14 @@ type TransportOptions struct {
 	// IdleConnTimeout is the maximum amount of time an idle (keep-alive)
 	// connection will remain idle before closing itself. Zero means no limit.
 	IdleConnTimeout *time.Duration
+	// ReadIdleTimeout is the HTTP/2 health-check interval: a PING frame is sent
+	// when no frame has been received for this long, so an idle connection
+	// pings every ReadIdleTimeout. This keeps idle connections open on servers
+	// that close them after an idle period. Zero disables the health check.
+	ReadIdleTimeout time.Duration
+	// PingTimeout closes an HTTP/2 connection whose health-check PING is not
+	// acknowledged in time. Zero means 15 seconds.
+	PingTimeout time.Duration
 	// RootCAs is the set of root certificate authorities used to verify
 	// the remote server's certificate.
 	RootCAs                *x509.CertPool
