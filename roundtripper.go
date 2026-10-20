@@ -22,6 +22,10 @@ import (
 const defaultIdleConnectionTimeout = 90 * time.Second
 const CHROME_MAX_FIELD_SECTION_SIZE = 262144
 
+// firefoxClientName is the Client of every Firefox ClientHelloID, the ones of
+// utls and the ones of the profiles in this module.
+const firefoxClientName = "Firefox"
+
 var errProtocolNegotiated = errors.New("protocol negotiated")
 
 type roundTripper struct {
@@ -91,6 +95,7 @@ type roundTripper struct {
 
 // http3Config contains all parameters needed to build an HTTP/3 transport
 type http3Config struct {
+	clientHelloId          tls.ClientHelloID
 	clientSessionCache     tls.ClientSessionCache
 	insecureSkipVerify     bool
 	serverNameOverwrite    string
@@ -307,11 +312,15 @@ func buildHTTP3Transport(cfg *http3Config) (http.RoundTripper, error) {
 	return t3, nil
 }
 
+// profileDefaultMaxResponseHeaderBytes keeps SETTINGS_MAX_FIELD_SECTION_SIZE out
+// of the HTTP/3 SETTINGS for Firefox only, because Firefox does not send it.
+// Every other profile, including the ones without own HTTP/3 settings, sends
+// the Chrome value.
 func profileDefaultMaxResponseHeaderBytes(cfg *http3Config) int {
-	if cfg.http3PriorityParam > 0 {
-		return CHROME_MAX_FIELD_SECTION_SIZE
+	if cfg.clientHelloId.Client == firefoxClientName {
+		return -1
 	}
-	return -1
+	return CHROME_MAX_FIELD_SECTION_SIZE
 }
 
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -578,6 +587,7 @@ func (rt *roundTripper) dialTLSWithSetup(ctx context.Context, network, addr stri
 		rt.setCachedKind(addr, transportHTTP2)
 	case http3.NextProtoH3:
 		t3, err := buildHTTP3Transport(&http3Config{
+			clientHelloId:          rt.clientHelloId,
 			clientSessionCache:     rt.clientSessionCache,
 			insecureSkipVerify:     rt.insecureSkipVerify,
 			serverNameOverwrite:    rt.serverNameOverwrite,
@@ -783,6 +793,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 	// Create protocol racer if HTTP/3 racing is enabled
 	if enableH3Racing {
 		rt.racer = newProtocolRacer(
+			clientProfile.GetClientHelloId(),
 			clientSessionCache,
 			insecureSkipVerify,
 			serverNameOverwrite,

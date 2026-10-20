@@ -323,8 +323,11 @@ func TestChromeTrustAnchorsAreAcceptedByAServer(t *testing.T) {
 
 // TestChromeTrustAnchorsMatchUpstream runs the generator against the Chrome Root Store
 // and compares its output with the committed list. It fails when Chromium
-// changed the store, and when somebody changed the profiles without running the
-// generator again.
+// changed the anchor IDs in the store, and when somebody changed the profiles
+// without running the generator again.
+//
+// A new store version that only reorders the same IDs does not fail the test,
+// because the profiles draw their own order anyway.
 //
 // The failure is not a defect of this package. The message names the steps.
 func TestChromeTrustAnchorsMatchUpstream(t *testing.T) {
@@ -351,6 +354,14 @@ func TestChromeTrustAnchorsMatchUpstream(t *testing.T) {
 		return
 	}
 
+	differences := listDifference(t, want, got)
+	if len(differences) == 0 {
+		t.Logf("the Chrome Root Store is at version %s, the committed list at version %s, both hold the same IDs in another order",
+			storeVersion(got), storeVersion(want))
+
+		return
+	}
+
 	t.Errorf(`the Chrome Root Store is at version %s and no longer matches %s.
 
 Do these steps:
@@ -372,12 +383,13 @@ upstream:
 %s
 %s`,
 		storeVersion(got), chromeListPath, chromeListPath, storeVersion(got),
-		header(want), header(got), listDifference(t, want, got))
+		header(want), header(got), strings.Join(differences, "\n"))
 }
 
 // listDifference names the IDs the two lists do not share. Two headers can read
-// the same while the lists differ, so the message must name them.
-func listDifference(t *testing.T, want, got []byte) string {
+// the same while the lists differ, so the message must name them. An empty
+// result means both lists hold the same IDs.
+func listDifference(t *testing.T, want, got []byte) []string {
 	t.Helper()
 
 	ids := func(source []byte) map[string]bool {
@@ -415,13 +427,9 @@ func listDifference(t *testing.T, want, got []byte) string {
 		}
 	}
 
-	if len(only) == 0 {
-		return "The two lists hold the same IDs in another order."
-	}
-
 	sort.Strings(only)
 
-	return strings.Join(only, "\n")
+	return only
 }
 
 // storeVersion returns the Chrome Root Store version a generated list names.

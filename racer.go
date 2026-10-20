@@ -17,6 +17,7 @@ type protocolRacer struct {
 	protocolCache   map[string]string
 	protocolCacheMu sync.RWMutex
 
+	clientHelloId       tls.ClientHelloID
 	clientSessionCache  tls.ClientSessionCache
 	insecureSkipVerify  bool
 	serverNameOverwrite string
@@ -45,6 +46,7 @@ type protocolRacer struct {
 }
 
 func newProtocolRacer(
+	clientHelloId tls.ClientHelloID,
 	clientSessionCache tls.ClientSessionCache,
 	insecureSkipVerify bool,
 	serverNameOverwrite string,
@@ -65,6 +67,7 @@ func newProtocolRacer(
 ) *protocolRacer {
 	return &protocolRacer{
 		protocolCache:          make(map[string]string),
+		clientHelloId:          clientHelloId,
 		clientSessionCache:     clientSessionCache,
 		insecureSkipVerify:     insecureSkipVerify,
 		serverNameOverwrite:    serverNameOverwrite,
@@ -287,6 +290,7 @@ func (pr *protocolRacer) handleCachedProtocolError(err error, addr string, req *
 
 func (pr *protocolRacer) getHTTP3Config() *http3Config {
 	return &http3Config{
+		clientHelloId:          pr.clientHelloId,
 		clientSessionCache:     pr.clientSessionCache,
 		insecureSkipVerify:     pr.insecureSkipVerify,
 		serverNameOverwrite:    pr.serverNameOverwrite,
