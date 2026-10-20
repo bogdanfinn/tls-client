@@ -93,7 +93,7 @@ func TestARedirectToPlainHTTPDoesNotReuseTheTLSTransport(t *testing.T) {
 	dialer := portMappingDialer{tlsAddr: tlsLn.Addr().String(), plainAddr: plainLn.Addr().String()}
 
 	tripper, err := newRoundTripper(profiles.Chrome_133, nil, "", true, false, false, true, false, false,
-		nil, nil, false, false, bandwidth.NewNopeTracker(), "", dialer)
+		nil, nil, nil, false, false, bandwidth.NewNopeTracker(), "", dialer)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -2,6 +2,7 @@ package profiles
 
 import (
 	"github.com/bogdanfinn/fhttp/http2"
+	"github.com/bogdanfinn/tls-client/trust_anchors"
 	tls "github.com/bogdanfinn/utls"
 )
 
@@ -191,4 +192,12 @@ func (c ClientProfile) GetHttp3PseudoHeaderOrder() []string {
 
 func (c ClientProfile) GetHttp3SendGreaseFrames() bool {
 	return c.http3SendGreaseFrames
+}
+
+// BuildTrustAnchorsPayload turns a captured trust_anchors payload into the data
+// for the extension.
+//
+// Deprecated: use trust_anchors.BuildPayload
+func BuildTrustAnchorsPayload(capture string) ([]byte, error) {
+	return trust_anchors.BuildPayload(capture)
 }

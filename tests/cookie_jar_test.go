@@ -3,11 +3,14 @@ package tests
 import (
 	"io"
 	"net/url"
+	"strconv"
+	"sync/atomic"
 	"testing"
 
 	"github.com/bogdanfinn/tls-client/profiles"
 
 	http "github.com/bogdanfinn/fhttp"
+	"github.com/bogdanfinn/fhttp/httptest"
 	tls_client "github.com/bogdanfinn/tls-client"
 	"github.com/stretchr/testify/assert"
 )
@@ -70,6 +73,10 @@ func TestClient_SkipExistingCookiesOnClientSetCookies(t *testing.T) {
 }
 
 func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
+	testServer := getCookieWebServer()
+	testServer.Start()
+	defer testServer.Close()
+
 	jarOptions := []tls_client.CookieJarOption{
 		tls_client.WithSkipExisting(),
 	}
@@ -86,27 +93,74 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	u, err := url.Parse(testServer.URL + "/cookies")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	urlString := "https://eu.kith.com/"
+	doCookieRequest(t, client, u.String())
+
+	cookiesAfterFirstRequest := client.GetCookies(u)
+
+	assert.Equal(t, len(mockServerCookieNames), len(cookiesAfterFirstRequest))
+	assertCookieValues(t, cookiesAfterFirstRequest, "1")
+
+	existingCookie := &http.Cookie{
+		Name:   cookiesAfterFirstRequest[0].Name,
+		Value:  "manual",
+		MaxAge: 60,
+	}
+	client.SetCookies(u, []*http.Cookie{existingCookie})
+
+	cookiesAfterSetCookies := client.GetCookies(u)
+
+	assert.Equal(t, len(mockServerCookieNames), len(cookiesAfterSetCookies))
+	assertCookieValues(t, cookiesAfterSetCookies, "1")
+
+	// The server answers the second request with new values for the same names,
+	// which the jar has to skip because the names already exist.
+	doCookieRequest(t, client, u.String())
+
+	cookiesAfterSecondRequest := client.GetCookies(u)
+
+	assert.Equal(t, len(mockServerCookieNames), len(cookiesAfterSecondRequest))
+	assertCookieValues(t, cookiesAfterSecondRequest, "1")
+}
+
+var mockServerCookieNames = []string{"session", "consent", "tracking"}
+
+// getCookieWebServer sets the same cookie names on every response, with the
+// request count as value, so a changed value shows that a cookie was overwritten.
+func getCookieWebServer() *httptest.Server {
+	var requestCount atomic.Int64
+
+	var cookieHandler = func(w http.ResponseWriter, req *http.Request) {
+		value := strconv.FormatInt(requestCount.Add(1), 10)
+
+		for _, name := range mockServerCookieNames {
+			http.SetCookie(w, &http.Cookie{
+				Name:   name,
+				Value:  value,
+				Path:   "/",
+				MaxAge: 60,
+			})
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+
+	router := http.NewServeMux()
+	router.HandleFunc("/cookies", cookieHandler)
+
+	return httptest.NewUnstartedServer(router)
+}
+
+func doCookieRequest(t *testing.T, client tls_client.HttpClient, urlString string) {
+	t.Helper()
+
 	req, err := http.NewRequest(http.MethodGet, urlString, nil)
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	req.Header = http.Header{
-		"accept":          {"*/*"},
-		"accept-encoding": {"gzip"},
-		"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
-		"user-agent":      {"Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"},
-		http.HeaderOrderKey: {
-			"accept",
-			"accept-encoding",
-			"accept-language",
-			"user-agent",
-		},
 	}
 
 	resp, err := client.Do(req)
@@ -120,56 +174,14 @@ func TestClient_SkipExistingCookiesOnSetCookiesResponse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
 
-	u, _ := url.Parse(urlString)
+func assertCookieValues(t *testing.T, cookies []*http.Cookie, expectedValue string) {
+	t.Helper()
 
-	cookiesAfterFirstRequest := client.GetCookies(u)
-
-	assert.Equal(t, 7, len(cookiesAfterFirstRequest))
-
-	cookie3 := &http.Cookie{
-		Name:   cookiesAfterFirstRequest[0].Name,
-		Value:  cookiesAfterFirstRequest[0].Value,
-		Domain: cookiesAfterFirstRequest[0].Domain,
-		MaxAge: cookiesAfterFirstRequest[0].MaxAge,
+	for _, cookie := range cookies {
+		assert.Equal(t, expectedValue, cookie.Value, "cookie %s", cookie.Name)
 	}
-	client.SetCookies(u, []*http.Cookie{cookie3})
-
-	assert.Equal(t, 7, len(client.GetCookies(u)))
-
-	req, err = http.NewRequest(http.MethodGet, "https://eu.kith.com/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header = http.Header{
-		"accept":          {"*/*"},
-		"accept-encoding": {"gzip"},
-		"accept-language": {"de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"},
-		"user-agent":      {"Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"},
-		http.HeaderOrderKey: {
-			"accept",
-			"accept-encoding",
-			"accept-language",
-			"user-agent",
-		},
-	}
-
-	resp, err = client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	_, err = io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cookiesAfterSecondRequest := client.GetCookies(u)
-
-	assert.Equal(t, 7, len(cookiesAfterSecondRequest))
 }
 
 func TestClient_ExcludeExpiredCookiesFromRequest(t *testing.T) {

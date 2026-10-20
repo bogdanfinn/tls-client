@@ -98,7 +98,6 @@ func TestClient_UseDifferentConnection(t *testing.T) {
 
 func getSimpleWebServer() *httptest.Server {
 	var indexHandler = func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("receive a request from:", req.RemoteAddr, req.Header)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(req.RemoteAddr))
 	}

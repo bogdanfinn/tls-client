@@ -43,7 +43,6 @@ func TestClient_UseCompressedResponse(t *testing.T) {
 
 func getSimpleWebServerCompressed() *httptest.Server {
 	var indexHandler = func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("receive a request from:", req.RemoteAddr, req.Header)
 		w.Write([]byte(req.RemoteAddr))
 		w.WriteHeader(http.StatusOK)
 	}
