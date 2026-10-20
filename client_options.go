@@ -76,6 +76,7 @@ type httpClientConfig struct {
 	cookieJar          http.CookieJar
 	customRedirectFunc func(req *http.Request, via []*http.Request) error
 	certificatePins    map[string][]string
+	certificatePinner  CertificatePinner
 	defaultHeaders     http.Header
 	connectHeaders     http.Header
 	badPinHandler      BadPinHandlerFunc
@@ -242,6 +243,30 @@ func WithCertificatePinning(certificatePins map[string][]string, handlerFunc Bad
 	return func(config *httpClientConfig) {
 		config.certificatePins = certificatePins
 		config.badPinHandler = handlerFunc
+	}
+}
+
+// WithCertificatePinner supplies a custom CertificatePinner, used wherever the
+// built-in one is: on the TLS handshake of every HTTP/1.1 and HTTP/2 connection.
+//
+// It is the escape hatch for validation the built-in SPKI pinner cannot express:
+// checking the peer's subject or SAN entries, refusing issuers that belong to
+// interception tooling, or any other rule that needs to look at the certificate
+// rather than compare a hash. The pinner receives the same *tls.UConn the
+// built-in one does, so conn.ConnectionState() is available to it.
+//
+// HTTP/3 is not covered. Those transports are built from http3Config and carry
+// their own QUIC TLS stack, which never reaches Pin — this is true of
+// WithCertificatePinning today and is unchanged here. A client that enables
+// protocol racing can therefore complete an h3 connection without either pinner
+// running; covering it would need an interface that is not tied to *tls.UConn.
+// Callers that require the check on every connection should keep HTTP/3 off
+// (WithDisableHttp3).
+//
+// Takes precedence over WithCertificatePinning; the two are not combined.
+func WithCertificatePinner(pinner CertificatePinner) HttpClientOption {
+	return func(config *httpClientConfig) {
+		config.certificatePinner = pinner
 	}
 }
 

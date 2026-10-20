@@ -59,7 +59,7 @@ func TestGetTransportDoesNotPanicWhenOnlyTheKindSurvivedADrop(t *testing.T) {
 	addr := listener.Addr().String()
 
 	tripper, err := newRoundTripper(profiles.Chrome_133, nil, "", true, false, false, true, false, false,
-		nil, nil, false, false, bandwidth.NewNopeTracker(), "", proxy.Direct)
+		nil, nil, nil, false, false, bandwidth.NewNopeTracker(), "", proxy.Direct)
 	if err != nil {
 		t.Fatal(err)
 	}
