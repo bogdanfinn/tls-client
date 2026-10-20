@@ -212,3 +212,116 @@ type Response struct {
 	UsedProtocol string              `json:"usedProtocol"`
 	Status       int                 `json:"status"`
 }
+
+// WsConnectInput contains the parameters for establishing a WebSocket connection.
+// Either SessionId (to reuse an existing TLS session) or TLSClientIdentifier / CustomTlsClient
+// (to create an inline client) must be provided.
+type WsConnectInput struct {
+	SessionId                    *string           `json:"sessionId"`
+	CustomTlsClient              *CustomTlsClient  `json:"customTlsClient"`
+	ProxyUrl                     *string           `json:"proxyUrl"`
+	Url                          string            `json:"url"`
+	TLSClientIdentifier          string            `json:"tlsClientIdentifier"`
+	Headers                      map[string]string `json:"headers"`
+	HeaderOrder                  []string          `json:"headerOrder"`
+	HandshakeTimeoutMilliseconds int               `json:"handshakeTimeoutMilliseconds"`
+	ReadBufferSize               int               `json:"readBufferSize"`
+	WriteBufferSize              int               `json:"writeBufferSize"`
+	InsecureSkipVerify           bool              `json:"insecureSkipVerify"`
+	WithRandomTLSExtensionOrder  bool              `json:"withRandomTLSExtensionOrder"`
+}
+
+// WsConnectOutput is returned after a successful WebSocket handshake.
+type WsConnectOutput struct {
+	Id           string `json:"id"`
+	ConnectionId string `json:"connectionId"`
+	SessionId    string `json:"sessionId,omitempty"`
+	Status       int    `json:"status"`
+}
+
+// WsReadInput contains the parameters for reading a single message from a WebSocket connection.
+type WsReadInput struct {
+	ConnectionId        string `json:"connectionId"`
+	TimeoutMilliseconds int    `json:"timeoutMilliseconds"`
+}
+
+// WsReadOutput contains a message received from a WebSocket connection.
+// MessageType 1 = text, 2 = binary (Data is base64-encoded for binary messages).
+type WsReadOutput struct {
+	Id           string `json:"id"`
+	ConnectionId string `json:"connectionId"`
+	MessageType  int    `json:"messageType"`
+	Data         string `json:"data"`
+}
+
+// WsWriteInput contains the parameters for sending a message over a WebSocket connection.
+// For binary messages (MessageType 2), Data must be base64-encoded.
+// TimeoutMilliseconds > 0 bounds how long the write may block (peer not reading, dead path); a write
+// that times out closes the connection. 0 = no deadline.
+type WsWriteInput struct {
+	ConnectionId        string `json:"connectionId"`
+	Data                string `json:"data"`
+	MessageType         int    `json:"messageType"`
+	TimeoutMilliseconds int    `json:"timeoutMilliseconds"`
+}
+
+// WsWriteOutput is returned after sending a WebSocket message.
+type WsWriteOutput struct {
+	Id           string `json:"id"`
+	ConnectionId string `json:"connectionId"`
+	Success      bool   `json:"success"`
+}
+
+// WsCloseInput contains the parameters for closing a WebSocket connection.
+type WsCloseInput struct {
+	ConnectionId string `json:"connectionId"`
+}
+
+// WsCloseOutput is returned after closing a WebSocket connection.
+type WsCloseOutput struct {
+	Id      string `json:"id"`
+	Success bool   `json:"success"`
+}
+
+// WsStatsInput contains the parameters for reading a WebSocket connection's diagnostics.
+type WsStatsInput struct {
+	ConnectionId string `json:"connectionId"`
+}
+
+// WsStatsOutput is a diagnostic snapshot of a WebSocket connection. Counters are application
+// messages (not control frames). MsSince* are -1 when nothing was read / written yet.
+type WsStatsOutput struct {
+	Tcp                 *WsTcpInfo `json:"tcp,omitempty"`
+	Id                  string     `json:"id"`
+	ConnectionId        string     `json:"connectionId"`
+	LocalAddr           string     `json:"localAddr"`
+	RemoteAddr          string     `json:"remoteAddr"`
+	AgeMs               int64      `json:"ageMs"`
+	MessagesRead        int64      `json:"messagesRead"`
+	MessagesWritten     int64      `json:"messagesWritten"`
+	BytesRead           int64      `json:"bytesRead"`
+	BytesWritten        int64      `json:"bytesWritten"`
+	MsSinceLastRead     int64      `json:"msSinceLastRead"`
+	MsSinceLastWrite    int64      `json:"msSinceLastWrite"`
+	LastWriteDurationMs int64      `json:"lastWriteDurationMs"`
+	MaxWriteDurationMs  int64      `json:"maxWriteDurationMs"`
+	UnreadPending       bool       `json:"unreadPending"`
+}
+
+// WsTcpInfo is the kernel's view of the TCP socket (linux TCP_INFO). With a proxy this is the
+// connection to the proxy. Growing Unacked / Retransmits with a stale MsSinceLastAckRecv means
+// our bytes are not being acknowledged: the path is dead even though writes still "succeed".
+type WsTcpInfo struct {
+	State               uint8  `json:"state"` // 1 = ESTABLISHED
+	Retransmits         uint8  `json:"retransmits"`
+	Backoff             uint8  `json:"backoff"`
+	RtoMs               uint32 `json:"rtoMs"`
+	RttMs               uint32 `json:"rttMs"`
+	Unacked             uint32 `json:"unacked"`
+	Lost                uint32 `json:"lost"`
+	TotalRetrans        uint32 `json:"totalRetrans"`
+	NotsentBytes        uint32 `json:"notsentBytes"`
+	MsSinceLastDataSent uint32 `json:"msSinceLastDataSent"`
+	MsSinceLastDataRecv uint32 `json:"msSinceLastDataRecv"`
+	MsSinceLastAckRecv  uint32 `json:"msSinceLastAckRecv"`
+}

@@ -25,4 +25,5 @@ require (
 	golang.org/x/text v0.32.0 // indirect
 )
 
-// replace github.com/bogdanfinn/tls-client => ../
+// fork: cffi_src/websocket.go is not part of any upstream release, build against the local checkout
+replace github.com/bogdanfinn/tls-client => ../

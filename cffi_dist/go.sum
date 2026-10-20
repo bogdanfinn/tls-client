@@ -8,8 +8,6 @@ github.com/bogdanfinn/fhttp v0.6.9 h1:F9MsWR1K6JMRlXN4Q/MfjYmptr29nCdycQo+OPBG5U
 github.com/bogdanfinn/fhttp v0.6.9/go.mod h1:7phoj3f/q54WuiTnCTlAhEoaVcdlruKkSzCSD47LzHk=
 github.com/bogdanfinn/quic-go-utls v1.0.10-utls h1:oZN+J3OKMmWaVbI/sx4ULvHiAXbWJKVcvEFW4fkybMU=
 github.com/bogdanfinn/quic-go-utls v1.0.10-utls/go.mod h1:bBLJ2Vy68Q7y6VfbG9czd825rTcQua7n+y12RM9Q588=
-github.com/bogdanfinn/tls-client v1.16.0 h1:km3YLI6CMRLZnfrC+hGStePPryIicd3hoxFQvHB1itY=
-github.com/bogdanfinn/tls-client v1.16.0/go.mod h1:TxbiXlpZhNN5xmxzsr3KhNAeqoEEPJafwgBbyp26Phc=
 github.com/bogdanfinn/utls v1.7.8-barnius h1:wRT83mP4hmuMM1/lIpLKKhzaEuyEKjux7VSj7XHFXdg=
 github.com/bogdanfinn/utls v1.7.8-barnius/go.mod h1:o5v09jf+9ayMEfcP+8sssNdSMm278cyhBV25H8jb5Lw=
 github.com/bogdanfinn/websocket v1.5.6-barnius h1:QpdWVEZ9rKtcT7C2pU19uE2KQw2XevuKTDTzLxfDi/I=

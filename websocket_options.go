@@ -9,13 +9,14 @@ import (
 type WebsocketOption func(config *websocketConfig)
 
 type websocketConfig struct {
-	url              string
-	tlsClient        HttpClient
-	headers          http.Header
-	readBufferSize   int
-	writeBufferSize  int
-	handshakeTimeout time.Duration
-	cookieJar        http.CookieJar
+	url               string
+	tlsClient         HttpClient
+	headers           http.Header
+	readBufferSize    int
+	writeBufferSize   int
+	handshakeTimeout  time.Duration
+	cookieJar         http.CookieJar
+	enableCompression bool
 }
 
 func WithUrl(url string) WebsocketOption {
@@ -68,5 +69,13 @@ func WithHandshakeTimeoutMilliseconds(timeout int) WebsocketOption {
 func WithCookiejar(cookiejar http.CookieJar) WebsocketOption {
 	return func(config *websocketConfig) {
 		config.cookieJar = cookiejar
+	}
+}
+
+// WithEnableCompression offers permessage-deflate in the handshake (browsers and iOS URLSession do)
+// and transparently compresses / decompresses messages when the server accepts it.
+func WithEnableCompression() WebsocketOption {
+	return func(config *websocketConfig) {
+		config.enableCompression = true
 	}
 }
