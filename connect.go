@@ -211,6 +211,12 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 		}
 	}
 
+	// The order is looked up by lower-cased name, as for every other request,
+	// so a capitalised order would silently fall back to alphabetical.
+	if order, ok := req.Header[http.HeaderOrderKey]; ok {
+		req.Header[http.HeaderOrderKey] = allToLower(order)
+	}
+
 	connectHttp2 := func(rawConn net.Conn, h2clientConn *http2.ClientConn) (net.Conn, error) {
 		req.Proto = "HTTP/2.0"
 		req.ProtoMajor = 2
