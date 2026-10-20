@@ -1,6 +1,8 @@
 package profiles
 
 import (
+	"github.com/bogdanfinn/tls-client/trust_anchors"
+
 	"github.com/bogdanfinn/fhttp/http2"
 	tls "github.com/bogdanfinn/utls"
 )
@@ -54,10 +56,10 @@ var Chrome_152_PSK = ClientProfile{
 					&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
 						// Chrome 152 sends a GREASE value as the first
 						// signature algorithm and picks a new one per connection.
-						randomGREASESignatureScheme(),
-						tls.SignatureScheme(0x0904),
-						tls.SignatureScheme(0x0905),
-						tls.SignatureScheme(0x0906),
+						tls.GREASE_PLACEHOLDER,
+						tls.MLDSA44,
+						tls.MLDSA65,
+						tls.MLDSA87,
 						tls.ECDSAWithP256AndSHA256,
 						tls.PSSWithSHA256,
 						tls.PKCS1WithSHA256,
@@ -97,7 +99,7 @@ var Chrome_152_PSK = ClientProfile{
 					// server_padding (0x12e0, BoringSSL-internal, payload 4000) is
 					// Beta-only. Stable omits it. Uncomment to match Beta.
 					// &tls.GenericExtension{Id: 0x12e0, Data: []byte{0x0f, 0xa0}},
-					&tls.GenericExtension{Id: 0xca34, Data: chrome152TrustAnchors}, // https://source.chromium.org/search?q=TLSEXT_TYPE_trust_anchors https://issues.chromium.org/issues/398275713
+					&tls.GenericExtension{Id: 0xca34, Data: trust_anchors.ChromeShuffled()},
 					&tls.UtlsGREASEExtension{},
 					&tls.UtlsPreSharedKeyExtension{},
 				},
@@ -189,10 +191,10 @@ var Chrome_152 = ClientProfile{
 					&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
 						// Chrome 152 sends a GREASE value as the first
 						// signature algorithm and picks a new one per connection.
-						randomGREASESignatureScheme(),
-						tls.SignatureScheme(0x0904),
-						tls.SignatureScheme(0x0905),
-						tls.SignatureScheme(0x0906),
+						tls.GREASE_PLACEHOLDER,
+						tls.MLDSA44,
+						tls.MLDSA65,
+						tls.MLDSA87,
 						tls.ECDSAWithP256AndSHA256,
 						tls.PSSWithSHA256,
 						tls.PKCS1WithSHA256,
@@ -217,7 +219,7 @@ var Chrome_152 = ClientProfile{
 					// server_padding (0x12e0, BoringSSL-internal, payload 4000) is
 					// Beta-only. Stable omits it. Uncomment to match Beta.
 					// &tls.GenericExtension{Id: 0x12e0, Data: []byte{0x0f, 0xa0}},
-					&tls.GenericExtension{Id: 0xca34, Data: chrome152TrustAnchors}, // https://source.chromium.org/search?q=TLSEXT_TYPE_trust_anchors https://issues.chromium.org/issues/398275713
+					&tls.GenericExtension{Id: 0xca34, Data: trust_anchors.ChromeShuffled()},
 					&tls.UtlsGREASEExtension{},
 				},
 			}, nil
@@ -291,9 +293,9 @@ var Chrome_150_PSK = ClientProfile{
 						{Group: tls.X25519},
 					}},
 					&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
-						tls.SignatureScheme(0x0904),
-						tls.SignatureScheme(0x0905),
-						tls.SignatureScheme(0x0906),
+						tls.MLDSA44,
+						tls.MLDSA65,
+						tls.MLDSA87,
 						tls.ECDSAWithP256AndSHA256,
 						tls.PSSWithSHA256,
 						tls.PKCS1WithSHA256,
@@ -419,9 +421,9 @@ var Chrome_150 = ClientProfile{
 						tls.VersionTLS12,
 					}},
 					&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
-						tls.SignatureScheme(0x0904),
-						tls.SignatureScheme(0x0905),
-						tls.SignatureScheme(0x0906),
+						tls.MLDSA44,
+						tls.MLDSA65,
+						tls.MLDSA87,
 						tls.ECDSAWithP256AndSHA256,
 						tls.PSSWithSHA256,
 						tls.PKCS1WithSHA256,

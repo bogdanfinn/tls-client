@@ -1,12 +1,13 @@
 package tls_client
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/bogdanfinn/tls-client/profiles"
+	"github.com/bogdanfinn/tls-client/trust_anchors"
 	tls "github.com/bogdanfinn/utls"
 )
 
@@ -21,15 +22,14 @@ type CandidateCipherSuites struct {
 }
 
 func GetSpecFactoryFromJa3String(ja3String string, supportedSignatureAlgorithms, supportedDelegatedCredentialsAlgorithms, supportedVersions, keyShareCurves, supportedProtocolsALPN, supportedProtocolsALPS []string, echCandidateCipherSuites []CandidateCipherSuites, candidatePayloads []uint16, certCompressionAlgorithms []string, recordSizeLimit uint16, trustAnchorsPayload string) (func() (tls.ClientHelloSpec, error), error) {
-	// The anchor order is drawn once here rather than inside the factory, because
-	// Chromium keeps one order for the life of a process and the factory runs per
-	// ClientHello.
+	// One process keeps one anchor order, and the factory runs per ClientHello,
+	// so the order is drawn here.
 	var trustAnchors []byte
 
 	if trustAnchorsPayload != "" {
 		var err error
 
-		trustAnchors, err = profiles.BuildTrustAnchorsPayload(trustAnchorsPayload)
+		trustAnchors, err = trust_anchors.BuildPayload(trustAnchorsPayload)
 		if err != nil {
 			return nil, fmt.Errorf("can not build the trust anchors extension: %w", err)
 		}
@@ -211,7 +211,7 @@ func stringToSpec(ja3 string, signatureAlgorithms []tls.SignatureScheme, delegat
 	}
 
 	if len(trustAnchors) > 0 {
-		extMap[extensionTrustAnchors] = &tls.GenericExtension{Id: extensionTrustAnchors, Data: trustAnchors}
+		extMap[extensionTrustAnchors] = &tls.GenericExtension{Id: extensionTrustAnchors, Data: bytes.Clone(trustAnchors)}
 	}
 
 	extMap[tls.ExtensionRecordSizeLimit] = &tls.FakeRecordSizeLimitExtension{
