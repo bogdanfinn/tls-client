@@ -77,6 +77,10 @@ type roundTripper struct {
 	disableHttp3 bool
 	proxyURL     string
 
+	// http2RedialTimeout bounds a dial the HTTP/2 transport makes on its own,
+	// which carries no request context. See dialTLSHTTP2.
+	http2RedialTimeout time.Duration
+
 	// racer handles HTTP/3 racing (nil if racing is disabled)
 	racer *protocolRacer
 
@@ -659,8 +663,31 @@ func (rt *roundTripper) buildHttp1Transport() *http.Transport {
 	return t
 }
 
+// dialTLSHTTP2 is the HTTP/2 transport's own dialer. The transport calls it
+// without a request context whenever it needs a new connection, and every
+// request for the address waits on that dial, past the client's timeout. So the
+// dial gets a deadline here; without one, a proxy that answers CONNECT and then
+// sends nothing stalls the handshake, which holds rt's lock, and with it every
+// later request on the client.
+//
+// The context is cancelled only when the deadline passes, never after a dial
+// that finished in time. A tunnel through an HTTP/2 proxy is a stream that lives
+// as long as the context it was dialed with, so cancelling that context would
+// reset the tunnel under the connection just returned.
 func (rt *roundTripper) dialTLSHTTP2(network, addr string, _ *tls.Config) (net.Conn, error) {
-	return rt.dialTLS(context.Background(), network, addr)
+	ctx, cancel := context.WithCancel(context.Background())
+	timer := time.AfterFunc(rt.http2RedialTimeout, cancel)
+
+	conn, err := rt.dialTLS(ctx, network, addr)
+	if !timer.Stop() {
+		if err == nil {
+			_ = conn.Close()
+		}
+
+		return nil, fmt.Errorf("tls-client: HTTP/2 dial to %s did not finish within %s: %w", addr, rt.http2RedialTimeout, context.DeadlineExceeded)
+	}
+
+	return conn, err
 }
 
 // dialTLSForWebsocket establishes a TLS connection for WebSocket use.
@@ -738,7 +765,7 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	return net.JoinHostPort(host, "443")
 }
 
-func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify, withRandomTlsExtensionOrder, forceHttp1, disableHttp3, disableSessionTickets, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, certificatePinner CertificatePinner, disableIPV6, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, proxyURL string, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
+func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify, withRandomTlsExtensionOrder, forceHttp1, disableHttp3, disableSessionTickets, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, certificatePinner CertificatePinner, disableIPV6, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, proxyURL string, timeout time.Duration, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
 	pinner := certificatePinner
 	if pinner == nil {
 		var err error
@@ -754,6 +781,13 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 
 	if withSessionResumption {
 		clientSessionCache = tls.NewLRUClientSessionCache(32)
+	}
+
+	// A timeout of 0 lifts the deadline on the request, for long downloads. It
+	// does not mean a handshake may take forever.
+	http2RedialTimeout := timeout
+	if http2RedialTimeout <= 0 {
+		http2RedialTimeout = time.Duration(DefaultTimeoutSeconds) * time.Second
 	}
 
 	rt := &roundTripper{
@@ -788,6 +822,7 @@ func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *Tra
 		http3PseudoHeaderOrder:      clientProfile.GetHttp3PseudoHeaderOrder(),
 		http3SendGreaseFrames:       clientProfile.GetHttp3SendGreaseFrames(),
 		proxyURL:                    proxyURL,
+		http2RedialTimeout:          http2RedialTimeout,
 	}
 
 	// Create protocol racer if HTTP/3 racing is enabled
