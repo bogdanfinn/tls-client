@@ -145,6 +145,9 @@ func WsConnect(input WsConnectInput) (WsConnectOutput, *TLSClientError) {
 			ForceHttp1:                  true,
 			InsecureSkipVerify:          input.InsecureSkipVerify,
 			WithRandomTLSExtensionOrder: input.WithRandomTLSExtensionOrder,
+			DisableIPV6:                 input.DisableIPV6,
+			DisableIPV4:                 input.DisableIPV4,
+			ServerNameOverwrite:         input.ServerNameOverwrite,
 			WithoutCookieJar:            true,
 			FollowRedirects:             false,
 		}

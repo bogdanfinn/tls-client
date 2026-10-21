@@ -220,6 +220,7 @@ type WsConnectInput struct {
 	SessionId                    *string           `json:"sessionId"`
 	CustomTlsClient              *CustomTlsClient  `json:"customTlsClient"`
 	ProxyUrl                     *string           `json:"proxyUrl"`
+	ServerNameOverwrite          *string           `json:"serverNameOverwrite"`
 	Url                          string            `json:"url"`
 	TLSClientIdentifier          string            `json:"tlsClientIdentifier"`
 	Headers                      map[string]string `json:"headers"`
@@ -229,6 +230,8 @@ type WsConnectInput struct {
 	WriteBufferSize              int               `json:"writeBufferSize"`
 	InsecureSkipVerify           bool              `json:"insecureSkipVerify"`
 	WithRandomTLSExtensionOrder  bool              `json:"withRandomTLSExtensionOrder"`
+	DisableIPV6                  bool              `json:"disableIPV6"`
+	DisableIPV4                  bool              `json:"disableIPV4"`
 }
 
 // WsConnectOutput is returned after a successful WebSocket handshake.
