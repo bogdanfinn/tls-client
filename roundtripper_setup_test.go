@@ -90,7 +90,7 @@ func TestGetTransportDoesNotPanicWhenOnlyTheKindSurvivedADrop(t *testing.T) {
 
 	// A panic here is the failure. An error is fine: the point is that the setup
 	// dial does not report success without caching a transport.
-	if err := rt.getTransport(req, addr); err != nil {
+	if _, err := rt.getTransport(req, addr); err != nil {
 		t.Fatalf("getTransport: %v", err)
 	}
 

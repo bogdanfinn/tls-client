@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/http2"
@@ -16,6 +17,7 @@ import (
 	"github.com/bogdanfinn/tls-client/bandwidth"
 	"github.com/bogdanfinn/tls-client/profiles"
 	tls "github.com/bogdanfinn/utls"
+	"golang.org/x/net/idna"
 	"golang.org/x/net/proxy"
 )
 
@@ -331,26 +333,25 @@ func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	addr := rt.getDialTLSAddr(req)
 
 	if rt.racer != nil && !rt.forceHttp1 && !rt.disableHttp3 && strings.ToLower(req.URL.Scheme) == "https" {
-		return rt.racer.race(req, addr, rt.getTransport)
+		return rt.racer.race(req, addr, func(req *http.Request, addr string) error {
+			_, err := rt.getTransport(req, addr)
+			return err
+		})
 	}
 
-	rt.cachedTransportsLck.Lock()
-	if _, ok := rt.cachedTransports[addr]; !ok {
-		if err := rt.getTransport(req, addr); err != nil {
-			rt.cachedTransportsLck.Unlock()
-
-			if errors.Is(err, ErrBadPinDetected) && rt.badPinHandlerFunc != nil {
-				rt.badPinHandlerFunc(req)
-			}
-
-			return nil, err
+	t, stashed, err := rt.transportFor(req, addr)
+	if err != nil {
+		if errors.Is(err, ErrBadPinDetected) && rt.badPinHandlerFunc != nil {
+			rt.badPinHandlerFunc(req)
 		}
-	}
 
-	t := rt.cachedTransports[addr]
-	rt.cachedTransportsLck.Unlock()
+		return nil, err
+	}
 
 	resp, err := t.RoundTrip(req)
+	if stashed != nil {
+		rt.discardStash(addr, stashed)
+	}
 	if err != nil && errors.Is(err, errProtocolChanged) {
 		rt.dropCachedTransport(addr, t)
 	}
@@ -358,27 +359,60 @@ func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return resp, err
 }
 
-func (rt *roundTripper) getTransport(req *http.Request, addr string) error {
+// transportFor returns the cached transport for addr, building it if missing,
+// and the connection the setup dial stashed (nil if none).
+func (rt *roundTripper) transportFor(req *http.Request, addr string) (t http.RoundTripper, stashed net.Conn, err error) {
+	rt.cachedTransportsLck.Lock()
+	defer rt.cachedTransportsLck.Unlock()
+
+	if t, ok := rt.cachedTransports[addr]; ok {
+		return t, nil, nil
+	}
+
+	stashed, err = rt.getTransport(req, addr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return rt.cachedTransports[addr], stashed, nil
+}
+
+// discardStash closes stashed if the transport never took it, e.g. because it
+// rejected the request before dialing.
+func (rt *roundTripper) discardStash(addr string, stashed net.Conn) {
+	rt.Lock()
+	defer rt.Unlock()
+
+	if rt.cachedConnections[addr] == stashed {
+		delete(rt.cachedConnections, addr)
+		_ = stashed.Close()
+	}
+}
+
+// getTransport builds and caches the transport for addr. For https it does so
+// with a setup dial and returns the connection that dial stashed for the
+// transport's first dial.
+func (rt *roundTripper) getTransport(req *http.Request, addr string) (net.Conn, error) {
 	switch strings.ToLower(req.URL.Scheme) {
 	case "http":
 		rt.cachedTransports[addr] = rt.buildHttp1Transport()
-		return nil
+		return nil, nil
 	case "https":
 	default:
-		return fmt.Errorf("invalid URL scheme: [%v]", req.URL.Scheme)
+		return nil, fmt.Errorf("invalid URL scheme: [%v]", req.URL.Scheme)
 	}
 
-	_, err := rt.dialTLSSetup(req.Context(), "tcp", addr)
-	switch err {
-	case errProtocolNegotiated:
-	case nil:
-		// Should never happen.
-		panic("dialTLS returned no error when determining cachedTransports")
-	default:
-		return err
+	conn, err := rt.dialTLSSetup(req.Context(), "tcp", addr)
+	if errors.Is(err, errProtocolNegotiated) {
+		return conn, nil
+	}
+	if err == nil {
+		_ = conn.Close()
+
+		return nil, fmt.Errorf("tls-client: setup dial for %s returned a connection without building a transport", addr)
 	}
 
-	return nil
+	return nil, err
 }
 
 // dialTLS is the transport's own DialTLSContext, so it runs whenever a cached
@@ -390,7 +424,7 @@ func (rt *roundTripper) dialTLS(ctx context.Context, network, addr string) (net.
 
 // dialTLSSetup is the first dial for an address, made by getTransport while the
 // caller holds cachedTransportsLck. It is the only path allowed to put a
-// transport in the cache.
+// transport in the cache. Returns the stashed connection with errProtocolNegotiated.
 func (rt *roundTripper) dialTLSSetup(ctx context.Context, network, addr string) (net.Conn, error) {
 	return rt.dialTLSWithSetup(ctx, network, addr, true)
 }
@@ -403,15 +437,21 @@ func (rt *roundTripper) dialTLSSetup(ctx context.Context, network, addr string) 
 // with no lock held at all: writing the map there raced with the read in
 // RoundTrip, on two different mutexes.
 func (rt *roundTripper) dialTLSWithSetup(ctx context.Context, network, addr string, setup bool) (net.Conn, error) {
+	// Transports dial the punycode form of internationalized hosts.
+	addr = dialAddr(addr)
+
 	rt.Lock()
 	defer rt.Unlock()
 
-	// If we have the connection from when we determined the HTTPS
-	// cachedTransports to use, return that.
+	// A stash found by a setup dial is stale.
 	if conn := rt.cachedConnections[addr]; conn != nil {
 		delete(rt.cachedConnections, addr)
 
-		return conn, nil
+		if !setup {
+			return conn, nil
+		}
+
+		_ = conn.Close()
 	}
 
 	if network == "tcp" && rt.disableIPV6 {
@@ -617,7 +657,7 @@ func (rt *roundTripper) dialTLSWithSetup(ctx context.Context, network, addr stri
 	// actual request (should be near-immediate).
 	rt.cachedConnections[addr] = conn
 
-	return nil, errProtocolNegotiated
+	return conn, errProtocolNegotiated
 }
 
 func (rt *roundTripper) dial(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -754,7 +794,7 @@ func (rt *roundTripper) dialTLSForWebsocket(ctx context.Context, network, addr s
 // transport the first request had cached, and that transport refuses any
 // scheme but https before it dials.
 func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
-	host := req.URL.Hostname()
+	host := dialHost(req.URL.Hostname())
 	if port := req.URL.Port(); port != "" {
 		return net.JoinHostPort(host, port)
 	}
@@ -763,6 +803,29 @@ func (rt *roundTripper) getDialTLSAddr(req *http.Request) string {
 	}
 
 	return net.JoinHostPort(host, "443")
+}
+
+// dialHost returns the punycode form of a non-ASCII host, as fhttp dials it.
+func dialHost(host string) string {
+	if strings.IndexFunc(host, func(r rune) bool { return r > unicode.MaxASCII }) < 0 {
+		return host
+	}
+
+	if ascii, err := idna.Lookup.ToASCII(host); err == nil {
+		return ascii
+	}
+
+	return host
+}
+
+// dialAddr applies dialHost to the host of a host:port address.
+func dialAddr(addr string) string {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return addr
+	}
+
+	return net.JoinHostPort(dialHost(host), port)
 }
 
 func newRoundTripper(clientProfile profiles.ClientProfile, transportOptions *TransportOptions, serverNameOverwrite string, insecureSkipVerify, withRandomTlsExtensionOrder, forceHttp1, disableHttp3, disableSessionTickets, enableH3Racing bool, certificatePins map[string][]string, badPinHandlerFunc BadPinHandlerFunc, certificatePinner CertificatePinner, disableIPV6, disableIPV4 bool, bandwidthTracker bandwidth.BandwidthTracker, proxyURL string, timeout time.Duration, dialer ...proxy.ContextDialer) (http.RoundTripper, error) {
