@@ -54,7 +54,32 @@ func newSocksContextDialer(socksDialer proxy.Dialer) socksContextDialer {
 }
 
 func (s *socksContextDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
-	return s.socksDialer.Dial(network, address)
+	if d, ok := s.socksDialer.(proxy.ContextDialer); ok {
+		return d.DialContext(ctx, network, address)
+	}
+
+	// SOCKS4 has no DialContext: stop waiting once ctx is done.
+	type result struct {
+		conn net.Conn
+		err  error
+	}
+	done := make(chan result, 1)
+	go func() {
+		conn, err := s.socksDialer.Dial(network, address)
+		done <- result{conn, err}
+	}()
+
+	select {
+	case r := <-done:
+		return r.conn, r.err
+	case <-ctx.Done():
+		go func() {
+			if r := <-done; r.conn != nil {
+				_ = r.conn.Close()
+			}
+		}()
+		return nil, ctx.Err()
+	}
 }
 
 // Copyright 2018 Google Inc.
@@ -243,21 +268,37 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 		req.ProtoMajor = 1
 		req.ProtoMinor = 1
 
-		deadline := time.Now().Add(c.Timeout)
-		err := rawConn.SetDeadline(deadline)
-		if err != nil {
+		// Use the earlier of the client timeout (0 means none) and the ctx deadline.
+		var deadline time.Time
+		if c.Timeout > 0 {
+			deadline = time.Now().Add(c.Timeout)
+		}
+		if d, ok := ctx.Deadline(); ok && (deadline.IsZero() || d.Before(deadline)) {
+			deadline = d
+		}
+		if err := rawConn.SetDeadline(deadline); err != nil {
 			_ = rawConn.Close()
 			return nil, err
 		}
 
-		err = req.Write(rawConn)
+		// Abort when ctx is cancelled.
+		stop := context.AfterFunc(ctx, func() { _ = rawConn.SetDeadline(time.Now()) })
+		fail := func(err error) (net.Conn, error) {
+			stop()
+			_ = rawConn.Close()
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return nil, ctxErr
+			}
+			return nil, err
+		}
+
+		err := req.Write(rawConn)
 		if err != nil {
 			if errors.Is(err, os.ErrDeadlineExceeded) {
 				c.logger.Error("deadline exceeded while trying to write proxy connection")
 			}
 
-			_ = rawConn.Close()
-			return nil, err
+			return fail(err)
 		}
 
 		resp, err := http.ReadResponse(bufio.NewReader(rawConn), req)
@@ -266,13 +307,16 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 				c.logger.Error("deadline exceeded while trying to read proxy connection")
 			}
 
-			_ = rawConn.Close()
-			return nil, err
+			return fail(err)
 		}
 
 		if resp.StatusCode != http.StatusOK {
+			return fail(errors.New("Proxy responded with non 200 code: " + resp.Status))
+		}
+
+		if !stop() {
 			_ = rawConn.Close()
-			return nil, errors.New("Proxy responded with non 200 code: " + resp.Status)
+			return nil, ctx.Err()
 		}
 
 		rawConn.SetDeadline(time.Time{})
@@ -319,18 +363,18 @@ func (c *connectDialer) DialContext(ctx context.Context, network, address string
 				return nil, err
 			}
 		} else {
-			tlsConf := tls.Config{
-				NextProtos: []string{"h2", "http/1.1"},
-				ServerName: c.ProxyUrl.Hostname(),
+			tlsDialer := tls.Dialer{
+				NetDialer: &c.Dialer,
+				Config: &tls.Config{
+					NextProtos: []string{"h2", "http/1.1"},
+					ServerName: c.ProxyUrl.Hostname(),
+				},
 			}
-			tlsConn, err := tls.Dial(network, c.ProxyUrl.Host, &tlsConf)
+			conn, err := tlsDialer.DialContext(ctx, network, c.ProxyUrl.Host)
 			if err != nil {
 				return nil, err
 			}
-			err = tlsConn.HandshakeContext(ctx)
-			if err != nil {
-				return nil, err
-			}
+			tlsConn := conn.(*tls.Conn)
 			negotiatedProtocol = tlsConn.ConnectionState().NegotiatedProtocol
 			rawConn = tlsConn
 		}
