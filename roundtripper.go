@@ -575,22 +575,9 @@ func (rt *roundTripper) dialTLSWithSetup(ctx context.Context, network, addr stri
 			t2.DisableCompression = rt.transportOptions.DisableCompression
 			t2.ReadIdleTimeout = rt.transportOptions.ReadIdleTimeout
 			t2.PingTimeout = rt.transportOptions.PingTimeout
-
-			t1 := t2.GetT1()
-			if t1 != nil {
-				t1.DisableKeepAlives = rt.transportOptions.DisableKeepAlives
-				t1.DisableCompression = rt.transportOptions.DisableCompression
-				t1.MaxIdleConns = rt.transportOptions.MaxIdleConns
-				t1.MaxIdleConnsPerHost = rt.transportOptions.MaxIdleConnsPerHost
-				t1.MaxConnsPerHost = rt.transportOptions.MaxConnsPerHost
-				// Only set MaxResponseHeaderBytes if > 0 (HTTP/1.1 transport doesn't understand -1)
-				if rt.transportOptions.MaxResponseHeaderBytes > 0 {
-					t1.MaxResponseHeaderBytes = rt.transportOptions.MaxResponseHeaderBytes
-				}
-				t1.WriteBufferSize = rt.transportOptions.WriteBufferSize
-				t1.ReadBufferSize = rt.transportOptions.ReadBufferSize
-				t1.IdleConnTimeout = idleConnectionTimeout
-			}
+			// The HTTP/2 transport reads ResponseHeaderTimeout and
+			// DisableKeepAlives from its HTTP/1 transport.
+			t2.SetT1(rt.buildHttp1Transport())
 		}
 
 		if rt.pseudoHeaderOrder == nil {
@@ -698,6 +685,7 @@ func (rt *roundTripper) buildHttp1Transport() *http.Transport {
 		}
 		t.WriteBufferSize = rt.transportOptions.WriteBufferSize
 		t.ReadBufferSize = rt.transportOptions.ReadBufferSize
+		t.ResponseHeaderTimeout = rt.transportOptions.ResponseHeaderTimeout
 	}
 
 	return t

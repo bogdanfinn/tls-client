@@ -156,6 +156,10 @@ type TransportOptions struct {
 	// PingTimeout closes the connection when that PING is not acknowledged in
 	// time. Zero means 15 seconds.
 	PingTimeout time.Duration `json:"pingTimeout"`
+	// ResponseHeaderTimeout is the time to wait for the response headers after
+	// the request has been written, over HTTP/1.1 and HTTP/2. Zero means no
+	// timeout.
+	ResponseHeaderTimeout time.Duration `json:"responseHeaderTimeout"`
 }
 
 type PriorityFrames struct {
