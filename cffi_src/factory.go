@@ -385,6 +385,7 @@ func getTlsClient(requestInput RequestInput, sessionId string, withSession bool)
 			IdleConnTimeout:        requestInput.TransportOptions.IdleConnTimeout,
 			ReadIdleTimeout:        requestInput.TransportOptions.ReadIdleTimeout,
 			PingTimeout:            requestInput.TransportOptions.PingTimeout,
+			ResponseHeaderTimeout:  requestInput.TransportOptions.ResponseHeaderTimeout,
 			// RootCAs:                requestInput.TransportOptions.RootCAs,
 		}
 

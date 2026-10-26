@@ -33,6 +33,10 @@ type TransportOptions struct {
 	// PingTimeout closes an HTTP/2 connection whose health-check PING is not
 	// acknowledged in time. Zero means 15 seconds.
 	PingTimeout time.Duration
+	// ResponseHeaderTimeout is the time to wait for a server's response
+	// headers after the request, including its body, has been written, over
+	// HTTP/1.1 and HTTP/2. Zero means no timeout.
+	ResponseHeaderTimeout time.Duration
 	// RootCAs is the set of root certificate authorities used to verify
 	// the remote server's certificate.
 	RootCAs                *x509.CertPool
