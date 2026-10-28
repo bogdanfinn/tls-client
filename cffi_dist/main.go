@@ -225,6 +225,11 @@ func request(requestParams *C.char) *C.char {
 		return handleErrorResponse(sessionId, withSession, err)
 	}
 
+	// A client without session is never used again, its HTTP/3 transports would keep their UDP sockets open forever.
+	if !withSession {
+		defer tlsClient.Close()
+	}
+
 	req, err := tls_client_cffi_src.BuildRequest(requestInput)
 	if err != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(err)
