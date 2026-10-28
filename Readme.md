@@ -132,6 +132,19 @@ func main() {
 }
 ```
 
+### The browser's headers for a profile
+
+A request with no headers goes out as `Go-http-client`, whatever profile the client has. `DefaultHeaders` gives the headers the profile's browser sends on a navigation, in the browser's order, for the Chrome and Brave profiles:
+
+```go
+headers, ok := profiles.Chrome_152.DefaultHeaders()
+if ok {
+	options = append(options, tls_client.WithDefaultHeaders(headers))
+}
+```
+
+They apply to requests that set no headers of their own. The set is what the browser sends over HTTP/2; over HTTP/1.1 the browser sends no `priority` header, so with `WithForceHttp1` do `delete(headers, "priority")` first. Through the shared library the same set is used when a request names a browser profile and carries neither `headers` nor `defaultHeaders`.
+
 ### Questions?
 
 Join my discord support server for free: https://discord.gg/7Ej9eJvHqk
