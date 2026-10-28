@@ -4,10 +4,10 @@ go 1.27
 
 require (
 	github.com/bdandy/go-socks4 v1.2.3
-	github.com/bogdanfinn/fhttp v0.7.2
-	github.com/bogdanfinn/quic-go-utls v1.0.12-utls
+	github.com/bogdanfinn/fhttp v0.7.3
+	github.com/bogdanfinn/quic-go-utls v1.0.13-utls
 	github.com/bogdanfinn/utls v1.8.2-barnius
-	github.com/bogdanfinn/websocket v1.5.8-barnius
+	github.com/bogdanfinn/websocket v1.5.9-barnius
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.11.1
 	github.com/tam7t/hpkp v0.0.0-20160821193359-2b70b4024ed5
