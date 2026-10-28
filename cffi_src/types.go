@@ -47,6 +47,20 @@ type CookiesFromSessionOutput struct {
 	Cookies []Cookie `json:"cookies"`
 }
 
+type GetAllCookiesFromSessionInput struct {
+	SessionId string `json:"sessionId"`
+}
+
+type SetCookiesToSessionInput struct {
+	SessionId string              `json:"sessionId"`
+	Cookies   map[string][]Cookie `json:"cookies"`
+}
+
+type AllCookiesFromSessionOutput struct {
+	Id      string              `json:"id"`
+	Cookies map[string][]Cookie `json:"cookies"`
+}
+
 // RequestInput is the data a Python client can construct a client and request from.
 type RequestInput struct {
 	CertificatePinningHosts     map[string][]string `json:"certificatePinningHosts"`
