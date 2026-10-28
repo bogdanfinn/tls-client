@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"sync"
 	"time"
 
@@ -177,10 +178,12 @@ func (pr *protocolRacer) attemptHTTP3(req *http.Request, resultCh chan<- racingR
 
 	resp, err := h3Transport.RoundTrip(req)
 	if err != nil {
+		closeTransport(h3Transport)
 		resultCh <- racingResult{protocol: "h3", err: fmt.Errorf("HTTP/3 request failed: %w", err)}
-	} else {
-		resultCh <- racingResult{protocol: "h3", response: resp}
+		return
 	}
+
+	resultCh <- racingResult{protocol: "h3", response: resp, transport: h3Transport}
 }
 
 func (pr *protocolRacer) attemptHTTP2(req *http.Request, addr string, getTransportFunc func(*http.Request, string) error, resultCh chan<- racingResult) {
@@ -206,17 +209,19 @@ func (pr *protocolRacer) attemptHTTP2(req *http.Request, addr string, getTranspo
 func (pr *protocolRacer) waitForRaceWinner(ctx context.Context, addr string, resultCh <-chan racingResult, cancel context.CancelFunc) (*http.Response, error) {
 	var lastErr error
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < racingAttempts; i++ {
 		select {
 		case result := <-resultCh:
 			if result.err == nil && result.response != nil {
-				pr.cacheWinningProtocol(addr, result.protocol)
+				pr.cacheWinningProtocol(addr, result)
 				cancel()
+				go discardRaceResults(resultCh, racingAttempts-i-1)
 				return result.response, nil
 			}
 			lastErr = result.err
 
 		case <-ctx.Done():
+			go discardRaceResults(resultCh, racingAttempts-i)
 			if lastErr != nil {
 				return nil, lastErr
 			}
@@ -263,21 +268,64 @@ func (pr *protocolRacer) clearProtocolCache(addr string) {
 	pr.protocolCacheMu.Unlock()
 }
 
-func (pr *protocolRacer) cacheWinningProtocol(addr, protocol string) {
+func (pr *protocolRacer) cacheWinningProtocol(addr string, winner racingResult) {
 	pr.protocolCacheMu.Lock()
-	pr.protocolCache[addr] = protocol
+	pr.protocolCache[addr] = winner.protocol
 	pr.protocolCacheMu.Unlock()
 
-	if protocol == "h3" {
-		h3Transport, err := buildHTTP3Transport(pr.getHTTP3Config())
-		if err != nil {
-			// Never cache a nil transport, the next request would panic on it.
-			return
+	if winner.transport == nil {
+		return
+	}
+
+	// The winning transport already holds the connection the response is read
+	// from, so it is cached instead of building a new one.
+	transportKey := pr.getTransportKey(winner.protocol, addr)
+
+	pr.cachedTransportsLck.Lock()
+	_, exists := pr.cachedTransports[transportKey]
+	if !exists {
+		pr.cachedTransports[transportKey] = winner.transport
+	}
+	pr.cachedTransportsLck.Unlock()
+
+	if !exists {
+		return
+	}
+
+	// A concurrent race for the same address cached its transport first and
+	// other requests may already use it, so the winning transport is closed
+	// once its response has been read instead.
+	winner.response.Body = &transportClosingBody{ReadCloser: winner.response.Body, transport: winner.transport}
+}
+
+// transportClosingBody closes a transport nobody else references once the
+// response read through it is closed.
+type transportClosingBody struct {
+	io.ReadCloser
+	transport http.RoundTripper
+}
+
+func (b *transportClosingBody) Close() error {
+	err := b.ReadCloser.Close()
+	closeTransport(b.transport)
+
+	return err
+}
+
+// discardRaceResults releases what the attempts that lost the race still
+// deliver, otherwise their response bodies and HTTP/3 transports stay open
+// forever.
+func discardRaceResults(resultCh <-chan racingResult, pending int) {
+	for i := 0; i < pending; i++ {
+		result := <-resultCh
+
+		if result.response != nil {
+			_ = result.response.Body.Close()
 		}
 
-		pr.cachedTransportsLck.Lock()
-		pr.cachedTransports[addr+":h3"] = h3Transport
-		pr.cachedTransportsLck.Unlock()
+		if result.transport != nil {
+			closeTransport(result.transport)
+		}
 	}
 }
 
@@ -304,8 +352,14 @@ func (pr *protocolRacer) getHTTP3Config() *http3Config {
 	}
 }
 
+// racingAttempts is the number of protocols raced against each other, HTTP/3 and HTTP/2.
+const racingAttempts = 2
+
 type racingResult struct {
 	protocol string
 	response *http.Response
 	err      error
+	// transport is only set for a successful HTTP/3 attempt, which builds a
+	// transport of its own. The HTTP/2 attempt uses the cached one.
+	transport http.RoundTripper
 }

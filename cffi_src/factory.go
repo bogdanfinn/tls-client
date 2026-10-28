@@ -35,7 +35,7 @@ func RemoveSession(sessionId string) {
 	if !ok {
 		return
 	}
-	client.CloseIdleConnections()
+	client.Close()
 
 	delete(clients, sessionId)
 }
@@ -46,7 +46,7 @@ func ClearSessionCache() {
 	defer clientsLock.Unlock()
 
 	for _, client := range clients {
-		client.CloseIdleConnections()
+		client.Close()
 	}
 
 	clients = make(map[string]tls_client.HttpClient)

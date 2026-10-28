@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/url"
 	"strings"
@@ -190,6 +191,34 @@ func (rt *roundTripper) CloseIdleConnections() {
 		if tr, ok := transport.(closeIdler); ok {
 			tr.CloseIdleConnections()
 		}
+	}
+}
+
+// Close closes and forgets every cached transport. CloseIdleConnections is not
+// enough for HTTP/3: an HTTP/3 transport owns a UDP socket and the goroutines
+// reading it, and only Close releases them.
+func (rt *roundTripper) Close() {
+	rt.cachedTransportsLck.Lock()
+	defer rt.cachedTransportsLck.Unlock()
+
+	for addr, transport := range rt.cachedTransports {
+		closeTransport(transport)
+		delete(rt.cachedTransports, addr)
+	}
+
+	rt.cachedKindsLck.Lock()
+	clear(rt.cachedKinds)
+	rt.cachedKindsLck.Unlock()
+}
+
+func closeTransport(transport http.RoundTripper) {
+	if closer, ok := transport.(io.Closer); ok {
+		_ = closer.Close()
+		return
+	}
+
+	if idler, ok := transport.(interface{ CloseIdleConnections() }); ok {
+		idler.CloseIdleConnections()
 	}
 }
 

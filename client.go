@@ -39,6 +39,7 @@ type HttpClient interface {
 	SetFollowRedirect(followRedirect bool)
 	GetFollowRedirect() bool
 	CloseIdleConnections()
+	Close()
 	Do(req *http.Request) (*http.Response, error)
 	Get(url string) (resp *http.Response, err error)
 	Head(url string) (resp *http.Response, err error)
@@ -283,6 +284,19 @@ func buildFromConfig(logger Logger, config *httpClientConfig) (*http.Client, pro
 // CloseIdleConnections closes all idle connections of the underlying http client.
 func (c *httpClient) CloseIdleConnections() {
 	c.Client.CloseIdleConnections()
+}
+
+// Close releases all connections and transports of the client, including the
+// UDP sockets of HTTP/3 transports which CloseIdleConnections keeps open.
+// The client stays usable and builds new transports on the next request.
+func (c *httpClient) Close() {
+	rt, ok := c.Transport.(*roundTripper)
+	if !ok {
+		c.Client.CloseIdleConnections()
+		return
+	}
+
+	rt.Close()
 }
 
 // GetDialer() returns the underlying Dialer
