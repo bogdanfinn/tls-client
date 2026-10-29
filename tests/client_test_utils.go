@@ -1,6 +1,11 @@
 package tests
 
 import (
+	"crypto/md5"
+	"fmt"
+	"strconv"
+	"strings"
+
 	tls_client "github.com/bogdanfinn/tls-client"
 	"github.com/bogdanfinn/tls-client/profiles"
 	tls "github.com/bogdanfinn/utls"
@@ -91,6 +96,45 @@ const (
 // Tests against other hosts keep normal certificate verification.
 var skipPeetCertVerify = tls_client.WithInsecureSkipVerify()
 
+// normalizeAkamaiFingerprint replaces every GREASE setting of the settings
+// section of an akamai fingerprint with the GREASE marker the expectations
+// use. Chromium draws a fresh RFC 8701 setting ID and value per connection,
+// so the raw fingerprint cannot be compared literally.
+func normalizeAkamaiFingerprint(fingerprint string) string {
+	sections := strings.SplitN(fingerprint, "|", 2)
+	settings := strings.Split(sections[0], ";")
+
+	for i, setting := range settings {
+		id, _, found := strings.Cut(setting, ":")
+		if !found {
+			continue
+		}
+
+		if isGreaseSettingID(id) {
+			settings[i] = "GREASE"
+		}
+	}
+
+	return strings.Join(settings, ";") + "|" + sections[1]
+}
+
+// isGreaseSettingID reports whether s is one of the HTTP/2 GREASE setting IDs
+// of RFC 8701, which have the form 0x?a?a.
+func isGreaseSettingID(s string) bool {
+	id, err := strconv.ParseUint(s, 10, 16)
+	if err != nil {
+		return false
+	}
+
+	return id&0x0f0f == 0x0a0a && id>>12 == id>>4&0xf
+}
+
+// akamaiFingerprintHash is the md5 of the normalized akamai fingerprint, the
+// same input peet.ws hashes except for the normalized GREASE marker.
+func akamaiFingerprintHashOf(fingerprint string) string {
+	return fmt.Sprintf("%x", md5.Sum([]byte(normalizeAkamaiFingerprint(fingerprint))))
+}
+
 var clientFingerprints = map[string]map[string]map[string]string{
 	chrome: {
 		profiles.Chrome_152.GetClientHelloStr(): map[string]string{
@@ -98,142 +142,142 @@ var clientFingerprints = map[string]map[string]map[string]string{
 			ja3Hash:               "5d510aa7220d1a7bc1256493e4b88909",
 			ja4String:             "t13d1517h2_002f,0035,009c,009d,1301,1302,1303,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0017,001b,0023,002b,002d,0033,44cd,ca34,fe0d,ff01_0904,0905,0906,0403,0804,0401,0503,0805,0501,0806,0601",
 			ja4Hash:               "t13d1517h2_8daaf6152771_cb7bf5808d99",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		profiles.Chrome_152_PSK.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,17613-43-18-65037-51-13-10-27-23-35-0-65281-45-11-5-16-51764-41,4588-29-23-24,0",
 			ja3Hash:               "b725019d0bcb612810eb226664682342",
 			ja4String:             "t13d1518h2_002f,0035,009c,009d,1301,1302,1303,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0017,001b,0023,0029,002b,002d,0033,44cd,ca34,fe0d,ff01_0904,0905,0906,0403,0804,0401,0503,0805,0501,0806,0601",
 			ja4Hash:               "t13d1518h2_8daaf6152771_e2d80978ab2e",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		profiles.Chrome_150.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,17613-43-18-65037-51-13-10-27-23-35-0-65281-45-11-5-16,4588-29-23-24,0",
 			ja3Hash:               "eeee4c6725bf89c31f225b3dab4cef37",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		profiles.Chrome_150_PSK.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,17613-43-18-65037-51-13-10-27-23-35-0-65281-45-11-5-16-41,4588-29-23-24,0",
 			ja3Hash:               "b89fcace1ff82501838878d4ccb30c6d",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		profiles.Chrome_146.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,17613-43-18-65037-51-13-10-27-23-35-0-65281-45-11-5-16-51764,4588-29-23-24,0",
 			ja3Hash:               "5d510aa7220d1a7bc1256493e4b88909",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		profiles.Chrome_146_PSK.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,17613-43-18-65037-51-13-10-27-23-35-0-65281-45-11-5-16-51764-41,4588-29-23-24,0",
 			ja3Hash:               "b725019d0bcb612810eb226664682342",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		profiles.Chrome_144.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,51-0-17613-65281-10-27-35-5-23-43-13-18-11-65037-16-45,4588-29-23-24,0",
 			ja3Hash:               "f984bd5bc7358922cde86ed4471a2e89",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		profiles.Chrome_133.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,35-13-17613-51-18-11-43-5-16-0-65037-27-10-45-23-65281,4588-29-23-24,0",
 			ja3Hash:               "74e530e488a43fddd78be75918be78c7",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		profiles.Chrome_131.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,13-65037-65281-18-27-16-5-10-17513-11-51-35-43-45-0-23,4588-29-23-24,0",
 			ja3Hash:               "a19ab9f02aacf42deddc1f2acb3d3f63",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		profiles.Chrome_124.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,27-18-23-17513-16-43-13-11-0-35-10-65037-5-65281-45-51,25497-29-23-24,0",
 			ja3Hash:               "64aff24dbef210f33880d4f62e1493dd",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		profiles.Chrome_120.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-45-43-5-23-35-13-65281-16-65037-18-51-10-11-17513-27,29-23-24,0",
 			ja3Hash:               "1d9a054bac1eef41f30d370f9bbb2ad2",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		profiles.Chrome_117.GetClientHelloStr(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,45-0-16-13-43-17513-10-23-35-27-18-5-51-65281-11-21,29-23-24,0",
 			ja3Hash:               "1ddf8a0ebd957d10c1ab320b10450028",
-			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "52d84b11737d980aef856699f885ca86",
+			akamaiFingerprint:     "1:65536;2:0;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "749c437ca378df148f8ae4046f73b643",
 		},
 		tls.HelloChrome_112_PSK.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,45-51-17513-43-0-11-5-23-16-10-65281-27-18-35-13-21-41,29-23-24,0",
 			ja3Hash:               "11d372983aac706304b678a44351c8dd",
-			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "a345a694846ad9f6c97bcc3c75adbe26",
+			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "9956ec2144b6eb41ef03c81d43e20638",
 		},
 		tls.HelloChrome_112.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,45-51-17513-43-0-11-5-23-16-10-65281-27-18-35-13-21,29-23-24,0",
 			ja3Hash:               "7f052aeccc9b50e9b3a43a02780539b2",
-			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "a345a694846ad9f6c97bcc3c75adbe26",
+			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "9956ec2144b6eb41ef03c81d43e20638",
 		},
 		tls.HelloChrome_111.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,27-11-17513-5-10-18-23-0-45-51-43-35-65281-16-13-21,29-23-24,0",
 			ja3Hash:               "499d7c2439dc2fb83d1ab2e52b9dc680",
-			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "a345a694846ad9f6c97bcc3c75adbe26",
+			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "9956ec2144b6eb41ef03c81d43e20638",
 		},
 		tls.HelloChrome_110.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,23-27-18-51-17513-0-16-35-11-5-65281-43-13-45-10-21,29-23-24,0",
 			ja3Hash:               "f30e7d05622c38802b2ee65d147f4df8",
-			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "a345a694846ad9f6c97bcc3c75adbe26",
+			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "9956ec2144b6eb41ef03c81d43e20638",
 		},
 		tls.HelloChrome_109.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513-21,29-23-24,0",
 			ja3Hash:               "cd08e31494f9531f560d64c695473da9",
-			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "a345a694846ad9f6c97bcc3c75adbe26",
+			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "9956ec2144b6eb41ef03c81d43e20638",
 		},
 		tls.HelloChrome_108.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513-21,29-23-24,0",
 			ja3Hash:               "cd08e31494f9531f560d64c695473da9",
-			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "a345a694846ad9f6c97bcc3c75adbe26",
+			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "9956ec2144b6eb41ef03c81d43e20638",
 		},
 		tls.HelloChrome_107.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513-21,29-23-24,0",
 			ja3Hash:               "cd08e31494f9531f560d64c695473da9",
-			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "a345a694846ad9f6c97bcc3c75adbe26",
+			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "9956ec2144b6eb41ef03c81d43e20638",
 		},
 		tls.HelloChrome_106.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513-21,29-23-24,0",
 			ja3Hash:               "cd08e31494f9531f560d64c695473da9",
-			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "a345a694846ad9f6c97bcc3c75adbe26",
+			akamaiFingerprint:     "1:65536;2:0;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "9956ec2144b6eb41ef03c81d43e20638",
 		},
 		tls.HelloChrome_105.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513-21,29-23-24,0",
 			ja3Hash:               "cd08e31494f9531f560d64c695473da9",
-			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "4f04edce68a7ecbe689edce7bf5f23f3",
+			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "07efbbfacf46e7cb46e598c33ba0f6ba",
 		},
 		tls.HelloChrome_104.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513-21,29-23-24,0",
 			ja3Hash:               "cd08e31494f9531f560d64c695473da9",
-			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "4f04edce68a7ecbe689edce7bf5f23f3",
+			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "07efbbfacf46e7cb46e598c33ba0f6ba",
 		},
 		tls.HelloChrome_103.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513-21,29-23-24,0",
 			ja3Hash:               "cd08e31494f9531f560d64c695473da9",
-			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "4f04edce68a7ecbe689edce7bf5f23f3",
+			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "07efbbfacf46e7cb46e598c33ba0f6ba",
 		},
 	},
 	firefox: {
@@ -296,20 +340,20 @@ var clientFingerprints = map[string]map[string]map[string]string{
 		tls.HelloOpera_89.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513-21,29-23-24,0",
 			ja3Hash:               "cd08e31494f9531f560d64c695473da9",
-			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "4f04edce68a7ecbe689edce7bf5f23f3",
+			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "07efbbfacf46e7cb46e598c33ba0f6ba",
 		},
 		tls.HelloOpera_90.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513-21,29-23-24,0",
 			ja3Hash:               "cd08e31494f9531f560d64c695473da9",
-			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "4f04edce68a7ecbe689edce7bf5f23f3",
+			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "07efbbfacf46e7cb46e598c33ba0f6ba",
 		},
 		tls.HelloOpera_91.Str(): map[string]string{
 			ja3String:             "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513-21,29-23-24,0",
 			ja3Hash:               "cd08e31494f9531f560d64c695473da9",
-			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144|15663105|0|m,a,s,p",
-			akamaiFingerprintHash: "4f04edce68a7ecbe689edce7bf5f23f3",
+			akamaiFingerprint:     "1:65536;3:1000;4:6291456;6:262144;GREASE|15663105|0|m,a,s,p",
+			akamaiFingerprintHash: "07efbbfacf46e7cb46e598c33ba0f6ba",
 		},
 	},
 	safari: {
