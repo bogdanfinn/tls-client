@@ -95,3 +95,71 @@ func TestInt64ToInt(t *testing.T) {
 		})
 	}
 }
+
+func TestSanitizeRawQuery(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "empty query",
+			input: "",
+			want:  "",
+		},
+		{
+			name:  "plain query stays",
+			input: "a=1&b=2",
+			want:  "a=1&b=2",
+		},
+		{
+			name:  "space becomes %20",
+			input: "scope=openid offline_access",
+			want:  "scope=openid%20offline_access",
+		},
+		{
+			name:  "multiple spaces",
+			input: "scope=openid offline_access profile email",
+			want:  "scope=openid%20offline_access%20profile%20email",
+		},
+		{
+			name:  "already encoded stays",
+			input: "redirect_uri=https%3A%2F%2Fx.com%2Fcb",
+			want:  "redirect_uri=https%3A%2F%2Fx.com%2Fcb",
+		},
+		{
+			name:  "mixed raw and encoded",
+			input: "q=a%20b c",
+			want:  "q=a%20b%20c",
+		},
+		{
+			name:  "plus stays raw",
+			input: "q=a+b",
+			want:  "q=a+b",
+		},
+		{
+			name:  "invalid ascii encoded",
+			input: "a=b<>|\"c",
+			want:  "a=b%3C%3E%7C%22c",
+		},
+		{
+			name:  "non ascii encoded",
+			input: "a=ä",
+			want:  "a=%C3%A4",
+		},
+		{
+			name:  "real world scope param",
+			input: "response_type=code&scope=openid offline_access profile&prompt=test",
+			want:  "response_type=code&scope=openid%20offline_access%20profile&prompt=test",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := sanitizeRawQuery(tt.input)
+			if got != tt.want {
+				t.Errorf("sanitizeRawQuery(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
