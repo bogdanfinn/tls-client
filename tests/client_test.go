@@ -1098,12 +1098,12 @@ func compareResponse(t *testing.T, clientName string, expectedValues map[string]
 				t.Errorf("TLS Ja4 hash mismatch.\nexpected: %s\nactual  : %s\nclient: %s", expectedValue, tlsApiResponse.TLS.Ja4, clientName)
 			}
 		case akamaiFingerprint:
-			if tlsApiResponse.HTTP2.AkamaiFingerprint != expectedValue {
-				t.Errorf("akamai fingerprint mismatch.\nexpected: %s\nactual  : %s\nclient: %s", expectedValue, tlsApiResponse.HTTP2.AkamaiFingerprint, clientName)
+			if actual := normalizeAkamaiFingerprint(tlsApiResponse.HTTP2.AkamaiFingerprint); actual != expectedValue {
+				t.Errorf("akamai fingerprint mismatch.\nexpected: %s\nactual  : %s\nclient: %s", expectedValue, actual, clientName)
 			}
 		case akamaiFingerprintHash:
-			if tlsApiResponse.HTTP2.AkamaiFingerprintHash != expectedValue {
-				t.Errorf("akamai fingerprint hash mismatch.\nexpected: %s\nactual  : %s\nclient: %s", expectedValue, tlsApiResponse.HTTP2.AkamaiFingerprintHash, clientName)
+			if actual := akamaiFingerprintHashOf(tlsApiResponse.HTTP2.AkamaiFingerprint); actual != expectedValue {
+				t.Errorf("akamai fingerprint hash mismatch.\nexpected: %s\nactual  : %s\nclient: %s", expectedValue, actual, clientName)
 			}
 		}
 	}

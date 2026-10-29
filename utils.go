@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+
+	"github.com/bogdanfinn/fhttp/http2"
 )
 
 func Int64ToInt(x int64) (int, error) {
@@ -36,4 +38,17 @@ func generateGREASESettingValue() uint64 {
 		val = 1
 	}
 	return uint64(val)
+}
+
+// generateGREASEH2SettingID returns a random 16-bit GREASE setting ID for the
+// HTTP/2 SETTINGS frame. RFC 8701 reserves the IDs 0x?a?a, one nibble free, so
+// the result is one of 0x0a0a through 0xfafa. It panics if the random source
+// fails, which crypto/rand does not survive either.
+func generateGREASEH2SettingID() http2.SettingID {
+	n, err := rand.Int(rand.Reader, big.NewInt(16))
+	if err != nil {
+		panic(err)
+	}
+
+	return http2.SettingID(n.Uint64()<<12 | n.Uint64()<<4 | 0x0a0a)
 }
