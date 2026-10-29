@@ -37,3 +37,15 @@ func generateGREASESettingValue() uint64 {
 	}
 	return uint64(val)
 }
+
+// generateH2GreaseSettingID generates a valid 16-bit GREASE setting ID for HTTP/2.
+// Per RFC 8701, the reserved 16-bit GREASE values are 0x0a0a, 0x1a1a, ..., 0xfafa
+// (both bytes equal, each of the form 0xN0x0a where N is 0..15). Real Chrome
+// randomly picks one of these per connection for its HTTP/2 SETTINGS frame.
+// HTTP/2 setting IDs are 16-bit, so this differs from the HTTP/3 path which uses
+// large varint GREASE IDs (see generateGREASESettingID).
+func generateH2GreaseSettingID() uint16 {
+	nBig, _ := rand.Int(rand.Reader, big.NewInt(16))
+	b := uint8(0x0a) + uint8(nBig.Uint64())*0x10
+	return uint16(b)<<8 | uint16(b)
+}
