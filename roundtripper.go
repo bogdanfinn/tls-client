@@ -359,6 +359,14 @@ func profileDefaultMaxResponseHeaderBytes(cfg *http3Config) int {
 }
 
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	// A raw byte that is invalid in a URI query ends up verbatim in the HTTP/1
+	// request line and the HTTP/2 :path. url.Parse keeps it, a literal space
+	// for example then breaks the request line. Browsers never send these
+	// bytes unencoded, so fix the query up here for every protocol.
+	if req.URL != nil {
+		req.URL.RawQuery = sanitizeRawQuery(req.URL.RawQuery)
+	}
+
 	addr := rt.getDialTLSAddr(req)
 
 	if rt.racer != nil && !rt.forceHttp1 && !rt.disableHttp3 && strings.ToLower(req.URL.Scheme) == "https" {

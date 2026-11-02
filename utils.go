@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"strings"
 )
 
 func Int64ToInt(x int64) (int, error) {
@@ -36,4 +37,49 @@ func generateGREASESettingValue() uint64 {
 		val = 1
 	}
 	return uint64(val)
+}
+
+// sanitizeRawQuery percent-encodes every byte that RFC 3986 does not allow
+// raw in a URI query (query = pchar / "/" / "?", where pchar covers
+// pct-encoded triplets). url.Parse keeps such bytes verbatim in RawQuery and
+// both the HTTP/1 request line and the HTTP/2 :path carry RawQuery verbatim,
+// so a literal space for example would break the request line. Browsers never
+// send these bytes unencoded.
+func sanitizeRawQuery(query string) string {
+	for i := 0; i < len(query); i++ {
+		if !isValidRawQueryByte(query[i]) {
+			var b strings.Builder
+			b.Grow(len(query) + 8)
+			b.WriteString(query[:i])
+
+			for j := i; j < len(query); j++ {
+				if isValidRawQueryByte(query[j]) {
+					b.WriteByte(query[j])
+				} else {
+					fmt.Fprintf(&b, "%%%02X", query[j])
+				}
+			}
+
+			return b.String()
+		}
+	}
+
+	return query
+}
+
+// isValidRawQueryByte reports whether b may appear unencoded in a URI query.
+// '%' counts as valid: it introduces a pct-encoded triplet, and encoding it
+// again would double-encode already encoded input.
+func isValidRawQueryByte(b byte) bool {
+	switch {
+	case b >= 'a' && b <= 'z', b >= 'A' && b <= 'Z', b >= '0' && b <= '9':
+		return true
+	}
+
+	switch b {
+	case '-', '.', '_', '~', '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=', ':', '@', '/', '?', '%':
+		return true
+	}
+
+	return false
 }
