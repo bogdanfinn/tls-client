@@ -41,6 +41,7 @@ var MappedTLSClients = map[string]ClientProfile{
 	"brave_146_PSK":          Brave_146_PSK,
 	"safari_15_6_1":          Safari_15_6_1,
 	"safari_16_0":            Safari_16_0,
+	"safari_27_2":            Safari_27_2,
 	"safari_ipad_15_6":       Safari_Ipad_15_6,
 	"safari_ios_15_5":        Safari_IOS_15_5,
 	"safari_ios_15_6":        Safari_IOS_15_6,
