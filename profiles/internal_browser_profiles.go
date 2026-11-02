@@ -332,6 +332,7 @@ var Chrome_150_PSK = ClientProfile{
 						"h2",
 						"http/1.1",
 					}},
+					&tls.GenericExtension{Id: 0xca34, Data: trust_anchors.ChromeShuffled()},
 					&tls.UtlsGREASEExtension{},
 					&tls.UtlsPreSharedKeyExtension{},
 				},
@@ -445,6 +446,7 @@ var Chrome_150 = ClientProfile{
 					&tls.PSKKeyExchangeModesExtension{Modes: []uint8{
 						tls.PskModeDHE,
 					}},
+					&tls.GenericExtension{Id: 0xca34, Data: trust_anchors.ChromeShuffled()},
 					&tls.UtlsGREASEExtension{},
 				},
 			}, nil

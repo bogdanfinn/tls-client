@@ -519,3 +519,16 @@ func TestChromeTrustAnchorsSelectionRule(t *testing.T) {
 		}
 	}
 }
+
+// TestChrome150TrustAnchors covers issue #281: real Chrome 150 sends the
+// trust_anchors extension, but the Chrome_150 profiles shipped without it.
+// trustAnchorsFromSpec fails the test when the extension is missing, and
+// checkTrustAnchorIDs confirms the payload is the Chrome Root Store list.
+func TestChrome150TrustAnchors(t *testing.T) {
+	capture := chromeCapture(t)
+
+	for _, profile := range []profiles.ClientProfile{profiles.Chrome_150, profiles.Chrome_150_PSK} {
+		payload := trustAnchorsFromSpec(t, profile)
+		checkTrustAnchorIDs(t, profile.GetClientHelloStr(), capture, payload)
+	}
+}
