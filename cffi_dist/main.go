@@ -207,6 +207,104 @@ func addCookiesToSession(addCookiesParams *C.char) *C.char {
 	return responseString
 }
 
+//export getAllCookiesFromSession
+func getAllCookiesFromSession(getAllCookiesParams *C.char) *C.char {
+	getAllCookiesParamsJson := C.GoString(getAllCookiesParams)
+
+	cookiesInput := tls_client_cffi_src.GetAllCookiesFromSessionInput{}
+	marshallError := json.Unmarshal([]byte(getAllCookiesParamsJson), &cookiesInput)
+
+	if marshallError != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
+		return handleErrorResponse("", false, clientErr)
+	}
+
+	tlsClient, err := tls_client_cffi_src.GetClient(cookiesInput.SessionId)
+	if err != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(err)
+
+		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
+	}
+
+	cookies, err := tls_client_cffi_src.AllCookiesFromSession(tlsClient)
+	if err != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(err)
+
+		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
+	}
+
+	out := tls_client_cffi_src.AllCookiesFromSessionOutput{
+		Id:      uuid.New().String(),
+		Cookies: cookies,
+	}
+
+	jsonResponse, marshallError := json.Marshal(out)
+
+	if marshallError != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
+		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
+	}
+
+	responseString := C.CString(string(jsonResponse))
+
+	unsafePointersLck.Lock()
+	unsafePointers[out.Id] = responseString
+	unsafePointersLck.Unlock()
+
+	return responseString
+}
+
+//export setCookiesToSession
+func setCookiesToSession(setCookiesParams *C.char) *C.char {
+	setCookiesParamsJson := C.GoString(setCookiesParams)
+
+	cookiesInput := tls_client_cffi_src.SetCookiesToSessionInput{}
+	marshallError := json.Unmarshal([]byte(setCookiesParamsJson), &cookiesInput)
+
+	if marshallError != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
+		return handleErrorResponse("", false, clientErr)
+	}
+
+	tlsClient, err := tls_client_cffi_src.GetClient(cookiesInput.SessionId)
+	if err != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(err)
+
+		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
+	}
+
+	cookies, err := tls_client_cffi_src.SetCookiesToSession(tlsClient, cookiesInput.Cookies)
+	if err != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(err)
+
+		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
+	}
+
+	out := tls_client_cffi_src.AllCookiesFromSessionOutput{
+		Id:      uuid.New().String(),
+		Cookies: cookies,
+	}
+
+	jsonResponse, marshallError := json.Marshal(out)
+
+	if marshallError != nil {
+		clientErr := tls_client_cffi_src.NewTLSClientError(marshallError)
+
+		return handleErrorResponse(cookiesInput.SessionId, true, clientErr)
+	}
+
+	responseString := C.CString(string(jsonResponse))
+
+	unsafePointersLck.Lock()
+	unsafePointers[out.Id] = responseString
+	unsafePointersLck.Unlock()
+
+	return responseString
+}
+
 //export request
 func request(requestParams *C.char) *C.char {
 	requestParamsJson := C.GoString(requestParams)
