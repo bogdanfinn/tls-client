@@ -27,9 +27,10 @@ const trustAnchorsExtension = 0xca34
 // trust anchor IDs draft, so it reads the extension instead of skipping it.
 const generate204Endpoint = "https://www.google.com/generate_204"
 
-// chromeProfile is the profile these tests use. Every Chrome profile hands
-// the extension the same bytes, so one covers them all. This one is the newest,
-// so it is the wiring most likely to be wrong.
+// chromeProfile is the profile these tests use. Every Chrome 153 or earlier
+// profile hands the extension the same bytes, so one covers them all. This one
+// is the newest of them, so it is the wiring most likely to be wrong. The Chrome
+// 154 profiles sort the IDs instead, see TestChrome154TrustAnchors.
 const chromeProfileName = "Chrome_152_PSK"
 
 var chromeProfile = profiles.Chrome_152_PSK
@@ -530,5 +531,27 @@ func TestChrome150TrustAnchors(t *testing.T) {
 	for _, profile := range []profiles.ClientProfile{profiles.Chrome_150, profiles.Chrome_150_PSK} {
 		payload := trustAnchorsFromSpec(t, profile)
 		checkTrustAnchorIDs(t, profile.GetClientHelloStr(), capture, payload)
+	}
+}
+
+// TestChrome154TrustAnchors checks the profiles for Chrome 154 and later. They
+// send the IDs of the Chrome Root Store list in ascending order, and so the
+// same bytes in every program run. Chrome for Testing 154.0.8037.92 sent the
+// payload in this order. A profile that keeps the shuffled payload of Chrome 152
+// fails here.
+func TestChrome154TrustAnchors(t *testing.T) {
+	capture := chromeCapture(t)
+
+	for _, profile := range []profiles.ClientProfile{profiles.Chrome_154, profiles.Chrome_154_PSK} {
+		name := profile.GetClientHelloStr()
+		payload := trustAnchorsFromSpec(t, profile)
+
+		checkTrustAnchorIDs(t, name, capture, payload)
+
+		// splitTrustAnchors drops the length bytes, so this compares IDs. Hex
+		// keeps the byte order, so a shorter ID that is a prefix comes first.
+		if ids := splitTrustAnchors(t, payload); !sort.StringsAreSorted(ids) {
+			t.Errorf("%s sent the IDs %v, expected them in ascending order", name, ids)
+		}
 	}
 }
