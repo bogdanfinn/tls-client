@@ -89,12 +89,12 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	// One client for all the workers. Chrome_152 is the most recent Chrome
-	// profile the library ships; Chrome_152_PSK is the same fingerprint with
+	// One client for all the workers. Chrome_154 is the most recent Chrome
+	// profile the library ships; Chrome_154_PSK is the same fingerprint with
 	// session resumption.
 	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(30),
-		tls_client.WithClientProfile(profiles.Chrome_152),
+		tls_client.WithClientProfile(profiles.Chrome_154),
 		// Chrome shuffles its TLS extensions per connection since version 107,
 		// so a static order is a fingerprint of its own. The order is drawn
 		// per handshake, which means the workers here do not all present the

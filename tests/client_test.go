@@ -16,6 +16,8 @@ import (
 func TestClients(t *testing.T) {
 	t.Log("testing firefox 147")
 	firefox_147(t)
+	t.Log("testing chrome 154 with PSK")
+	chrome_154_PSK(t)
 	t.Log("testing chrome 152 with PSK")
 	chrome_152_PSK(t)
 	t.Log("testing chrome 150 with PSK")
@@ -644,6 +646,47 @@ func chrome_146_PSK(t *testing.T) {
 	}
 
 	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_146_PSK.GetClientHelloStr()], resp)
+}
+
+func chrome_154_PSK(t *testing.T) {
+	options := []tls_client.HttpClientOption{
+		skipPeetCertVerify,
+		tls_client.WithClientProfile(profiles.Chrome_154_PSK),
+		tls_client.WithTimeoutSeconds(120),
+	}
+
+	client, err := tls_client.NewHttpClient(nil, options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_154.GetClientHelloStr()], resp)
+
+	req, err = http.NewRequest(http.MethodGet, peetApiEndpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header = defaultHeader
+
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareResponse(t, "chrome", clientFingerprints[chrome][profiles.Chrome_154_PSK.GetClientHelloStr()], resp)
 }
 
 func chrome_152_PSK(t *testing.T) {
