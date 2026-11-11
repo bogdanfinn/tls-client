@@ -8,8 +8,8 @@ github.com/bogdanfinn/fhttp v0.7.3 h1:DLiZfU9dKD+JCFDUZk8XUgbwm32DuvPLp9x2mucNPv
 github.com/bogdanfinn/fhttp v0.7.3/go.mod h1:Pco5Ml+HnzrBRAu+6BORirlCAF9JqKmAvC0vI3JSjss=
 github.com/bogdanfinn/quic-go-utls v1.0.13-utls h1:csafI+9mkfwRqwM8dXdcmC6mgwxTAj+d+PhcqLHnUWg=
 github.com/bogdanfinn/quic-go-utls v1.0.13-utls/go.mod h1:w92OqFJYP900bLkAjvnnvV4M43XikIvhvsY39AxXQfM=
-github.com/bogdanfinn/tls-client v1.18.0 h1:CNh+8Mq0lU+iAxn3TkxhHQrucIOpPacAl7cio8HVo1c=
-github.com/bogdanfinn/tls-client v1.18.0/go.mod h1:T7hIrZnYRex0YFc/CWkEvxRV28RXUQlROb2b5FgM4BU=
+github.com/bogdanfinn/tls-client v1.18.1 h1:940xCSoipJG13GaGcvOMnF/f+pOCJ+3pKDwemC7Vnt8=
+github.com/bogdanfinn/tls-client v1.18.1/go.mod h1:T7hIrZnYRex0YFc/CWkEvxRV28RXUQlROb2b5FgM4BU=
 github.com/bogdanfinn/utls v1.8.2-barnius h1:ypYWUe4gklEgdBYP+cZAfoG/hhVUMG6ot/pmqgbc/Es=
 github.com/bogdanfinn/utls v1.8.2-barnius/go.mod h1:piJQqN3RvYCC1Bvh5kqhaAhJ+DC1i7PRJDfPKiZsiF8=
 github.com/bogdanfinn/websocket v1.5.9-barnius h1:KY6PMx2I3WspLKJ++wPF5TNhd/fxqu5IpYU+lfH5DbM=
