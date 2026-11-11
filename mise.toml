@@ -1,6 +1,6 @@
 [tools]
 node="20.9.0"
-go="1.24.1"
+go="1.27.3"
 
 [env]
 SOCKS_5_PROXY={ required = true }
