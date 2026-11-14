@@ -2,6 +2,7 @@ package tls_client
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"strings"
 	"sync"
@@ -88,6 +89,12 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	notEmptyCookies := jar.nonEmpty(cookies)
 	uniqueCookies := jar.unique(notEmptyCookies)
 
+	// The standard jar applies the RFC 6265 domain rules and drops a cookie
+	// whose Domain does not match the host it arrives from. allCookies keeps
+	// the same set so GetAllCookies never reports a cookie the request path
+	// could not send.
+	storableCookies := jar.domainMatches(u, uniqueCookies)
+
 	hostKey := jar.buildCookieHostKey(u)
 
 	if !jar.config.skipExisting {
@@ -97,7 +104,7 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 
 		for _, existingCookie := range existingCookies {
 			shouldOverwrite := false
-			for _, cookie := range uniqueCookies {
+			for _, cookie := range storableCookies {
 				shouldOverwrite = existingCookie.Name == cookie.Name
 
 				if shouldOverwrite {
@@ -112,9 +119,13 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 			remainingExistingCookies = append(remainingExistingCookies, existingCookie)
 		}
 
-		newCookies := append(remainingExistingCookies, uniqueCookies...)
+		newCookies := append(remainingExistingCookies, storableCookies...)
 
-		jar.jar.SetCookies(u, newCookies)
+		// Only the newly arrived cookies go into the standard jar, each under
+		// the URL it actually arrived with. Re-registering existing cookies
+		// under a different URL of the same host key would widen a host-only
+		// cookie to the parent domain.
+		jar.jar.SetCookies(u, storableCookies)
 		jar.allCookies[hostKey] = newCookies
 
 		return
@@ -124,7 +135,7 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 
 	existingCookies := jar.allCookies[hostKey]
 
-	for _, cookie := range uniqueCookies {
+	for _, cookie := range storableCookies {
 		alreadyInJar := false
 
 		for _, existingCookie := range existingCookies {
@@ -144,20 +155,74 @@ func (jar *cookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 		newNonExistentCookies = append(newNonExistentCookies, cookie)
 	}
 
-	newCookies := append(existingCookies, newNonExistentCookies...)
-	jar.jar.SetCookies(u, newCookies)
-	jar.allCookies[hostKey] = newCookies
+	jar.jar.SetCookies(u, newNonExistentCookies)
+	jar.allCookies[hostKey] = append(existingCookies, newNonExistentCookies...)
 }
 
 func (jar *cookieJar) Cookies(u *url.URL) []*http.Cookie {
 	jar.RLock()
 	defer jar.RUnlock()
 
-	hostKey := jar.buildCookieHostKey(u)
+	// The standard jar is the authority on which cookies may go back to u: it
+	// applies the RFC 6265 domain, path, secure and expiry rules. allCookies
+	// only tracks what was offered, so without this filter a cookie set for a
+	// different host would leak into this request.
+	standard := jar.jar.Cookies(u)
 
-	allCookies := jar.allCookies[hostKey]
+	sendable := make(map[string]struct{}, len(standard))
+	for _, c := range standard {
+		sendable[c.Name+"\x00"+c.Value] = struct{}{}
+	}
 
-	return jar.notExpired(allCookies)
+	var filteredCookies []*http.Cookie
+
+	for _, c := range jar.notExpired(jar.allCookies[jar.buildCookieHostKey(u)]) {
+		key := c.Name + "\x00" + c.Value
+		if _, ok := sendable[key]; ok {
+			delete(sendable, key)
+			filteredCookies = append(filteredCookies, c)
+		}
+	}
+
+	return filteredCookies
+}
+
+// domainMatches drops the cookies the standard jar would reject on arrival:
+// a Domain attribute that is malformed or does not domain-match the host the
+// cookie is set from (RFC 6265 section 5.3). A cookie without a Domain
+// attribute is a host cookie and always allowed.
+func (jar *cookieJar) domainMatches(u *url.URL, cookies []*http.Cookie) []*http.Cookie {
+	host := strings.ToLower(u.Hostname())
+	isIPHost := net.ParseIP(host) != nil
+
+	var filteredCookies []*http.Cookie
+
+	for _, c := range cookies {
+		if c.Domain == "" {
+			filteredCookies = append(filteredCookies, c)
+			continue
+		}
+
+		if isIPHost {
+			jar.config.logger.Debug("cookie %s carries a domain attribute on an IP host, dropping", c.Name)
+			continue
+		}
+
+		domain := strings.ToLower(strings.TrimPrefix(c.Domain, "."))
+		if domain == "" || strings.HasPrefix(domain, ".") || strings.HasSuffix(domain, ".") {
+			jar.config.logger.Debug("cookie %s carries a malformed domain %q, dropping", c.Name, c.Domain)
+			continue
+		}
+
+		if host != domain && !strings.HasSuffix(host, "."+domain) {
+			jar.config.logger.Debug("cookie %s carries domain %s which does not match host %s, dropping", c.Name, c.Domain, host)
+			continue
+		}
+
+		filteredCookies = append(filteredCookies, c)
+	}
+
+	return filteredCookies
 }
 
 func (jar *cookieJar) GetAllCookies() map[string][]*http.Cookie {
