@@ -165,5 +165,12 @@ No browser automation. Just simple API calls that return the exact cookies and h
 
 ---
 
-### Powered by
-[![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSource)
+## 📦 Need the data, not the scraper?
+
+<a href="https://pckt.sh/?utm_source=github&utm_medium=sponsor&utm_campaign=tls-client">
+  <img src="https://pckt.sh/press/banner.png" alt="pckt.sh: unofficial APIs & datasets for developers" width="100%">
+</a>
+
+[pckt.sh](https://pckt.sh/?utm_source=github&utm_medium=sponsor&utm_campaign=tls-client) gives you StockX, GOAT, Shopify and more as clean JSON through one API key. We handle the TLS fingerprints, proxies and retries, so you don't have to.
+
+[Get your API key](https://pckt.sh/auth/signup?utm_source=github&utm_medium=sponsor&utm_campaign=tls-client) · [Docs](https://pckt.sh/docs?utm_source=github&utm_medium=sponsor&utm_campaign=tls-client) · [Pricing](https://pckt.sh/pricing?utm_source=github&utm_medium=sponsor&utm_campaign=tls-client)
