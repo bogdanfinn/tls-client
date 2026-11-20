@@ -247,26 +247,31 @@ func request(requestParams *C.char) *C.char {
 		}
 	}
 
+	bandwidthMeasurement := tls_client_cffi_src.StartBandwidthMeasurement(tlsClient, requestInput)
+
 	resp, reqErr := tlsClient.Do(req)
 
 	if reqErr != nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(fmt.Errorf("failed to do request: %w", reqErr))
 
-		return handleErrorResponse(sessionId, withSession, clientErr)
+		return handleErrorResponseWithBandwidth(sessionId, withSession, clientErr, bandwidthMeasurement.Usage())
 	}
 
 	if resp == nil {
 		clientErr := tls_client_cffi_src.NewTLSClientError(fmt.Errorf("response is nil"))
 
-		return handleErrorResponse(sessionId, withSession, clientErr)
+		return handleErrorResponseWithBandwidth(sessionId, withSession, clientErr, bandwidthMeasurement.Usage())
 	}
 
 	targetCookies := tlsClient.GetCookies(resp.Request.URL)
 
 	response, err := tls_client_cffi_src.BuildResponse(sessionId, withSession, resp, targetCookies, requestInput)
 	if err != nil {
-		return handleErrorResponse(sessionId, withSession, err)
+		return handleErrorResponseWithBandwidth(sessionId, withSession, err, bandwidthMeasurement.Usage())
 	}
+
+	// After BuildResponse, so the fully read body is counted.
+	response.Bandwidth = bandwidthMeasurement.Usage()
 
 	jsonResponse, marshallError := json.Marshal(response)
 
@@ -432,12 +437,18 @@ func wsStats(wsStatsParams *C.char) *C.char {
 }
 
 func handleErrorResponse(sessionId string, withSession bool, err *tls_client_cffi_src.TLSClientError) *C.char {
+	return handleErrorResponseWithBandwidth(sessionId, withSession, err, nil)
+}
+
+// Failed requests can still use bandwidth (e.g. a metered proxy), so report it.
+func handleErrorResponseWithBandwidth(sessionId string, withSession bool, err *tls_client_cffi_src.TLSClientError, bandwidthUsage *tls_client_cffi_src.BandwidthUsage) *C.char {
 	response := tls_client_cffi_src.Response{
-		Id:      uuid.New().String(),
-		Status:  0,
-		Body:    err.Error(),
-		Headers: nil,
-		Cookies: nil,
+		Id:        uuid.New().String(),
+		Status:    0,
+		Body:      err.Error(),
+		Headers:   nil,
+		Cookies:   nil,
+		Bandwidth: bandwidthUsage,
 	}
 
 	if withSession {

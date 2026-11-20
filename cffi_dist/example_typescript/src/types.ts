@@ -177,6 +177,10 @@ export interface TLSClientRequestPayload {
 
     withDebug?: boolean;
     catchPanics?: boolean;
+
+    // Adds bandwidth to the response. For a session, set it on the request
+    // that creates the session.
+    withBandwidthTracker?: boolean;
 }
 
 export interface TLSClientResponseData {
@@ -191,6 +195,19 @@ export interface TLSClientResponseData {
     usedProtocol: string;
     headers: { [key: string]: string[] };
     cookies: { [key: string]: string };
+    // Present when withBandwidthTracker was set.
+    bandwidth?: TLSClientBandwidthUsage;
+}
+
+// Bytes on the wire, TLS and header overhead included. The session* fields
+// are cumulative for the session.
+export interface TLSClientBandwidthUsage {
+    downloadedBytes: number;
+    uploadedBytes: number;
+    totalBytes: number;
+    sessionDownloadedBytes: number;
+    sessionUploadedBytes: number;
+    sessionTotalBytes: number;
 }
 
 export interface TLSClientReleaseSessionPayload {

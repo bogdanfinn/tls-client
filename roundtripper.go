@@ -688,7 +688,13 @@ func (rt *roundTripper) dial(ctx context.Context, network, addr string) (net.Con
 	if network == "tcp" && rt.disableIPV6 {
 		network = "tcp4"
 	}
-	return rt.dialer.DialContext(ctx, network, addr)
+
+	rawConn, err := rt.dialer.DialContext(ctx, network, addr)
+	if err != nil {
+		return nil, err
+	}
+
+	return rt.bandwidthTracker.TrackConnection(ctx, rawConn), nil
 }
 
 func (rt *roundTripper) buildHttp1Transport() *http.Transport {
