@@ -139,8 +139,23 @@ func TestSanitizeRawQuery(t *testing.T) {
 		},
 		{
 			name:  "invalid ascii encoded",
-			input: "a=b<>|\"c",
-			want:  "a=b%3C%3E%7C%22c",
+			input: "a=b<>\"c",
+			want:  "a=b%3C%3E%22c",
+		},
+		{
+			name:  "control bytes and DEL encoded",
+			input: "a=b\tc\x7f",
+			want:  "a=b%09c%7F",
+		},
+		{
+			name:  "brackets stay raw as browsers send them",
+			input: "mediaIds[]=1&mediaIds[]=2&filter[list_id]=3",
+			want:  "mediaIds[]=1&mediaIds[]=2&filter[list_id]=3",
+		},
+		{
+			name:  "other bytes browsers leave raw stay raw",
+			input: "a={b}|c^d`e\\f",
+			want:  "a={b}|c^d`e\\f",
 		},
 		{
 			name:  "non ascii encoded",
