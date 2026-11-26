@@ -87,6 +87,8 @@ type RequestInput struct {
 	WithCustomCookieJar         bool                `json:"withCustomCookieJar"`
 	WithoutCookieJar            bool                `json:"withoutCookieJar"`
 	WithRandomTLSExtensionOrder bool                `json:"withRandomTLSExtensionOrder"`
+	// WithBandwidthTracker adds "bandwidth" to the response. Must be set when the session is created.
+	WithBandwidthTracker bool `json:"withBandwidthTracker"`
 }
 
 // CustomTlsClient contains custom TLS specifications to construct a client from.
@@ -214,7 +216,19 @@ type Response struct {
 	SessionId    string              `json:"sessionId,omitempty"`
 	Target       string              `json:"target"`
 	UsedProtocol string              `json:"usedProtocol"`
+	Bandwidth    *BandwidthUsage     `json:"bandwidth,omitempty"`
 	Status       int                 `json:"status"`
+}
+
+// BandwidthUsage is measured on the raw connection, so TLS and header overhead are included.
+// Per-request numbers are only exact when requests on a session don't run concurrently.
+type BandwidthUsage struct {
+	DownloadedBytes        int64 `json:"downloadedBytes"`
+	UploadedBytes          int64 `json:"uploadedBytes"`
+	TotalBytes             int64 `json:"totalBytes"`
+	SessionDownloadedBytes int64 `json:"sessionDownloadedBytes"`
+	SessionUploadedBytes   int64 `json:"sessionUploadedBytes"`
+	SessionTotalBytes      int64 `json:"sessionTotalBytes"`
 }
 
 // WsConnectInput contains the parameters for establishing a WebSocket connection.
