@@ -39,12 +39,19 @@ func generateGREASESettingValue() uint64 {
 	return uint64(val)
 }
 
-// sanitizeRawQuery percent-encodes every byte that RFC 3986 does not allow
-// raw in a URI query (query = pchar / "/" / "?", where pchar covers
-// pct-encoded triplets). url.Parse keeps such bytes verbatim in RawQuery and
-// both the HTTP/1 request line and the HTTP/2 :path carry RawQuery verbatim,
-// so a literal space for example would break the request line. Browsers never
-// send these bytes unencoded.
+// sanitizeRawQuery percent-encodes the bytes a browser percent-encodes in a
+// URL query: control bytes, space, '"', '#', '<', '>' and every non-ASCII byte
+// (the WHATWG URL Standard's query percent-encode set). url.Parse keeps such
+// bytes verbatim in RawQuery and both the HTTP/1 request line and the HTTP/2
+// :path carry RawQuery verbatim, so a literal space for example would break the
+// request line.
+//
+// Every other printable ASCII byte stays raw, as browsers send it: '[' and ']'
+// in "ids[]=1" or "filter[id]=2", '{', '}', '|', '^', '`' and '\\'. Encoding them
+// changes the request-target the server receives, which breaks APIs that sign
+// the path and query as the browser sends them. The single quote also stays raw,
+// as it did before, although browsers encode it in http(s) queries (the
+// special-query percent-encode set): this function only stops encoding.
 func sanitizeRawQuery(query string) string {
 	for i := 0; i < len(query); i++ {
 		if !isValidRawQueryByte(query[i]) {
@@ -67,19 +74,18 @@ func sanitizeRawQuery(query string) string {
 	return query
 }
 
-// isValidRawQueryByte reports whether b may appear unencoded in a URI query.
-// '%' counts as valid: it introduces a pct-encoded triplet, and encoding it
-// again would double-encode already encoded input.
+// isValidRawQueryByte reports whether a browser sends b unencoded in a URL
+// query. '%' counts as valid: it introduces a pct-encoded triplet, and encoding
+// it again would double-encode already encoded input.
 func isValidRawQueryByte(b byte) bool {
-	switch {
-	case b >= 'a' && b <= 'z', b >= 'A' && b <= 'Z', b >= '0' && b <= '9':
-		return true
+	if b <= ' ' || b >= 0x7F {
+		return false
 	}
 
 	switch b {
-	case '-', '.', '_', '~', '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=', ':', '@', '/', '?', '%':
-		return true
+	case '"', '#', '<', '>':
+		return false
 	}
 
-	return false
+	return true
 }
