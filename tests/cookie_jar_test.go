@@ -233,3 +233,102 @@ func TestClient_ExcludeExpiredCookiesFromRequest(t *testing.T) {
 
 	assert.Equal(t, 0, len(client.GetCookies(u)))
 }
+
+// TestClient_CookieDomainRules covers issue #75: a cookie set for a domain
+// that does not match the request host must never be stored or sent, and a
+// host-only cookie set on a subdomain must not leak to the parent domain.
+func TestClient_CookieDomainRules(t *testing.T) {
+	jar := tls_client.NewCookieJar()
+
+	options := []tls_client.HttpClientOption{
+		tls_client.WithClientProfile(profiles.Chrome_133),
+		tls_client.WithCookieJar(jar),
+	}
+
+	client, err := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	u := &url.URL{
+		Scheme: "https",
+		Host:   "httpbin.org",
+		Path:   "/cookies",
+	}
+
+	client.SetCookies(u, []*http.Cookie{
+		{Name: "host", Value: "1"},
+		// foreign domain: rejected at store time, like the standard jar does
+		{Name: "foreign", Value: "x", Domain: "example.org"},
+		// malformed domain: rejected at store time
+		{Name: "malformed", Value: "x", Domain: "."},
+	})
+
+	cookies := client.GetCookies(u)
+	assert.Equal(t, 1, len(cookies))
+	assert.Equal(t, "host", cookies[0].Name)
+
+	// the foreign cookie does not appear in the exported view either
+	for _, stored := range jar.GetAllCookies() {
+		for _, c := range stored {
+			assert.NotEqual(t, "foreign", c.Name)
+		}
+	}
+
+	sub := &url.URL{
+		Scheme: "https",
+		Host:   "sub.httpbin.org",
+		Path:   "/cookies",
+	}
+
+	// host-only cookie set on a subdomain: no Domain attribute means it must
+	// not go to the parent domain
+	client.SetCookies(sub, []*http.Cookie{{Name: "subonly", Value: "1"}})
+
+	parentCookies := client.GetCookies(u)
+	for _, c := range parentCookies {
+		assert.NotEqual(t, "subonly", c.Name)
+	}
+
+	subCookies := client.GetCookies(sub)
+	foundSubOnly := false
+	for _, c := range subCookies {
+		if c.Name == "subonly" {
+			foundSubOnly = true
+		}
+	}
+	assert.True(t, foundSubOnly)
+
+	// a subdomain may set a domain cookie for its parent; it is then sent to
+	// both the subdomain and the parent
+	client.SetCookies(sub, []*http.Cookie{{Name: "shared", Value: "1", Domain: "httpbin.org"}})
+
+	foundShared := false
+	for _, c := range client.GetCookies(u) {
+		if c.Name == "shared" {
+			foundShared = true
+		}
+	}
+	assert.True(t, foundShared)
+
+	foundShared = false
+	for _, c := range client.GetCookies(sub) {
+		if c.Name == "shared" {
+			foundShared = true
+		}
+	}
+	assert.True(t, foundShared)
+
+	// a secure cookie does not travel over plain http
+	insecure := &url.URL{
+		Scheme: "http",
+		Host:   "httpbin.org",
+		Path:   "/cookies",
+	}
+
+	client.SetCookies(u, []*http.Cookie{{Name: "secure", Value: "1", Secure: true}})
+
+	for _, c := range client.GetCookies(insecure) {
+		assert.NotEqual(t, "secure", c.Name)
+	}
+}
